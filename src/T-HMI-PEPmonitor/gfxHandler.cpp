@@ -130,7 +130,6 @@ void loadBmpAnim(DISPLAY_T** displays, String filename, uint8_t animFrames, uint
           }
 
           if (flipped & FLIPPED_H) {
-            Serial.println("Flipping H");
             std::reverse((uint16_t*)lineBuffer, ((uint16_t*)lineBuffer)+w);
           }
           // Push the pixel row to screen, pushImage will crop the line if needed

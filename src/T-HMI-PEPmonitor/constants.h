@@ -30,7 +30,7 @@
 #define SIMULATE_BLOWS_SHORT_BLOW_DURATION 1000
 #define SIMULATE_BLOWS_PAUSE_DURATION 5000
 
-#define WIN_SCREEN_COUNT 11
+#define WIN_SCREEN_COUNT 23
 
 struct BlowData {
   bool currentlyBlowing = false;
