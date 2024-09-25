@@ -1,7 +1,5 @@
 #ifndef __GAMES_H__
 #define __GAMES_H__
-#include <Preferences.h>
-
 #include <Arduino.h>
 
 #include "config.h"
@@ -11,9 +9,11 @@
 #include "sdHandler.h"
 #include "touchHandler.h"
 #include "monsterDetails.h"
+#include "prefsHandler.h"
 
-#define NUM_SHORT_BLOW_GAMES 2
-#define NUM_LONG_BLOW_GAMES 3
+#define NUM_SHORT_BLOW_GAMES 1
+#define NUM_LONG_BLOW_GAMES 1
+#define NUM_TRAMPOLINE_GAMES 1
 
 #define GAME_DRAW_Y 18
 #define GAME_SNOWMAN_DRAW_Y 1
@@ -34,8 +34,9 @@
 #define BITMAP_VBOTTOM_ALIGN 0b00100000
 
 void initGames();
-bool drawShortBlowGame(uint8_t index, DISPLAY_T* display, BlowData* blowData);
-bool drawLongBlowGame(uint8_t index, DISPLAY_T* display, BlowData* blowData);
+void drawShortBlowGame(uint8_t index, DISPLAY_T* display, BlowData* blowData);
+void drawLongBlowGame(uint8_t index, DISPLAY_T* display, BlowData* blowData);
+void drawTrampolineGame(uint8_t index, DISPLAY_T* display, JumpData* jumpData);
 
 #define TRAINER_ANIM_PATH "/gfx/trainer/brendan.bmp"
 

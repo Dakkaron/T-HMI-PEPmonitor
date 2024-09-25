@@ -32,6 +32,9 @@
 
 #define WIN_SCREEN_COUNT 23
 
+#define SENSOR_MODE_PEPS 1
+#define SENSOR_MODE_TRAMPOLINE 2
+
 struct BlowData {
   bool currentlyBlowing = false;
   unsigned long ms = 0;
@@ -45,6 +48,18 @@ struct BlowData {
   uint8_t fails = 0;
   bool isLongBlows = true;
   uint8_t lastBlowStatus = 0;
+};
+
+struct JumpData {
+  unsigned long ms;
+  uint16_t jumpCount = 0;
+  bool currentlyJumping = false;
+  int32_t msLeft = 0;
+  int32_t totalTime = 5 * 60 * 1000;
+  uint16_t misses = 0;
+  uint16_t highscore = 0;
+  bool newHighscore = false;
+  bool lastReadSuccessful = false;
 };
 
 #endif /* __CONSTANTS_H__ */

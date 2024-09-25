@@ -17,7 +17,6 @@ public:
     uint16_t RawZ(void);
     uint16_t X(void);
     uint16_t Y(void);
-    int16_t Z(void);
 
     void setCal(uint16_t xmin, uint16_t xmax, uint16_t ymin, uint16_t ymax, uint16_t xres, uint16_t yres);
     void setRotation(byte rotation);

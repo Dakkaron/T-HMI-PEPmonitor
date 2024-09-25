@@ -1,5 +1,4 @@
 #include "games.hpp"
-Preferences prefs;
 
 uint8_t attackFunction_confusion(DISPLAY_T* display, BlowData* blowData, bool playerIsAttacking, int32_t animTime, bool draw);
 uint8_t attackFunction_ember(DISPLAY_T* display, BlowData* blowData, bool playerIsAttacking, int32_t animTime, bool draw);
@@ -37,8 +36,10 @@ const AttackData attackDataArray[] = {
 
 TFT_eSprite playerSprite[] = {TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft)};
 TFT_eSprite enemySprite[] = {TFT_eSprite(&tft), TFT_eSprite(&tft)};
+TFT_eSprite safariBushSprite[] {TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft)};
 uint16_t playerMonsterId = 0;
 uint16_t enemyMonsterId = 0;
+uint8_t monsterLevels[MAX_MONSTER_NUMBER];
 int16_t loadedAttacks[2] = {-1,-1}; //-1 == no attack loaded
 TFT_eSprite attackSprites[2][ATTACK_SPRITE_NUMBER] {
   {TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft),
@@ -46,6 +47,16 @@ TFT_eSprite attackSprites[2][ATTACK_SPRITE_NUMBER] {
   {TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft),
    TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft)},
 };
+
+uint16_t getRandomCaughtMonster() {
+  uint16_t monsterId = 0;
+  while (true) {
+    monsterId = random(0, MAX_MONSTER_NUMBER);
+    if (monsterLevels[monsterId] > 0) {
+      return monsterId;
+    }
+  }
+}
 
 uint8_t attackDodgeBoilerplate(BlowData* blowData, bool playerIsAttacking) {
     if (blowData->lastBlowStatus == LAST_BLOW_FAILED) {
@@ -313,13 +324,19 @@ inline void loadPlayerMonsterIdFromSD() {
 inline void savePlayerMonsterIdToSD() {
   Serial.print(F("Saving monster id: "));
   Serial.println(playerMonsterId);
+  if (monsterLevels[playerMonsterId] == 0) {
+    monsterLevels[playerMonsterId] = 1;
+  }
   prefs.putInt("playerMonsterId", playerMonsterId);
+  prefs.putBytes("levels", monsterLevels, MAX_MONSTER_NUMBER);
   //writeIntToFile("/playerMonsterId.txt", playerMonsterId);
 }
 
 int8_t lastCycleMonsterSelected = -1;
 void drawGameLongBlows_MonsterCombat(DISPLAY_T* display, BlowData* blowData) {
   if (playerMonsterId == 0) {
+    playerMonsterId = 33;
+    savePlayerMonsterIdToSD();
     loadPlayerMonsterIdFromSD();
   }
   if (enemyMonsterId == 0 || blowData->cycleNumber > lastCycleMonsterSelected) {
@@ -442,56 +459,105 @@ void drawGameShortBlows_CatchMonster(DISPLAY_T* display, BlowData* blowData) {
   drawCombat(display, blowData, 1, attackFunctions, true);
 }
 
+void loadBushes(uint8_t nr) {
+  Serial.print("Loading bushes ");
+  Serial.println(nr);
+  for (int8_t i = 0; i<4; i++) {
+    String setNr = String(nr);
+    String filePath = String(i+1);
+    filePath = "/gfx/safari/Bush" + setNr + "_" + filePath + ".bmp";
+    loadBmp(&safariBushSprite[i], filePath);
+  }
+}
+
+int16_t jumpCountLoaded = -1;
+bool winLoaded = false;
+void drawGameTrampoline_safariZone(DISPLAY_T* display, JumpData* jumpData) {
+  if (!winLoaded && jumpData->msLeft<0) {
+    Serial.println("Win hit");
+    winLoaded = true;
+    playerMonsterId = getSafariMonster(_min(3, 1 + (jumpData->jumpCount / 100)));
+    TFT_eSprite* playerSpriteRefs[] = {
+      &playerSprite[0],
+      &playerSprite[1],
+      &playerSprite[2],
+      &playerSprite[3],
+    };
+    savePlayerMonsterIdToSD();
+    loadBmpAnim(playerSpriteRefs, monsterImagePath[playerMonsterId] + "/anim_front.bmp", 2);
+  }
+  if (jumpData->msLeft<0) {
+    playerSprite[(jumpData->ms/250)%2].pushToSprite(display, SCREEN_WIDTH/2-16, SCREEN_HEIGHT/2-16, 0x0000);
+    return;
+  }
+  if (jumpData->jumpCount>jumpCountLoaded) {
+    Serial.println("Loading new bushes");
+    jumpCountLoaded += 50;
+    loadBushes(_min(10,_max(1,1+(jumpData->jumpCount/50))));
+  }
+  int16_t bushYShift = jumpData->currentlyJumping ? 10*((jumpData->ms / 500) % 2) : 0;
+  safariBushSprite[0].pushToSprite(display, 180, 80 + bushYShift, 0x00);
+  safariBushSprite[0].pushToSprite(display, 80, 80 + bushYShift, 0x00);
+  safariBushSprite[1].pushToSprite(display, 120, 101 + bushYShift, 0x00);
+  safariBushSprite[2].pushToSprite(display, 170, 123 + bushYShift, 0x00);
+  safariBushSprite[3].pushToSprite(display, 115, 141 + bushYShift, 0x00);
+  safariBushSprite[3].pushToSprite(display, 100, 141 + bushYShift, 0x00);
+  safariBushSprite[3].pushToSprite(display, 200, 141 + bushYShift, 0x00);
+}
+
 
 void initGames() {
   prefs.begin("game-monsters");
-  for (int8_t i = 0; i<4; i++) {
+  if (prefs.getBytes("levels", monsterLevels, MAX_MONSTER_NUMBER) == 0) {
+    for (int16_t i=0; i<MAX_MONSTER_NUMBER; i++) {
+      monsterLevels[i] = 0;
+    }
+    monsterLevels[1] = 1;
+  }
+  for (int8_t i=0; i<4; i++) {
     playerSprite[i].createSprite(64, 64);
     playerSprite[i].setColorDepth(16); //redundant
   }
-  for (int8_t i = 0; i<2; i++) {
+  for (int8_t i=0; i<2; i++) {
     enemySprite[i].createSprite(64, 64);
     enemySprite[i].setColorDepth(16); //redundant
     for (int8_t j = 0; j<ATTACK_SPRITE_NUMBER; j++) {
       attackSprites[i][j].createSprite(32,32);
     }
   }
+  safariBushSprite[0].createSprite(124,96);
+  safariBushSprite[1].createSprite(104,75);
+  safariBushSprite[2].createSprite(75,58);
+  safariBushSprite[3].createSprite(59,40);
+  for (int8_t i = 0; i<4; i++) {
+    safariBushSprite[i].setColorDepth(16);
+  }
+  loadBushes(1);
 }
 
-bool drawShortBlowGame(uint8_t index, DISPLAY_T* display, BlowData* blowData) {
+void drawShortBlowGame(uint8_t index, DISPLAY_T* display, BlowData* blowData) {
   index = index % NUM_SHORT_BLOW_GAMES;
-  index = 0;
   switch (index) {
     case 0:
       drawGameShortBlows_CatchMonster(display, blowData);
-      //drawGameShortBlows_Ballon(display, blowData);
-      break;
-    case 1:
-      //drawGameShortBlows_ShipCombat(display, blowData);
-      break;
-    case 2:
-      //drawGameShortBlows_Cannon(display, blowData);
       break;
   }
-  return false;
 }
 
-bool drawLongBlowGame(uint8_t index, DISPLAY_T* display, BlowData* blowData) {
+void drawLongBlowGame(uint8_t index, DISPLAY_T* display, BlowData* blowData) {
   index = index % NUM_LONG_BLOW_GAMES;
-  index = 2;
   switch (index) {
-    /*case 255: // NOT USED
-      drawGame_Ship(display, blowData);
-      break;*/
     case 0:
-      //drawGameLongBlows_MageCombat(display, blowData);
-      break;
-    case 1:
-      //drawGameLongBlows_Snowman(display, blowData);
-      break;
-    case 2:
       drawGameLongBlows_MonsterCombat(display, blowData);
       break;
   }
-  return false;
+}
+
+void drawTrampolineGame(uint8_t index, DISPLAY_T* display, JumpData* jumpData) {
+  index = index % NUM_TRAMPOLINE_GAMES;
+  switch (index) {
+    case 0:
+      drawGameTrampoline_safariZone(display, jumpData);
+      break;
+  }
 }

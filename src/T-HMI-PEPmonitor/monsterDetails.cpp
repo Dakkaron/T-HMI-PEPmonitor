@@ -8,7 +8,36 @@ uint16_t getMonsterEvolvesTo(uint16_t monsterId) {
   if (monsterId == 133) {
     return random(134,137);
   }
-  return monsterEvolvesTo[monsterId] & ~BASIC_MONSTER;
+  return (monsterEvolvesTo[monsterId] & ~BASIC_MONSTER) & ~SAFARI_MONSTER_RARITY_2;
+}
+
+uint8_t getMonsterSafariRarity(uint16_t monsterId) {
+  uint8_t rarity = 0;
+  switch (monsterEvolvesTo[monsterId] & SAFARI_MONSTER_RARITY_3) {
+    case SAFARI_MONSTER_RARITY_1:
+      rarity = 1;
+      break;
+    case SAFARI_MONSTER_RARITY_2:
+      rarity = 2;
+      break;
+    case SAFARI_MONSTER_RARITY_3:
+      rarity = 3;
+      break;
+  }
+  return rarity;
+}
+
+uint16_t getSafariMonster(uint8_t targetRarity) {
+  uint16_t id = 0;
+  targetRarity = _min(3, _max(1, targetRarity));
+  while (id == 0) {
+    id = random(1,TOTAL_MONSTER_NUMBER+1);
+    uint8_t monsterRarity = getMonsterSafariRarity(id);
+    if (monsterRarity == 0 || monsterRarity>targetRarity) {
+      id = 0;
+    }
+  }
+  return id;
 }
 
 const String pokemonName[] = {
@@ -816,18 +845,18 @@ const uint16_t monsterEvolvesTo[] = {
   20 | BASIC_MONSTER, // 0019, Rattfratz
   0, // 0020, Rattikarl
   22 | BASIC_MONSTER, // 0021, Habitak
-  0, // 0022, Ibitak
+  0 | SAFARI_MONSTER_RARITY_2, // 0022, Ibitak
   24 | BASIC_MONSTER, // 0023, Rettan
   0, // 0024, Arbok
-  26 | BASIC_MONSTER, // 0025, Pikachu
+  26 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_1, // 0025, Pikachu
   0, // 0026, Raichu
   28 | BASIC_MONSTER, // 0027, Sandan
   0, // 0028, Sandamer
-  30 | BASIC_MONSTER, // 0029, Nidoran♀
-  31, // 0030, Nidorina
+  30 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_1, // 0029, Nidoran♀
+  31 | SAFARI_MONSTER_RARITY_2, // 0030, Nidorina
   0, // 0031, Nidoqueen
-  33 | BASIC_MONSTER, // 0032, Nidoran♂
-  34, // 0033, Nidorino
+  33 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_1, // 0032, Nidoran♂
+  34 | SAFARI_MONSTER_RARITY_2, // 0033, Nidorino
   0, // 0034, Nidoking
   36 | BASIC_MONSTER, // 0035, Piepi
   0, // 0036, Pixi
@@ -837,24 +866,24 @@ const uint16_t monsterEvolvesTo[] = {
   0, // 0040, Knuddeluff
   42 | BASIC_MONSTER, // 0041, Zubat
   0, // 0042, Golbat
-  44 | BASIC_MONSTER, // 0043, Myrapla
-  45 | BASIC_MONSTER, // 0044, Duflor
+  44 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_1, // 0043, Myrapla
+  45 | SAFARI_MONSTER_RARITY_2, // 0044, Duflor
   0, // 0045, Giflor
-  47 | BASIC_MONSTER, // 0046, Paras
-  0, // 0047, Parasek
-  49 | BASIC_MONSTER, // 0048, Bluzuk
-  0, // 0049, Omot
+  47 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_1, // 0046, Paras
+  0 | SAFARI_MONSTER_RARITY_2, // 0047, Parasek
+  49 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_1, // 0048, Bluzuk
+  0 | SAFARI_MONSTER_RARITY_2, // 0049, Omot
   51 | BASIC_MONSTER, // 0050, Digda
   0, // 0051, Digdri
   53 | BASIC_MONSTER, // 0052, Mauzi
   0, // 0053, Snobilikat
-  55 | BASIC_MONSTER, // 0054, Enton
-  0, // 0055, Entoron
+  55 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_1, // 0054, Enton
+  0 | SAFARI_MONSTER_RARITY_2, // 0055, Entoron
   57 | BASIC_MONSTER, // 0056, Menki
   0, // 0057, Rasaff
   59 | BASIC_MONSTER, // 0058, Fukano
   0, // 0059, Arkani
-  61 | BASIC_MONSTER, // 0060, Quapsel
+  61 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_1, // 0060, Quapsel
   62, // 0061, Quaputzi
   0, // 0062, Quappo
   64 | BASIC_MONSTER, // 0063, Abra
@@ -868,18 +897,18 @@ const uint16_t monsterEvolvesTo[] = {
   0, // 0071, Sarzenia
   73 | BASIC_MONSTER, // 0072, Tentacha
   0, // 0073, Tentoxa
-  75 | BASIC_MONSTER, // 0074, Kleinstein
-  76, // 0075, Georok
+  75 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_1, // 0074, Kleinstein
+  76 | SAFARI_MONSTER_RARITY_2, // 0075, Georok
   0, // 0076, Geowaz
   78 | BASIC_MONSTER, // 0077, Ponita
   0, // 0078, Gallopa
-  80 | BASIC_MONSTER, // 0079, Flegmon
-  0, // 0080, Lahmus
-  82 | BASIC_MONSTER, // 0081, Magnetilo
-  0, // 0082, Magneton
+  80 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_1, // 0079, Flegmon
+  0 | SAFARI_MONSTER_RARITY_2, // 0080, Lahmus
+  82 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_1, // 0081, Magnetilo
+  0 | SAFARI_MONSTER_RARITY_2, // 0082, Magneton
   0  | BASIC_MONSTER, // 0083, Porenta
-  85 | BASIC_MONSTER, // 0084, Dodu
-  0, // 0085, Dodri
+  85 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_1, // 0084, Doduprusa
+  0 | SAFARI_MONSTER_RARITY_2, // 0085, Dodri
   87 | BASIC_MONSTER, // 0086, Jurob
   0, // 0087, Jugong
   89 | BASIC_MONSTER, // 0088, Sleima
@@ -892,38 +921,38 @@ const uint16_t monsterEvolvesTo[] = {
   0 | BASIC_MONSTER, // 0095, Onix
   97 | BASIC_MONSTER, // 0096, Traumato
   0, // 0097, Hypno
-  99 | BASIC_MONSTER, // 0098, Krabby
+  99 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_1, // 0098, Krabby
   0, // 0099, Kingler
   101 | BASIC_MONSTER, // 0100, Voltobal
   0, // 0101, Lektrobal
-  103 | BASIC_MONSTER, // 0102, Owei
+  103 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_2, // 0102, Owei
   0, // 0103, Kokowei
-  105 | BASIC_MONSTER, // 0104, Tragosso
-  0, // 0105, Knogga
+  105 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_2, // 0104, Tragosso
+  0 | SAFARI_MONSTER_RARITY_2, // 0105, Knogga
   0 | BASIC_MONSTER, // 0106, Kicklee
   0 | BASIC_MONSTER, // 0107, Nockchan
   0 | BASIC_MONSTER, // 0108, Schlurp
   110 | BASIC_MONSTER, // 0109, Smogon
   0, // 0110, Smogmog
-  112 | BASIC_MONSTER, // 0111, Rihorn
+  112 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_2, // 0111, Rihorn
   0, // 0112, Rizeros
-  0 | BASIC_MONSTER, // 0113, Chaneira
-  0 | BASIC_MONSTER, // 0114, Tangela
-  0 | BASIC_MONSTER, // 0115, Kangama
+  0 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_2, // 0113, Chaneira
+  0 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_1, // 0114, Tangela
+  0 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_2, // 0115, Kangama
   117 | BASIC_MONSTER, // 0116, Seeper
-  0, // 0117, Seemon
-  119 | BASIC_MONSTER, // 0118, Goldini
-  0, // 0119, Golking
+  230, // 0117, Seemon
+  119 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_1, // 0118, Goldini
+  0 | SAFARI_MONSTER_RARITY_2, // 0119, Golking
   121 | BASIC_MONSTER, // 0120, Sterndu
   0, // 0121, Starmie
   0 | BASIC_MONSTER, // 0122, Pantimos
-  0 | BASIC_MONSTER, // 0123, Sichlor
+  0 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_2, // 0123, Sichlor
   0 | BASIC_MONSTER, // 0124, Rossana
   0 | BASIC_MONSTER, // 0125, Elektek
-  0 | BASIC_MONSTER, // 0126, Magmar
-  0 | BASIC_MONSTER, // 0127, Pinsir
-  0 | BASIC_MONSTER, // 0128, Tauros
-  130 | BASIC_MONSTER, // 0129, Karpador
+  0 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_2, // 0126, Magmar
+  0 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_2, // 0127, Pinsir
+  0 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_2, // 0128, Tauros
+  130 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_1, // 0129, Karpador
   0, // 0130, Garados
   0 | BASIC_MONSTER, // 0131, Lapras
   0 | BASIC_MONSTER, // 0132, Ditto
@@ -941,8 +970,8 @@ const uint16_t monsterEvolvesTo[] = {
   0 | BASIC_MONSTER, // 0144, Arktos
   0 | BASIC_MONSTER, // 0145, Zapdos
   0 | BASIC_MONSTER, // 0146, Lavados
-  148 | BASIC_MONSTER, // 0147, Dratini
-  149, // 0148, Dragonir
+  148 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_3, // 0147, Dratini
+  149 | SAFARI_MONSTER_RARITY_3, // 0148, Dragonir
   0, // 0149, Dragoran
   0 | BASIC_MONSTER, // 0150, Mewtu
   0 | BASIC_MONSTER, // 0151, Mew
@@ -957,11 +986,11 @@ const uint16_t monsterEvolvesTo[] = {
   0, // 0160, Impergator
   0, // 0161, Wiesor
   0, // 0162, Wiesenior
-  0, // 0163, Hoothoot
+  164 | BASIC_MONSTER |  SAFARI_MONSTER_RARITY_3, // 0163, Hoothoot
   0, // 0164, Noctuh
-  0, // 0165, Ledyba
+  166 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_2, // 0165, Ledyba
   0, // 0166, Ledian
-  0, // 0167, Webarak
+  168 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_1, // 0167, Webarak
   0, // 0168, Ariados
   0, // 0169, Iksbat
   0, // 0170, Lampi
@@ -971,71 +1000,71 @@ const uint16_t monsterEvolvesTo[] = {
   0, // 0174, Fluffeluff
   0, // 0175, Togepi
   0, // 0176, Togetic
-  0, // 0177, Natu
+  178 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_2, // 0177, Natu
   0, // 0178, Xatu
-  0, // 0179, Voltilamm
-  0, // 0180, Waaty
+  180 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_1, // 0179, Voltilamm
+  181, // 0180, Waaty
   0, // 0181, Ampharos
   0, // 0182, Blubella
-  0, // 0183, Marill
+  184 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_2, // 0183, Marill
   0, // 0184, Azumarill
   0, // 0185, Mogelbaum
   0, // 0186, Quaxo
   0, // 0187, Hoppspross
   0, // 0188, Hubelupf
   0, // 0189, Papungha
-  0, // 0190, Griffel
-  0, // 0191, Sonnkern
+  0 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_1, // 0190, Griffel
+  192 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_1, // 0191, Sonnkern
   0, // 0192, Sonnflora
   0, // 0193, Yanma
-  0, // 0194, Felino
-  0, // 0195, Morlord
+  195 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_2, // 0194, Felino
+  0 | SAFARI_MONSTER_RARITY_3, // 0195, Morlord
   0, // 0196, Psiana
   0, // 0197, Nachtara
   0, // 0198, Kramurx
   0, // 0199, Laschoking
   0, // 0200, Traunfugil
   0, // 0201, Icognito
-  0, // 0202, Woingenau
-  0, // 0203, Girafarig
-  0, // 0204, Tannza
+  0 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_3, // 0202, Woingenau
+  0 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_2, // 0203, Girafarig
+  205 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_3, // 0204, Tannza
   0, // 0205, Forstellka
   0, // 0206, Dummisel
-  0, // 0207, Skorgla
+  0 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_1, // 0207, Skorgla
   0, // 0208, Stahlos
-  0, // 0209, Snubbull
+  210 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_2, // 0209, Snubbull
   0, // 0210, Granbull
   0, // 0211, Baldorfish
   0, // 0212, Scherox
-  0, // 0213, Pottrott
-  0, // 0214, Skaraborn
+  0 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_1, // 0213, Pottrott
+  0 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_2, // 0214, Skaraborn
   0, // 0215, Sniebel
-  0, // 0216, Teddiursa
+  217 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_1, // 0216, Teddiursa
   0, // 0217, Ursaring
   0, // 0218, Schneckmag
   0, // 0219, Magcargo
   0, // 0220, Quiekel
   0, // 0221, Keifel
   0, // 0222, Corasonn
-  0, // 0223, Remoraid
-  0, // 0224, Octillery
+  0 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_2, // 0223, Remoraid
+  0 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_3, // 0224, Octillery
   0, // 0225, Botogel
   0, // 0226, Mantax
   0, // 0227, Panzaeron
-  0, // 0228, Hunduster
+  229 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_3, // 0228, Hunduster
   0, // 0229, Hundemon
   0, // 0230, Seedraking
-  0, // 0231, Phanpy
+  0 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_1, // 0231, Phanpy
   0, // 0232, Donphan
   0, // 0233, Porygon2
-  0, // 0234, Damhirplex
+  0 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_3, // 0234, Damhirplex
   0, // 0235, Farbeagle
   0, // 0236, Rabauz
   0, // 0237, Kapoera
   0, // 0238, Kussilla
   0, // 0239, Elekid
   0, // 0240, Magby
-  0, // 0241, Miltank
+  0 | BASIC_MONSTER | SAFARI_MONSTER_RARITY_3, // 0241, Miltank
   0, // 0242, Heiteira
   0, // 0243, Raikou
   0, // 0244, Entei

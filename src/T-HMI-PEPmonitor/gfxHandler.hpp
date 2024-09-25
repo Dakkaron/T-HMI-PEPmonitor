@@ -22,7 +22,7 @@ void loadBmp(DISPLAY_T* display, String filename);
 void loadBmp(DISPLAY_T* display, String filename, uint8_t flipped);
 void loadBmpAnim(DISPLAY_T** display, String filename, uint8_t animFrames);
 void loadBmpAnim(DISPLAY_T** display, String filename, uint8_t animFrames, uint8_t flipped);
-void drawProgressBar(DISPLAY_T* display, uint16_t progress, int16_t x, int16_t y, int16_t w, int16_t h);
-void drawProgressBar(DISPLAY_T* display, uint16_t val, uint16_t maxVal, int16_t x, int16_t y, int16_t w, int16_t h);
+void drawProgressBar(DISPLAY_T* display, uint16_t progress, uint16_t greenOffset, int16_t x, int16_t y, int16_t w, int16_t h);
+void drawProgressBar(DISPLAY_T* display, uint16_t val, uint16_t maxVal, uint16_t greenOffset, int16_t x, int16_t y, int16_t w, int16_t h);
 
 #endif /*__GFXHANDLER_H__*/

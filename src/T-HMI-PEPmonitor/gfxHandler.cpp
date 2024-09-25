@@ -258,14 +258,14 @@ void drawBmp(String filename, int16_t x, int16_t y) {
 }
 
 
-void drawProgressBarCommon(DISPLAY_T* display, uint16_t percent, int16_t x, int16_t y, int16_t w, int16_t h) {
+void drawProgressBarCommon(DISPLAY_T* display, uint16_t percent, uint16_t greenOffset, int16_t x, int16_t y, int16_t w, int16_t h) {
   display->drawRect(x, y, w, h, TFT_WHITE);
 
   uint16_t fillWidth = (w * percent) / 100;
 
   uint16_t color;
   uint16_t percentOffset = abs(100-percent);
-  if (percentOffset < 10) {
+  if (percentOffset < greenOffset) {
     color = TFT_GREEN;
   } else if (percentOffset < 25) {
     color = TFT_YELLOW;
@@ -277,8 +277,8 @@ void drawProgressBarCommon(DISPLAY_T* display, uint16_t percent, int16_t x, int1
   display->fillRect(x+1, y+1, fillWidth-2, h-2, color);
 }
 
-void drawProgressBar(DISPLAY_T* display, uint16_t percent, int16_t x, int16_t y, int16_t w, int16_t h) {
-  drawProgressBarCommon(display, percent, x, y, w, h);
+void drawProgressBar(DISPLAY_T* display, uint16_t percent, uint16_t greenOffset, int16_t x, int16_t y, int16_t w, int16_t h) {
+  drawProgressBarCommon(display, percent, greenOffset, x, y, w, h);
   display->setTextSize(1);
   display->setTextColor(TFT_WHITE);
   display->setCursor(x, y - 11);
@@ -286,9 +286,10 @@ void drawProgressBar(DISPLAY_T* display, uint16_t percent, int16_t x, int16_t y,
   display->print('%');
 }
 
-void drawProgressBar(DISPLAY_T* display, uint16_t val, uint16_t maxVal, int16_t x, int16_t y, int16_t w, int16_t h) {
+void drawProgressBar(DISPLAY_T* display, uint16_t val, uint16_t maxVal, uint16_t greenOffset, int16_t x, int16_t y, int16_t w, int16_t h) {
   uint16_t percent = (val * 100) / _max(1, maxVal);
-  drawProgressBarCommon(display, percent, x, y, w, h);
+  greenOffset = (greenOffset * 100) /_max(1, maxVal);
+  drawProgressBarCommon(display, percent, greenOffset, x, y, w, h);
   display->setTextSize(1);
   display->setTextColor(TFT_WHITE);
   display->setCursor(x, y - 11);

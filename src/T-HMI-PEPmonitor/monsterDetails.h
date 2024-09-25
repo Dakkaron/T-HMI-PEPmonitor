@@ -4,6 +4,7 @@
 #include <Arduino.h>
 
 #define TOTAL_MONSTER_NUMBER 151
+#define MAX_MONSTER_NUMBER 400 // The maximum number of monsters that the save game will ever be compatible. Should not be changed.
 
 #define ATTACK_ID_EMBER 1
 #define ATTACK_ID_SEED 2
@@ -28,9 +29,13 @@
 #define ATTACK_ID_BITE 21
 
 #define BASIC_MONSTER 0x8000
+#define SAFARI_MONSTER_RARITY_1 0x2000 // Common
+#define SAFARI_MONSTER_RARITY_2 0x4000
+#define SAFARI_MONSTER_RARITY_3 0x6000 // Rare
 
 uint16_t getMonsterEvolvesTo(uint16_t monsterId);
 bool isBasicMonster(uint16_t monsterId);
+uint16_t getSafariMonster(uint8_t rarity); //rarity can between 1-4
 
 extern const String pokemonName[387];
 extern const String monsterImagePath[387];
