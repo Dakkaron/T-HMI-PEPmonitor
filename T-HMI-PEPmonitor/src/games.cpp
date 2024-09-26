@@ -49,7 +49,10 @@ TFT_eSprite attackSprites[2][ATTACK_SPRITE_NUMBER] {
    TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft)},
 };
 
-uint16_t getRandomCaughtMonster() {
+void loadPlayerMonsterIdFromSD();
+void savePlayerMonsterIdToSD();
+
+uint16_t getRandomPreviouslyCaughtMonster() {
   uint16_t monsterId = 0;
   while (true) {
     monsterId = random(0, MAX_MONSTER_NUMBER);
@@ -272,16 +275,35 @@ void drawCombat(DISPLAY_T* display, BlowData* blowData, uint8_t numberOfAttacks,
 
   uint8_t playerAnimSprite = isCatch ? _min(3, animTime / 100) : 0;
 
-  if (drawCombattantSprites & DRAW_PLAYER_ALIVE || (drawCombattantSprites & DRAW_PLAYER_DODGE && animTime >= 2000)) {
+  uint16_t hpPerFail = 100 / 10;
+  uint16_t hp = 100 - hpPerFail * blowData->fails;
+  display->setCursor(0, 30);
+  display->print(animTime);
+  if (hp<=0 && (animTime >= 2000 || blowData->lastBlowStatus == NEW_BLOW)) {
+      hp = 100;
+      blowData->fails = 0;
+      playerMonsterId = getRandomPreviouslyCaughtMonster();
+      TFT_eSprite* playerSpriteRefs[] = { // Reload player anim at the beginning of the round
+        &playerSprite[0],
+        &playerSprite[1]
+      };
+      loadBmpAnim(playerSpriteRefs, monsterImagePath[playerMonsterId] + "/back.bmp", 1, 0);
+      loadAttackSprites(monsterAttackId[playerMonsterId], 0);
+      savePlayerMonsterIdToSD();
+  }
+  if (hp<=0) {
+    int16_t yOffset = _min(150, animTime / 3);
+    playerSprite[playerAnimSprite].pushToSprite(display, 50, 100 + yOffset);
+  } else if (drawCombattantSprites & DRAW_PLAYER_ALIVE || (drawCombattantSprites & DRAW_PLAYER_DODGE && animTime >= 2000)) {
     playerSprite[playerAnimSprite].pushToSprite(display, 50, 100);
   } else if (drawCombattantSprites & DRAW_PLAYER_DODGE) {
     int16_t xOffset = _min(50, animTime / 10);
     playerSprite[playerAnimSprite].pushToSprite(display, 50 - xOffset, 100);
   }
-  uint16_t hpPerFail = 100 / 10;
   if (blowData->isLongBlows) {
     drawProgressBar(display, _max(1, 100 - hpPerFail * blowData->fails), 100, 10, 158, 100, 10);
   }
+
   /*if ((drawCombattantSprites & DRAW_PLAYER_DEAD) || (altKillBitmap == NULL && drawCombattantSprites & DRAW_PLAYER_ALTERNATE)) {
     drawBitmap(display, 1, GAME_DRAW_Y, explosion_bmp);
   }
@@ -317,7 +339,7 @@ AttackFunctionType getAttackFunction(uint16_t monsterId) {
   return attackDataArray[monsterAttackId[monsterId]].attackFunction;
 }
 
-inline void loadPlayerMonsterIdFromSD() {
+void loadPlayerMonsterIdFromSD() {
   uint8_t read = 0;
   //read = readIntFromFile("/playerMonsterId.txt");
   read = prefs.getInt("playerMonsterId", 1);
@@ -328,7 +350,7 @@ inline void loadPlayerMonsterIdFromSD() {
   Serial.println(playerMonsterId);
 }
 
-inline void savePlayerMonsterIdToSD() {
+void savePlayerMonsterIdToSD() {
   Serial.print(F("Saving monster id: "));
   Serial.println(playerMonsterId);
   if (monsterLevels[playerMonsterId] == 0) {
