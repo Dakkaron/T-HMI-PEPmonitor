@@ -40,7 +40,7 @@ uint16_t getSafariMonster(uint8_t targetRarity) {
   return id;
 }
 
-const String pokemonName[] = {
+const String monsterName[] = {
   "Missingno", //0000
   "Bisasam", //0001
   "Bisaknosp", //0002

@@ -37,7 +37,7 @@ uint16_t getMonsterEvolvesTo(uint16_t monsterId);
 bool isBasicMonster(uint16_t monsterId);
 uint16_t getSafariMonster(uint8_t rarity); //rarity can between 1-4
 
-extern const String pokemonName[387];
+extern const String monsterName[387];
 extern const String monsterImagePath[387];
 extern const uint16_t monsterEvolvesTo[387];
 extern const uint8_t monsterAttackId[387];

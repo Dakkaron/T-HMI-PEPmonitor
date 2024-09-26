@@ -37,6 +37,7 @@ const AttackData attackDataArray[] = {
 TFT_eSprite playerSprite[] = {TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft)};
 TFT_eSprite enemySprite[] = {TFT_eSprite(&tft), TFT_eSprite(&tft)};
 TFT_eSprite safariBushSprite[] {TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft)};
+TFT_eSprite ballCaughtIndicator = TFT_eSprite(&tft);
 uint16_t playerMonsterId = 0;
 uint16_t enemyMonsterId = 0;
 uint8_t monsterLevels[MAX_MONSTER_NUMBER];
@@ -293,6 +294,12 @@ void drawCombat(DISPLAY_T* display, BlowData* blowData, uint8_t numberOfAttacks,
     int16_t xOffset = _min(50, animTime / 10);
     enemySprite[(blowData->ms / 500) % 2].pushToSprite(display, 200 + xOffset, 50);
   }
+  if (monsterLevels[enemyMonsterId] > 0) {
+    ballCaughtIndicator.pushToSprite(display, 200, 50);
+  }
+  display->setCursor(200, 33);
+  display->setTextSize(2);
+  display->print(monsterName[enemyMonsterId]);
   uint16_t hpPerCycle = 100 / (blowData->isLongBlows ? LONG_BLOW_NUMBER_MAX : SHORT_BLOW_NUMBER_MAX);
   drawProgressBar(display, hpPerCycle*2*(((blowData->isLongBlows ? LONG_BLOW_NUMBER_MAX : SHORT_BLOW_NUMBER_MAX)-blowData->blowCount + 1)/2), 100, 200, 20, 100, 10);
   /*if (drawCombattantSprites & DRAW_ENEMY_DEAD || (altKillBitmap == NULL && drawCombattantSprites & DRAW_ENEMY_ALTERNATE)) {
@@ -335,8 +342,6 @@ inline void savePlayerMonsterIdToSD() {
 int8_t lastCycleMonsterSelected = -1;
 void drawGameLongBlows_MonsterCombat(DISPLAY_T* display, BlowData* blowData) {
   if (playerMonsterId == 0) {
-    playerMonsterId = 33;
-    savePlayerMonsterIdToSD();
     loadPlayerMonsterIdFromSD();
   }
   if (enemyMonsterId == 0 || blowData->cycleNumber > lastCycleMonsterSelected) {
@@ -533,6 +538,9 @@ void initGames() {
     safariBushSprite[i].setColorDepth(16);
   }
   loadBushes(1);
+  ballCaughtIndicator.createSprite(7,7);
+  ballCaughtIndicator.setColorDepth(16);
+  loadBmp(&ballCaughtIndicator, "/gfx/interface/ball_caught_indicator.bmp");
 }
 
 void drawShortBlowGame(uint8_t index, DISPLAY_T* display, BlowData* blowData) {
