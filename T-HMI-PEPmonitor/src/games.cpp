@@ -277,8 +277,6 @@ void drawCombat(DISPLAY_T* display, BlowData* blowData, uint8_t numberOfAttacks,
 
   uint16_t hpPerFail = 100 / 10;
   uint16_t hp = 100 - hpPerFail * blowData->fails;
-  display->setCursor(0, 30);
-  display->print(animTime);
   if (hp<=0 && (animTime >= 2000 || blowData->lastBlowStatus == NEW_BLOW)) {
       hp = 100;
       blowData->fails = 0;
