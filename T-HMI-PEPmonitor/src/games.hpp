@@ -40,14 +40,4 @@ void drawTrampolineGame(uint8_t index, DISPLAY_T* display, JumpData* jumpData);
 
 #define TRAINER_ANIM_PATH "/gfx/trainer/brendan.bmp"
 
-#define ATTACK_SPRITE_NUMBER 16
-
-typedef uint8_t (*AttackFunctionType)(DISPLAY_T* display, BlowData* blowData, bool playerIsAttacking, int32_t animTime, bool draw);
-
-struct AttackData {
-  uint8_t animFrames;
-  String gfxPath;
-  AttackFunctionType attackFunction;
-};
-
 #endif /* __GAMES_H__*/

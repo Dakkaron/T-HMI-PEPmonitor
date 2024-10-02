@@ -1,5 +1,6 @@
 #ifndef __CONSTANTS_H__
 #define __CONSTANTS_H__
+#include <Arduino.h>
 
 #define LAST_BLOW_SUCCEEDED 0B00000001
 #define LAST_BLOW_FAILED    0B00000010
@@ -30,10 +31,16 @@
 #define SIMULATE_BLOWS_SHORT_BLOW_DURATION 1000
 #define SIMULATE_BLOWS_PAUSE_DURATION 5000
 
-#define WIN_SCREEN_COUNT 23
-
 #define SENSOR_MODE_PEPS 1
 #define SENSOR_MODE_TRAMPOLINE 2
+
+struct SystemConfig {
+  uint16_t longBlowGameCount = 1;
+  uint16_t shortBlowGameCount = 1;
+  uint16_t jumpGameCount = 1;
+  bool pepEnalbed = true;
+  bool trampolineEnabled = true;
+};
 
 struct BlowData {
   bool currentlyBlowing = false;

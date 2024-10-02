@@ -1,47 +1,13 @@
 #include "games.hpp"
 
-uint8_t attackFunction_confusion(DISPLAY_T* display, BlowData* blowData, bool playerIsAttacking, int32_t animTime, bool draw);
-uint8_t attackFunction_ember(DISPLAY_T* display, BlowData* blowData, bool playerIsAttacking, int32_t animTime, bool draw);
-uint8_t attackFunction_throwFastAnim(DISPLAY_T* display, BlowData* blowData, bool playerIsAttacking, int32_t animTime, bool draw);
-uint8_t attackFunction_scratch(DISPLAY_T* display, BlowData* blowData, bool playerIsAttacking, int32_t animTime, bool draw);
-uint8_t attackFunction_lightning(DISPLAY_T* display, BlowData* blowData, bool playerIsAttacking, int32_t animTime, bool draw);
-uint8_t attackFunction_catch(DISPLAY_T* display, BlowData* blowData, bool playerIsAttacking, int32_t animTime, bool draw);
-uint8_t attackFunction_rareCandy(DISPLAY_T* display, BlowData* blowData, bool playerIsAttacking, int32_t animTime, bool draw);
-
-const AttackData attackDataArray[] = {
-  {0, "", NULL}, // no attack
-  {8, "/gfx/attacks/fire.bmp", attackFunction_ember}, // ATTACK_ID_EMBER
-  {3, "/gfx/attacks/seed.bmp", attackFunction_ember}, // ATTACK_ID_SEED
-  {5, "/gfx/attacks/water_droplet_2.bmp", attackFunction_ember}, // ATTACK_ID_WATER
-  {1, "/gfx/attacks/web.bmp", attackFunction_ember}, // ATTACK_ID_STRINGSHOT
-  {0, "", attackFunction_confusion}, // ATTACK_ID_CONFUSION
-  {3, "/gfx/attacks/ball.bmp", attackFunction_catch}, // ATTACK_ID_BALL
-  {1, "/gfx/attacks/rare_candy.bmp", attackFunction_rareCandy}, // ATTACK_ID_RARE_CANDY
-  {1, "/gfx/attacks/horn_hit.bmp", attackFunction_ember}, //ATTACK_ID_POISONSTING
-  {3, "/gfx/attacks/air_slash.bmp", attackFunction_throwFastAnim}, //ATTACK_ID_AIR_SLASH
-  {5, "/gfx/attacks/scratch.bmp", attackFunction_scratch}, //ATTACK_ID_SCRATCH
-  {5, "/gfx/attacks/lightning.bmp", attackFunction_lightning}, //ATTACK_ID_LIGHTNING
-  {5, "/gfx/attacks/leer.bmp", attackFunction_lightning}, //ATTACK_ID_LEER
-  {5, "/gfx/attacks/music_notes_2.bmp", attackFunction_lightning}, //ATTACK_ID_SING
-  {5, "/gfx/attacks/rocks.bmp", attackFunction_lightning}, //ATTACK_ID_ROCK_THROW
-  {8, "/gfx/attacks/fire.bmp", attackFunction_ember}, // ATTACK_ID_DRAGON_RAGE TODO: currelty just a copy of ember, make it a separate thing
-  {5, "/gfx/attacks/scratch.bmp", attackFunction_scratch}, // ATTACK_ID_KARATE_CHOP TODO: currelty just a copy of scratch, make it a separate thing
-  {3, "/gfx/attacks/air_slash.bmp", attackFunction_throwFastAnim}, //ATTACK_ID_ICE_BEAM TODO: currelty just a copy of air slash, make it a separate thing
-  {5, "/gfx/attacks/scratch.bmp", attackFunction_scratch}, // ATTACK_ID_SAND_TOMB TODO: currelty just a copy of scratch, make it a separate thing
-  {0, "", attackFunction_confusion}, // ATTACK_ID_SHADOW_BALL TODO: currelty just a copy of cpnfusion, make it a separate thing
-  {5, "/gfx/attacks/scratch.bmp", attackFunction_scratch}, // ATTACK_ID_METAL_CLAW TODO: currelty just a copy of scratch, make it a separate thing
-  {5, "/gfx/attacks/scratch.bmp", attackFunction_scratch}, // ATTACK_ID_BITE TODO: currelty just a copy of scratch, make it a separate thing
-};
-
-
 TFT_eSprite playerSprite[] = {TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft)};
 TFT_eSprite enemySprite[] = {TFT_eSprite(&tft), TFT_eSprite(&tft)};
 TFT_eSprite safariBushSprite[] {TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft)};
 TFT_eSprite ballCaughtIndicator = TFT_eSprite(&tft);
-uint16_t playerMonsterId = 0;
-uint16_t enemyMonsterId = 0;
+MonsterData playerMonsterData;
+MonsterData enemyMonsterData;
 uint8_t monsterLevels[MAX_MONSTER_NUMBER];
-int16_t loadedAttacks[2] = {-1,-1}; //-1 == no attack loaded
+String loadedAttacks[2] = {"",""}; //-1 == no attack loaded
 TFT_eSprite attackSprites[2][ATTACK_SPRITE_NUMBER] {
   {TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft),
    TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft)},
@@ -51,6 +17,7 @@ TFT_eSprite attackSprites[2][ATTACK_SPRITE_NUMBER] {
 
 void loadPlayerMonsterIdFromSD();
 void savePlayerMonsterIdToSD();
+
 
 uint16_t getRandomPreviouslyCaughtMonster() {
   uint16_t monsterId = 0;
@@ -149,7 +116,7 @@ uint8_t attackFunction_ember(DISPLAY_T* display, BlowData* blowData, bool player
   if (animTime >= 2000 || blowData->lastBlowStatus == NEW_BLOW) {
     return DRAW_PLAYER_ALIVE | DRAW_ENEMY_ALIVE;
   }
-  uint8_t animCount = attackDataArray[monsterAttackId[playerIsAttacking ? playerMonsterId : enemyMonsterId]].animFrames;
+  uint8_t animCount = playerIsAttacking ? playerMonsterData.attack.animFrames : enemyMonsterData.attack.animFrames;
   uint16_t msPerAnimFrame = 2000 / animCount;
   uint8_t animFrame = animCount - 1 - _min(animCount - 1, animTime / msPerAnimFrame);
   if (playerIsAttacking) {
@@ -177,7 +144,7 @@ uint8_t attackFunction_throwFastAnim(DISPLAY_T* display, BlowData* blowData, boo
   if (animTime >= 2000 || blowData->lastBlowStatus == NEW_BLOW) {
     return DRAW_PLAYER_ALIVE | DRAW_ENEMY_ALIVE;
   }
-  uint8_t animCount = attackDataArray[monsterAttackId[playerIsAttacking ? playerMonsterId : enemyMonsterId]].animFrames;
+  uint8_t animCount = playerIsAttacking ? playerMonsterData.attack.animFrames : enemyMonsterData.attack.animFrames;
   uint8_t animFrame = (animTime / 100) % animCount;
   if (playerIsAttacking) {
     if (animTime<1000) {
@@ -204,7 +171,7 @@ uint8_t attackFunction_scratch(DISPLAY_T* display, BlowData* blowData, bool play
   if (animTime >= 2000 || blowData->lastBlowStatus == NEW_BLOW) {
     return DRAW_PLAYER_ALIVE | DRAW_ENEMY_ALIVE;
   }
-  uint8_t animCount = attackDataArray[monsterAttackId[playerIsAttacking ? playerMonsterId : enemyMonsterId]].animFrames;
+  uint8_t animCount = playerIsAttacking ? playerMonsterData.attack.animFrames : enemyMonsterData.attack.animFrames;
   uint8_t animFrame = (animTime / 100) % animCount;
   if (playerIsAttacking) {
     attackSprites[!playerIsAttacking][animFrame].pushToSprite(display, 200+6+((animTime/250)% 3)*10, 50+32, 0x0000);
@@ -221,7 +188,7 @@ uint8_t attackFunction_lightning(DISPLAY_T* display, BlowData* blowData, bool pl
   if (animTime >= 2000 || blowData->lastBlowStatus == NEW_BLOW) {
     return DRAW_PLAYER_ALIVE | DRAW_ENEMY_ALIVE;
   }
-  uint8_t animCount = attackDataArray[monsterAttackId[playerIsAttacking ? playerMonsterId : enemyMonsterId]].animFrames;
+  uint8_t animCount = playerIsAttacking ? playerMonsterData.attack.animFrames : enemyMonsterData.attack.animFrames;
   uint8_t animFrame = (animTime / 100) % animCount;
   if (playerIsAttacking) {
     attackSprites[!playerIsAttacking][animFrame].pushToSprite(display, 200+16, 50+16, 0x0000);
@@ -231,20 +198,20 @@ uint8_t attackFunction_lightning(DISPLAY_T* display, BlowData* blowData, bool pl
   return 0; // On draw==true, the return value is ignored;
 }
 
-void loadAttackSprites(uint16_t attackId, uint8_t slot) {
+void loadAttackSprites(AttackData* attack, uint8_t slot) {
   Serial.print("Loading attack ");
-  Serial.print(attackId);
+  Serial.print(attack->identifier);
   Serial.print(" into slot ");
   Serial.println(slot);
-  if (loadedAttacks[slot] == attackId) {
+  if (loadedAttacks[slot] == attack->identifier) {
     Serial.print("Attack ");
-    Serial.print(attackId);
+    Serial.print(attack->identifier);
     Serial.print(" already loaded into slot ");
     Serial.print(slot);
     Serial.println(".");
     return;
   }
-  loadedAttacks[slot] = attackId;
+  loadedAttacks[slot] = attack->identifier;
   TFT_eSprite* attackSpriteRefs[] = {
     &attackSprites[slot][0],
     &attackSprites[slot][1],
@@ -255,7 +222,13 @@ void loadAttackSprites(uint16_t attackId, uint8_t slot) {
     &attackSprites[slot][6],
     &attackSprites[slot][7],
   };
-  loadBmpAnim(attackSpriteRefs, attackDataArray[attackId].gfxPath, attackDataArray[attackId].animFrames, slot==1 ? FLIPPED_H : 0);
+  loadBmpAnim(attackSpriteRefs, attack->imagePath, attack->animFrames, slot==1 ? FLIPPED_H : 0);
+}
+
+void loadAttackSprites(String attackId, uint8_t slot) {
+  AttackData attackData;
+  loadAttackData(&attackData, attackId);
+  loadAttackSprites(&attackData, slot);
 }
 
 void drawCombat(DISPLAY_T* display, BlowData* blowData, uint8_t numberOfAttacks, AttackFunctionType attackFunctions[], bool isCatch) {
@@ -280,13 +253,13 @@ void drawCombat(DISPLAY_T* display, BlowData* blowData, uint8_t numberOfAttacks,
   if (hp<=0 && (animTime >= 2000 || blowData->lastBlowStatus == NEW_BLOW)) {
       hp = 100;
       blowData->fails = 0;
-      playerMonsterId = getRandomPreviouslyCaughtMonster();
+      loadMonsterData(&playerMonsterData, getRandomPreviouslyCaughtMonster());
       TFT_eSprite* playerSpriteRefs[] = { // Reload player anim at the beginning of the round
         &playerSprite[0],
         &playerSprite[1]
       };
-      loadBmpAnim(playerSpriteRefs, monsterImagePath[playerMonsterId] + "/back.bmp", 1, 0);
-      loadAttackSprites(monsterAttackId[playerMonsterId], 0);
+      loadBmpAnim(playerSpriteRefs, playerMonsterData.imagePath, 1, 0);
+      loadAttackSprites(&(playerMonsterData.attack), 0);
       savePlayerMonsterIdToSD();
   }
   if (hp<=0) {
@@ -314,12 +287,12 @@ void drawCombat(DISPLAY_T* display, BlowData* blowData, uint8_t numberOfAttacks,
     int16_t xOffset = _min(50, animTime / 10);
     enemySprite[(blowData->ms / 500) % 2].pushToSprite(display, 200 + xOffset, 50);
   }
-  if (monsterLevels[enemyMonsterId] > 0) {
+  if (monsterLevels[enemyMonsterData.id] > 0) {
     ballCaughtIndicator.pushToSprite(display, 200, 50);
   }
   display->setCursor(200, 33);
   display->setTextSize(2);
-  display->print(monsterName[enemyMonsterId]);
+  display->print(enemyMonsterData.name);
   uint16_t hpPerCycle = 100 / (blowData->isLongBlows ? LONG_BLOW_NUMBER_MAX : SHORT_BLOW_NUMBER_MAX);
   drawProgressBar(display, hpPerCycle*2*(((blowData->isLongBlows ? LONG_BLOW_NUMBER_MAX : SHORT_BLOW_NUMBER_MAX)-blowData->blowCount + 1)/2), 100, 200, 20, 100, 10);
   /*if (drawCombattantSprites & DRAW_ENEMY_DEAD || (altKillBitmap == NULL && drawCombattantSprites & DRAW_ENEMY_ALTERNATE)) {
@@ -333,59 +306,53 @@ void drawCombat(DISPLAY_T* display, BlowData* blowData, uint8_t numberOfAttacks,
   }
 }
 
-AttackFunctionType getAttackFunction(uint16_t monsterId) {
-  return attackDataArray[monsterAttackId[monsterId]].attackFunction;
-}
-
 void loadPlayerMonsterIdFromSD() {
   uint8_t read = 0;
-  //read = readIntFromFile("/playerMonsterId.txt");
   read = prefs.getInt("playerMonsterId", 1);
-  Serial.print(F("Loaded monster id: "));
+  Serial.print(F("Loaded monster ID: "));
   Serial.println(read);
-  playerMonsterId = max(1, read % (TOTAL_MONSTER_NUMBER+1));
+  loadMonsterData(&playerMonsterData, (uint16_t)max(1, read % (TOTAL_MONSTER_NUMBER+1)));
   Serial.print(F("Corrected to: "));
-  Serial.println(playerMonsterId);
+  Serial.println(playerMonsterData.id);
 }
 
 void savePlayerMonsterIdToSD() {
   Serial.print(F("Saving monster id: "));
-  Serial.println(playerMonsterId);
-  if (monsterLevels[playerMonsterId] == 0) {
-    monsterLevels[playerMonsterId] = 1;
+  Serial.println(playerMonsterData.id);
+  if (monsterLevels[playerMonsterData.id] == 0) {
+    monsterLevels[playerMonsterData.id] = 1;
+    prefs.putBytes("levels", monsterLevels, MAX_MONSTER_NUMBER);
   }
-  prefs.putInt("playerMonsterId", playerMonsterId);
-  prefs.putBytes("levels", monsterLevels, MAX_MONSTER_NUMBER);
-  //writeIntToFile("/playerMonsterId.txt", playerMonsterId);
+  prefs.putInt("playerMonsterId", playerMonsterData.id);
 }
 
 int8_t lastCycleMonsterSelected = -1;
 void drawGameLongBlows_MonsterCombat(DISPLAY_T* display, BlowData* blowData) {
-  if (playerMonsterId == 0) {
+  if (playerMonsterData.id == 0) {
     loadPlayerMonsterIdFromSD();
   }
-  if (enemyMonsterId == 0 || blowData->cycleNumber > lastCycleMonsterSelected) {
+  if (enemyMonsterData.id == 0 || blowData->cycleNumber > lastCycleMonsterSelected) {
     TFT_eSprite* playerSpriteRefs[] = { // Reload player anim at the beginning of the round
       &playerSprite[0],
       &playerSprite[1]
     };
-    loadBmpAnim(playerSpriteRefs, monsterImagePath[playerMonsterId] + "/back.bmp", 1, 0);
-    loadAttackSprites(monsterAttackId[playerMonsterId], 0);
+    loadBmpAnim(playerSpriteRefs, playerMonsterData.imagePath + "/back.bmp", 1, 0);
+    loadAttackSprites(&(playerMonsterData.attack), 0);
 
     lastCycleMonsterSelected = blowData->cycleNumber;
     Serial.print(F("Choosing new enemy: "));
-    enemyMonsterId = random(1, TOTAL_MONSTER_NUMBER + 1);
-    Serial.println(enemyMonsterId);
+    loadMonsterData(&enemyMonsterData, (uint16_t)random(1, TOTAL_MONSTER_NUMBER + 1));
+    Serial.println(enemyMonsterData.id);
     TFT_eSprite* enemySpriteRefs[] = {
       &enemySprite[0],
       &enemySprite[1]
     };
-    loadBmpAnim(enemySpriteRefs, monsterImagePath[enemyMonsterId] + "/anim_front.bmp", 2);
-    loadAttackSprites(monsterAttackId[enemyMonsterId], 1);
+    loadBmpAnim(enemySpriteRefs, enemyMonsterData.imagePath + "/anim_front.bmp", 2);
+    loadAttackSprites(&(enemyMonsterData.attack), 1);
   }
   AttackFunctionType attackFunctions[2];
-  attackFunctions[0] = getAttackFunction(playerMonsterId);
-  attackFunctions[1] = getAttackFunction(enemyMonsterId);
+  attackFunctions[0] = playerMonsterData.attack.attackFunction;
+  attackFunctions[1] = enemyMonsterData.attack.attackFunction;
   drawCombat(display, blowData, 2, attackFunctions, false);
 }
 
@@ -395,15 +362,15 @@ uint16_t playerEvolutionTarget;
 bool catchMonsterModeEvolution = false;
 void drawGameShortBlows_CatchMonster(DISPLAY_T* display, BlowData* blowData) {
   if (blowData->cycleNumber > catchCheckForCycle) {
-    bool enemyCanBeCaught = isBasicMonster(enemyMonsterId);
-    playerEvolutionTarget = getMonsterEvolvesTo(playerMonsterId);
+    bool enemyCanBeCaught = enemyMonsterData.isBasicMonster;
+    playerEvolutionTarget = playerMonsterData.evolvesTo;
     TFT_eSprite* playerSpriteRefs[] = {
       &playerSprite[0],
       &playerSprite[1],
       &playerSprite[2],
       &playerSprite[3],
     };
-    loadBmpAnim(playerSpriteRefs, monsterImagePath[playerMonsterId] + "/anim_front.bmp", 2);
+    loadBmpAnim(playerSpriteRefs, playerMonsterData.imagePath + "/anim_front.bmp", 2);
     if (playerEvolutionTarget != 0 && enemyCanBeCaught) {
       while (true) {
         display->fillSprite(TFT_BLACK);
@@ -432,41 +399,41 @@ void drawGameShortBlows_CatchMonster(DISPLAY_T* display, BlowData* blowData) {
       Serial.println("Defaulting to catch");
       if (!enemyCanBeCaught) {
         Serial.println("Missingno!");
-        enemyMonsterId = 0; //MissingNo easteregg if player cannot evolve and enemy cannot be caught.
+        loadMonsterData(&enemyMonsterData, 0); //MissingNo easteregg if player cannot evolve and enemy cannot be caught.
       }
       catchMonsterModeEvolution = false;
     }
     if (catchMonsterModeEvolution) {
-      loadAttackSprites(ATTACK_ID_RARE_CANDY, 0);
+      loadAttackSprites(ATTACK_IDENTIFIER_RARE_CANDY, 0);
     } else {
-      loadAttackSprites(ATTACK_ID_BALL, 0);
+      loadAttackSprites(ATTACK_IDENTIFIER_CATCH_BALL, 0);
     }
     loadBmpAnim(playerSpriteRefs, TRAINER_ANIM_PATH, 4);
     TFT_eSprite* enemySpriteRefs[] = {
       &enemySprite[0],
       &enemySprite[1]
     };
-    loadBmpAnim(enemySpriteRefs, monsterImagePath[catchMonsterModeEvolution ? playerMonsterId : enemyMonsterId] + "/anim_front.bmp", 2);
+    loadBmpAnim(enemySpriteRefs, (catchMonsterModeEvolution ? playerMonsterData.imagePath : enemyMonsterData.imagePath) + "/anim_front.bmp", 2);
   }
 
   if (catchCheckForBlow && blowData->blowCount == SHORT_BLOW_NUMBER_MAX) {
       catchCheckForBlow = blowData->blowCount;
       if (catchMonsterModeEvolution) {
-        playerMonsterId = playerEvolutionTarget;
+        loadMonsterData(&playerMonsterData, playerEvolutionTarget);
       } else {
-        if (enemyMonsterId==0) {
-          while (!isBasicMonster(enemyMonsterId)) {
-            enemyMonsterId = random(1, TOTAL_MONSTER_NUMBER + 1);
+        if (enemyMonsterData.id==0) {
+          while (!enemyMonsterData.isBasicMonster) {
+            loadMonsterData(&enemyMonsterData, random(1, TOTAL_MONSTER_NUMBER + 1));
           }
         }
-        playerMonsterId = enemyMonsterId;
+        loadMonsterData(&playerMonsterData, enemyMonsterData.id);
       }
       savePlayerMonsterIdToSD();
       TFT_eSprite* playerSpriteRefs[] = {
         &playerSprite[0],
         &playerSprite[1]
       };
-      loadBmpAnim(playerSpriteRefs, monsterImagePath[playerMonsterId] + "/anim_front.bmp", 2);
+      loadBmpAnim(playerSpriteRefs, playerMonsterData.imagePath + "/anim_front.bmp", 2);
     }
 
   if (blowData->blowCount == SHORT_BLOW_NUMBER_MAX) { // If is monster evolution, display evolved monster on last round
@@ -501,7 +468,7 @@ void drawGameTrampoline_safariZone(DISPLAY_T* display, JumpData* jumpData) {
   if (!winLoaded && jumpData->msLeft<0) {
     Serial.println("Win hit");
     winLoaded = true;
-    playerMonsterId = getSafariMonster(_min(3, 1 + (jumpData->jumpCount / 100)));
+    loadMonsterData(&playerMonsterData, getSafariMonster(_min(3, 1 + (jumpData->jumpCount / 100))));
     TFT_eSprite* playerSpriteRefs[] = {
       &playerSprite[0],
       &playerSprite[1],
@@ -509,7 +476,7 @@ void drawGameTrampoline_safariZone(DISPLAY_T* display, JumpData* jumpData) {
       &playerSprite[3],
     };
     savePlayerMonsterIdToSD();
-    loadBmpAnim(playerSpriteRefs, monsterImagePath[playerMonsterId] + "/anim_front.bmp", 2);
+    loadBmpAnim(playerSpriteRefs, playerMonsterData.imagePath + "/anim_front.bmp", 2);
   }
   if (jumpData->msLeft<0) {
     playerSprite[(jumpData->ms/250)%2].pushToSprite(display, SCREEN_WIDTH/2-16, SCREEN_HEIGHT/2-16, 0x0000);

@@ -16,6 +16,7 @@
 #include "pressuresensor.h"
 #include "touchHandler.h"
 #include "wifiHandler.h"
+#include "sdHandler.h"
 
 #include <OneButton.h>
 
@@ -42,6 +43,11 @@ void switchMode() {
   Serial.print("Switching mode to ");
   switch (sensorMode) {
     case SENSOR_MODE_PEPS:
+      if (trampolineConnectionStatus != CONNECTION_OK) {
+        trampolineConnectionStatus = connectToTrampoline();
+        Serial.print("-1> CONN STAT: ");
+        Serial.println(trampolineConnectionStatus);
+      }
       if (trampolineConnectionStatus != CONNECTION_OK) {
         Serial.println("Trampoline failed: no connection");
         Serial.println("Not changing mode");
@@ -108,7 +114,8 @@ void setup() {
   pinMode(PWR_EN_PIN, OUTPUT);
   digitalWrite(PWR_EN_PIN, HIGH);
 
-  Serial.print(F("Initializing peripherals...."));
+  Serial.print("Initializing peripherals....");
+  delay(1000);
 
   // Initialize the HX711
   hx711.begin();
@@ -159,9 +166,7 @@ void setup() {
       Serial.println("SD init success");
       Serial.printf("? Detected SdCard insert: %.2f GB\r\n", SD_MMC.cardSize() / 1024.0 / 1024.0 / 1024.0);
   }
-  trampolineConnectionStatus = connectToTrampoline();
-  Serial.print("-1> CONN STAT: ");
-  Serial.println(trampolineConnectionStatus);
+
   initGames();
   Serial.println(F("done"));
 }
@@ -202,17 +207,17 @@ void drawPEPDisplay() {
   spr.print(batteryVoltage/1000); // Battery voltage
   spr.print(".");
   spr.print(leftPad(String(batteryVoltage%1000), 3, "0"));
-  spr.print("V");
+  spr.println("V");
   lastMs = millis();
   spr.pushSprite(0, 0);
 }
 
-uint16_t winScreenNumber = 0;
+String winScreenPath = "";
 void drawFinished() {
-  if (winScreenNumber == 0) {
-    winScreenNumber = random(1, WIN_SCREEN_COUNT + 1);
+  if (winScreenPath == "") {
+    winScreenPath = getRandomWinScreenPath();
   }
-  drawBmp("/gfx/win/" + String(winScreenNumber) + ".bmp", 0, 0);
+  drawBmp(winScreenPath, 0, 0);
 }
 
 void drawTrampolineDisplay() {
