@@ -44,6 +44,12 @@ void switchMode() {
   switch (sensorMode) {
     case SENSOR_MODE_PEPS:
       if (trampolineConnectionStatus != CONNECTION_OK) {
+        spr.fillSprite(TFT_BLACK);
+        spr.setTextSize(2);
+        spr.setTextColor(TFT_WHITE);
+        spr.setCursor(1, 16);
+        spr.print("Verbinde...");
+        spr.pushSprite(0,0);
         trampolineConnectionStatus = connectToTrampoline();
         Serial.print("-1> CONN STAT: ");
         Serial.println(trampolineConnectionStatus);
