@@ -108,6 +108,35 @@ void setBrightness(uint8_t value) {
   _brightness = value;
 }
 
+void checkFailWithMessage(String message) {
+  if (!message.isEmpty()) {
+    tft.fillScreen(TFT_BLACK);
+    spr.fillSprite(TFT_BLACK);
+    spr.setCursor(1, 16);
+    spr.println("FEHLER:");
+    spr.println(message);
+    spr.pushSprite(0, 0);
+    while (true) {};
+  }
+}
+
+void runGameSelection() {
+  String errorMessage;
+  uint16_t numberOfGames = getNumberOfGames(&errorMessage);
+  checkFailWithMessage(errorMessage);
+  Serial.print("Number of games: ");
+  Serial.println(numberOfGames);
+  if (numberOfGames == 1) {
+    String gamePath = getGamePath(0, &errorMessage);
+    checkFailWithMessage(errorMessage);
+    Serial.print("Game path: ");
+    Serial.println(gamePath);
+    initGames(gamePath);
+  } else {
+    // TODO: Add game selection mechanism
+  }
+}
+
 void setup() {
   pinMode(PWR_ON_PIN, OUTPUT);
   digitalWrite(PWR_ON_PIN, HIGH);
@@ -166,15 +195,16 @@ void setup() {
   SD_MMC.setPins(SD_SCLK_PIN, SD_MOSI_PIN, SD_MISO_PIN);
   bool rlst = SD_MMC.begin("/sdcard", true);
   if (!rlst) {
-      Serial.println("SD init failed");
-      Serial.println("? No detected SdCard");
+    Serial.println("SD init failed");
+    Serial.println("? No detected SdCard");
+    checkFailWithMessage("SD Karte nicht lesbar!");
   } else {
-      Serial.println("SD init success");
-      Serial.printf("? Detected SdCard insert: %.2f GB\r\n", SD_MMC.cardSize() / 1024.0 / 1024.0 / 1024.0);
+    Serial.println("SD init success");
+    Serial.printf("? Detected SdCard insert: %.2f GB\r\n", SD_MMC.cardSize() / 1024.0 / 1024.0 / 1024.0);
   }
-
-  initGames();
   Serial.println(F("done"));
+
+  runGameSelection();
 }
 
 uint32_t readBatteryVoltage() {
@@ -192,13 +222,15 @@ uint32_t lastMs = 0;
 void drawPEPDisplay() {
   spr.fillSprite(TFT_BLACK);
   blowData.ms = millis();
+  String errorMessage;
   if (blowData.isLongBlows) {
-    drawLongBlowGame(blowData.cycleNumber, &spr, &blowData);
+    drawLongBlowGame(blowData.cycleNumber, &spr, &blowData, &errorMessage);
     drawProgressBar(&spr, blowData.currentlyBlowing ? (100 * (blowData.ms - blowData.blowStartMs) / LONG_BLOW_DURATION_MS) : 0, 0, PRESSURE_BAR_X, PRESSURE_BAR_Y+25, PRESSURE_BAR_WIDTH, PRESSURE_BAR_HEIGHT);
   } else {
-    drawShortBlowGame(blowData.cycleNumber, &spr, &blowData);
+    drawShortBlowGame(blowData.cycleNumber, &spr, &blowData, &errorMessage);
     drawProgressBar(&spr, blowData.currentlyBlowing ? (100 * (blowData.ms - blowData.blowStartMs) / SHORT_BLOW_DURATION_DISPLAY_MS) : 0, 0, PRESSURE_BAR_X, PRESSURE_BAR_Y+25, PRESSURE_BAR_WIDTH, PRESSURE_BAR_HEIGHT);
   }
+  checkFailWithMessage(errorMessage);
   
   drawProgressBar(&spr, blowData.pressure, 10, PRESSURE_BAR_X, PRESSURE_BAR_Y, PRESSURE_BAR_WIDTH, PRESSURE_BAR_HEIGHT);
   spr.setCursor(PRESSURE_BAR_X + 20, PRESSURE_BAR_Y - 14);
@@ -221,14 +253,18 @@ void drawPEPDisplay() {
 String winScreenPath = "";
 void drawFinished() {
   if (winScreenPath == "") {
-    winScreenPath = getRandomWinScreenPath();
+    String errorMessage;
+    winScreenPath = getRandomWinScreenPath(&errorMessage);
+    checkFailWithMessage(errorMessage);
   }
   drawBmp(winScreenPath, 0, 0);
 }
 
 void drawTrampolineDisplay() {
   spr.fillSprite(TFT_BLACK);
-  drawTrampolineGame(0, &spr, &jumpData);
+  String errorMessage;
+  drawTrampolineGame(0, &spr, &jumpData, &errorMessage);
+  checkFailWithMessage(errorMessage);
   if (jumpData.msLeft > 0) {
     drawProgressBar(&spr, (100L*(jumpData.totalTime-jumpData.msLeft))/jumpData.totalTime, 0, PRESSURE_BAR_X, PRESSURE_BAR_Y, PRESSURE_BAR_WIDTH, PRESSURE_BAR_HEIGHT);
     spr.setCursor(PRESSURE_BAR_X + 20, PRESSURE_BAR_Y - 14);

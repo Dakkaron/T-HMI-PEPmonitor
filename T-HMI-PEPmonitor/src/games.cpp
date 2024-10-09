@@ -1,5 +1,8 @@
 #include "games.hpp"
 
+String monsterCatcherGamePath;
+String monsterCatcherGameIniPath;
+
 TFT_eSprite playerSprite[] = {TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft)};
 TFT_eSprite enemySprite[] = {TFT_eSprite(&tft), TFT_eSprite(&tft)};
 TFT_eSprite safariBushSprite[] {TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft)};
@@ -15,8 +18,8 @@ TFT_eSprite attackSprites[2][ATTACK_SPRITE_NUMBER] {
    TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft)},
 };
 
-void loadPlayerMonsterIdFromSD();
-void savePlayerMonsterIdToSD();
+void loadPlayerMonsterId(String* errorMessage);
+void savePlayerMonsterId();
 
 
 uint16_t getRandomPreviouslyCaughtMonster() {
@@ -116,8 +119,8 @@ uint8_t attackFunction_ember(DISPLAY_T* display, BlowData* blowData, bool player
   if (animTime >= 2000 || blowData->lastBlowStatus == NEW_BLOW) {
     return DRAW_PLAYER_ALIVE | DRAW_ENEMY_ALIVE;
   }
-  uint8_t animCount = playerIsAttacking ? playerMonsterData.attack.animFrames : enemyMonsterData.attack.animFrames;
-  uint16_t msPerAnimFrame = 2000 / animCount;
+  uint8_t animCount = _max(1, playerIsAttacking ? playerMonsterData.attack.animFrames : enemyMonsterData.attack.animFrames);
+  uint16_t msPerAnimFrame = _max(1, 2000 / animCount);
   uint8_t animFrame = animCount - 1 - _min(animCount - 1, animTime / msPerAnimFrame);
   if (playerIsAttacking) {
     if (animTime<1000) {
@@ -144,7 +147,7 @@ uint8_t attackFunction_throwFastAnim(DISPLAY_T* display, BlowData* blowData, boo
   if (animTime >= 2000 || blowData->lastBlowStatus == NEW_BLOW) {
     return DRAW_PLAYER_ALIVE | DRAW_ENEMY_ALIVE;
   }
-  uint8_t animCount = playerIsAttacking ? playerMonsterData.attack.animFrames : enemyMonsterData.attack.animFrames;
+  uint8_t animCount = _max(1, playerIsAttacking ? playerMonsterData.attack.animFrames : enemyMonsterData.attack.animFrames);
   uint8_t animFrame = (animTime / 100) % animCount;
   if (playerIsAttacking) {
     if (animTime<1000) {
@@ -171,7 +174,7 @@ uint8_t attackFunction_scratch(DISPLAY_T* display, BlowData* blowData, bool play
   if (animTime >= 2000 || blowData->lastBlowStatus == NEW_BLOW) {
     return DRAW_PLAYER_ALIVE | DRAW_ENEMY_ALIVE;
   }
-  uint8_t animCount = playerIsAttacking ? playerMonsterData.attack.animFrames : enemyMonsterData.attack.animFrames;
+  uint8_t animCount = _max(1, playerIsAttacking ? playerMonsterData.attack.animFrames : enemyMonsterData.attack.animFrames);
   uint8_t animFrame = (animTime / 100) % animCount;
   if (playerIsAttacking) {
     attackSprites[!playerIsAttacking][animFrame].pushToSprite(display, 200+6+((animTime/250)% 3)*10, 50+32, 0x0000);
@@ -188,7 +191,7 @@ uint8_t attackFunction_lightning(DISPLAY_T* display, BlowData* blowData, bool pl
   if (animTime >= 2000 || blowData->lastBlowStatus == NEW_BLOW) {
     return DRAW_PLAYER_ALIVE | DRAW_ENEMY_ALIVE;
   }
-  uint8_t animCount = playerIsAttacking ? playerMonsterData.attack.animFrames : enemyMonsterData.attack.animFrames;
+  uint8_t animCount = _max(1, playerIsAttacking ? playerMonsterData.attack.animFrames : enemyMonsterData.attack.animFrames);
   uint8_t animFrame = (animTime / 100) % animCount;
   if (playerIsAttacking) {
     attackSprites[!playerIsAttacking][animFrame].pushToSprite(display, 200+16, 50+16, 0x0000);
@@ -222,16 +225,19 @@ void loadAttackSprites(AttackData* attack, uint8_t slot) {
     &attackSprites[slot][6],
     &attackSprites[slot][7],
   };
-  loadBmpAnim(attackSpriteRefs, attack->imagePath, attack->animFrames, slot==1 ? FLIPPED_H : 0);
+  loadBmpAnim(attackSpriteRefs, monsterCatcherGamePath + attack->imagePath, attack->animFrames, slot==1 ? FLIPPED_H : 0);
 }
 
-void loadAttackSprites(String attackId, uint8_t slot) {
+void loadAttackSprites(String attackId, uint8_t slot, String* errorMessage) {
   AttackData attackData;
-  loadAttackData(&attackData, attackId);
+  loadAttackData(monsterCatcherGameIniPath, &attackData, attackId, errorMessage);
+  if (!errorMessage->isEmpty()) {
+    return;
+  }
   loadAttackSprites(&attackData, slot);
 }
 
-void drawCombat(DISPLAY_T* display, BlowData* blowData, uint8_t numberOfAttacks, AttackFunctionType attackFunctions[], bool isCatch) {
+void drawCombat(DISPLAY_T* display, BlowData* blowData, uint8_t numberOfAttacks, AttackFunctionType attackFunctions[], bool isCatch, String* errorMessage) {
   #ifdef SHOW_REMAINING_SECONDS
     display->print(timeLeft, 10);
   #endif
@@ -253,14 +259,14 @@ void drawCombat(DISPLAY_T* display, BlowData* blowData, uint8_t numberOfAttacks,
   if (hp<=0 && (animTime >= 2000 || blowData->lastBlowStatus == NEW_BLOW)) {
       hp = 100;
       blowData->fails = 0;
-      loadMonsterData(&playerMonsterData, getRandomPreviouslyCaughtMonster());
+      loadMonsterData(monsterCatcherGameIniPath, &playerMonsterData, getRandomPreviouslyCaughtMonster(), errorMessage);
       TFT_eSprite* playerSpriteRefs[] = { // Reload player anim at the beginning of the round
         &playerSprite[0],
         &playerSprite[1]
       };
-      loadBmpAnim(playerSpriteRefs, playerMonsterData.imagePath, 1, 0);
+      loadBmpAnim(playerSpriteRefs, monsterCatcherGamePath + playerMonsterData.imagePath, 1, 0);
       loadAttackSprites(&(playerMonsterData.attack), 0);
-      savePlayerMonsterIdToSD();
+      savePlayerMonsterId();
   }
   if (hp<=0) {
     int16_t yOffset = _min(150, animTime / 3);
@@ -288,7 +294,7 @@ void drawCombat(DISPLAY_T* display, BlowData* blowData, uint8_t numberOfAttacks,
     enemySprite[(blowData->ms / 500) % 2].pushToSprite(display, 200 + xOffset, 50);
   }
   if (monsterLevels[enemyMonsterData.id] > 0) {
-    ballCaughtIndicator.pushToSprite(display, 200, 50);
+    ballCaughtIndicator.pushToSprite(display, 190195, 50);
   }
   display->setCursor(200, 33);
   display->setTextSize(2);
@@ -306,17 +312,17 @@ void drawCombat(DISPLAY_T* display, BlowData* blowData, uint8_t numberOfAttacks,
   }
 }
 
-void loadPlayerMonsterIdFromSD() {
+void loadPlayerMonsterId(String* errorMessage) {
   uint8_t read = 0;
   read = prefs.getInt("playerMonsterId", 1);
   Serial.print(F("Loaded monster ID: "));
   Serial.println(read);
-  loadMonsterData(&playerMonsterData, (uint16_t)max(1, read % (TOTAL_MONSTER_NUMBER+1)));
+  loadMonsterData(monsterCatcherGameIniPath, &playerMonsterData, (uint16_t)max(1, read % (TOTAL_MONSTER_NUMBER+1)), errorMessage);
   Serial.print(F("Corrected to: "));
   Serial.println(playerMonsterData.id);
 }
 
-void savePlayerMonsterIdToSD() {
+void savePlayerMonsterId() {
   Serial.print(F("Saving monster id: "));
   Serial.println(playerMonsterData.id);
   if (monsterLevels[playerMonsterData.id] == 0) {
@@ -327,40 +333,40 @@ void savePlayerMonsterIdToSD() {
 }
 
 int8_t lastCycleMonsterSelected = -1;
-void drawGameLongBlows_MonsterCombat(DISPLAY_T* display, BlowData* blowData) {
+void drawGameLongBlows_MonsterCombat(DISPLAY_T* display, BlowData* blowData, String* errorMessage) {
   if (playerMonsterData.id == 0) {
-    loadPlayerMonsterIdFromSD();
+    loadPlayerMonsterId(errorMessage);
   }
   if (enemyMonsterData.id == 0 || blowData->cycleNumber > lastCycleMonsterSelected) {
     TFT_eSprite* playerSpriteRefs[] = { // Reload player anim at the beginning of the round
       &playerSprite[0],
       &playerSprite[1]
     };
-    loadBmpAnim(playerSpriteRefs, playerMonsterData.imagePath + "/back.bmp", 1, 0);
+    loadBmpAnim(playerSpriteRefs, monsterCatcherGamePath + playerMonsterData.imagePath + "/back.bmp", 1, 0);
     loadAttackSprites(&(playerMonsterData.attack), 0);
 
     lastCycleMonsterSelected = blowData->cycleNumber;
     Serial.print(F("Choosing new enemy: "));
-    loadMonsterData(&enemyMonsterData, (uint16_t)random(1, TOTAL_MONSTER_NUMBER + 1));
+    loadMonsterData(monsterCatcherGameIniPath, &enemyMonsterData, (uint16_t)random(1, TOTAL_MONSTER_NUMBER + 1), errorMessage);
     Serial.println(enemyMonsterData.id);
     TFT_eSprite* enemySpriteRefs[] = {
       &enemySprite[0],
       &enemySprite[1]
     };
-    loadBmpAnim(enemySpriteRefs, enemyMonsterData.imagePath + "/anim_front.bmp", 2);
+    loadBmpAnim(enemySpriteRefs, monsterCatcherGamePath + enemyMonsterData.imagePath + "/anim_front.bmp", 2);
     loadAttackSprites(&(enemyMonsterData.attack), 1);
   }
   AttackFunctionType attackFunctions[2];
   attackFunctions[0] = playerMonsterData.attack.attackFunction;
   attackFunctions[1] = enemyMonsterData.attack.attackFunction;
-  drawCombat(display, blowData, 2, attackFunctions, false);
+  drawCombat(display, blowData, 2, attackFunctions, false, errorMessage);
 }
 
 int8_t catchCheckForCycle = -1;
 int8_t catchCheckForBlow = -1;
 uint16_t playerEvolutionTarget;
 bool catchMonsterModeEvolution = false;
-void drawGameShortBlows_CatchMonster(DISPLAY_T* display, BlowData* blowData) {
+void drawGameShortBlows_CatchMonster(DISPLAY_T* display, BlowData* blowData, String* errorMessage) {
   if (blowData->cycleNumber > catchCheckForCycle) {
     bool enemyCanBeCaught = enemyMonsterData.isBasicMonster;
     playerEvolutionTarget = playerMonsterData.evolvesTo;
@@ -370,7 +376,7 @@ void drawGameShortBlows_CatchMonster(DISPLAY_T* display, BlowData* blowData) {
       &playerSprite[2],
       &playerSprite[3],
     };
-    loadBmpAnim(playerSpriteRefs, playerMonsterData.imagePath + "/anim_front.bmp", 2);
+    loadBmpAnim(playerSpriteRefs, monsterCatcherGamePath + playerMonsterData.imagePath + "/anim_front.bmp", 2);
     if (playerEvolutionTarget != 0 && enemyCanBeCaught) {
       while (true) {
         display->fillSprite(TFT_BLACK);
@@ -399,41 +405,41 @@ void drawGameShortBlows_CatchMonster(DISPLAY_T* display, BlowData* blowData) {
       Serial.println("Defaulting to catch");
       if (!enemyCanBeCaught) {
         Serial.println("Missingno!");
-        loadMonsterData(&enemyMonsterData, 0); //MissingNo easteregg if player cannot evolve and enemy cannot be caught.
+        loadMonsterData(monsterCatcherGameIniPath, &enemyMonsterData, 0, errorMessage); //MissingNo easteregg if player cannot evolve and enemy cannot be caught.
       }
       catchMonsterModeEvolution = false;
     }
     if (catchMonsterModeEvolution) {
-      loadAttackSprites(ATTACK_IDENTIFIER_RARE_CANDY, 0);
+      loadAttackSprites(ATTACK_IDENTIFIER_RARE_CANDY, 0, errorMessage);
     } else {
-      loadAttackSprites(ATTACK_IDENTIFIER_CATCH_BALL, 0);
+      loadAttackSprites(ATTACK_IDENTIFIER_CATCH_BALL, 0, errorMessage);
     }
-    loadBmpAnim(playerSpriteRefs, TRAINER_ANIM_PATH, 4);
+    loadBmpAnim(playerSpriteRefs, monsterCatcherGamePath + TRAINER_ANIM_PATH, 4);
     TFT_eSprite* enemySpriteRefs[] = {
       &enemySprite[0],
       &enemySprite[1]
     };
-    loadBmpAnim(enemySpriteRefs, (catchMonsterModeEvolution ? playerMonsterData.imagePath : enemyMonsterData.imagePath) + "/anim_front.bmp", 2);
+    loadBmpAnim(enemySpriteRefs, monsterCatcherGamePath + (catchMonsterModeEvolution ? playerMonsterData.imagePath : enemyMonsterData.imagePath) + "/anim_front.bmp", 2);
   }
 
   if (catchCheckForBlow && blowData->blowCount == SHORT_BLOW_NUMBER_MAX) {
       catchCheckForBlow = blowData->blowCount;
       if (catchMonsterModeEvolution) {
-        loadMonsterData(&playerMonsterData, playerEvolutionTarget);
+        loadMonsterData(monsterCatcherGameIniPath, &playerMonsterData, playerEvolutionTarget, errorMessage);
       } else {
         if (enemyMonsterData.id==0) {
           while (!enemyMonsterData.isBasicMonster) {
-            loadMonsterData(&enemyMonsterData, random(1, TOTAL_MONSTER_NUMBER + 1));
+            loadMonsterData(monsterCatcherGameIniPath, &enemyMonsterData, random(1, TOTAL_MONSTER_NUMBER + 1), errorMessage);
           }
         }
-        loadMonsterData(&playerMonsterData, enemyMonsterData.id);
+        loadMonsterData(monsterCatcherGameIniPath, &playerMonsterData, enemyMonsterData.id, errorMessage);
       }
-      savePlayerMonsterIdToSD();
+      savePlayerMonsterId();
       TFT_eSprite* playerSpriteRefs[] = {
         &playerSprite[0],
         &playerSprite[1]
       };
-      loadBmpAnim(playerSpriteRefs, playerMonsterData.imagePath + "/anim_front.bmp", 2);
+      loadBmpAnim(playerSpriteRefs, monsterCatcherGamePath + playerMonsterData.imagePath + "/anim_front.bmp", 2);
     }
 
   if (blowData->blowCount == SHORT_BLOW_NUMBER_MAX) { // If is monster evolution, display evolved monster on last round
@@ -448,7 +454,7 @@ void drawGameShortBlows_CatchMonster(DISPLAY_T* display, BlowData* blowData) {
   } else {
     attackFunctions[0] = attackFunction_catch;
   }
-  drawCombat(display, blowData, 1, attackFunctions, true);
+  drawCombat(display, blowData, 1, attackFunctions, true, errorMessage);
 }
 
 void loadBushes(uint8_t nr) {
@@ -457,26 +463,26 @@ void loadBushes(uint8_t nr) {
   for (int8_t i = 0; i<4; i++) {
     String setNr = String(nr);
     String filePath = String(i+1);
-    filePath = "/gfx/safari/Bush" + setNr + "_" + filePath + ".bmp";
+    filePath = monsterCatcherGamePath + "gfx/safari/Bush" + setNr + "_" + filePath + ".bmp";
     loadBmp(&safariBushSprite[i], filePath);
   }
 }
 
 int16_t jumpCountLoaded = -1;
 bool winLoaded = false;
-void drawGameTrampoline_safariZone(DISPLAY_T* display, JumpData* jumpData) {
+void drawGameTrampoline_safariZone(DISPLAY_T* display, JumpData* jumpData, String* errorMessage) {
   if (!winLoaded && jumpData->msLeft<0) {
     Serial.println("Win hit");
     winLoaded = true;
-    loadMonsterData(&playerMonsterData, getSafariMonster(_min(3, 1 + (jumpData->jumpCount / 100))));
+    loadMonsterData(monsterCatcherGameIniPath, &playerMonsterData, getSafariMonster(monsterCatcherGameIniPath,_min(3, 1 + (jumpData->jumpCount / 100)), errorMessage), errorMessage);
     TFT_eSprite* playerSpriteRefs[] = {
       &playerSprite[0],
       &playerSprite[1],
       &playerSprite[2],
       &playerSprite[3],
     };
-    savePlayerMonsterIdToSD();
-    loadBmpAnim(playerSpriteRefs, playerMonsterData.imagePath + "/anim_front.bmp", 2);
+    savePlayerMonsterId();
+    loadBmpAnim(playerSpriteRefs, monsterCatcherGamePath + playerMonsterData.imagePath + "/anim_front.bmp", 2);
   }
   if (jumpData->msLeft<0) {
     playerSprite[(jumpData->ms/250)%2].pushToSprite(display, SCREEN_WIDTH/2-16, SCREEN_HEIGHT/2-16, 0x0000);
@@ -498,7 +504,11 @@ void drawGameTrampoline_safariZone(DISPLAY_T* display, JumpData* jumpData) {
 }
 
 
-void initGames() {
+void initGames(String gamePath) {
+  Serial.print("Game path: ");
+  Serial.println(gamePath);
+  monsterCatcherGamePath = gamePath;
+  monsterCatcherGameIniPath = gamePath + "gameconfig.ini";
   prefs.begin("game-monsters");
   if (prefs.getBytes("levels", monsterLevels, MAX_MONSTER_NUMBER) == 0) {
     for (int16_t i=0; i<MAX_MONSTER_NUMBER; i++) {
@@ -527,32 +537,32 @@ void initGames() {
   loadBushes(1);
   ballCaughtIndicator.createSprite(7,7);
   ballCaughtIndicator.setColorDepth(16);
-  loadBmp(&ballCaughtIndicator, "/gfx/interface/ball_caught_indicator.bmp");
+  loadBmp(&ballCaughtIndicator, monsterCatcherGamePath + "gfx/interface/ball_caught_indicator.bmp");
 }
 
-void drawShortBlowGame(uint8_t index, DISPLAY_T* display, BlowData* blowData) {
+void drawShortBlowGame(uint8_t index, DISPLAY_T* display, BlowData* blowData, String* errorMessage) {
   index = index % NUM_SHORT_BLOW_GAMES;
   switch (index) {
     case 0:
-      drawGameShortBlows_CatchMonster(display, blowData);
+      drawGameShortBlows_CatchMonster(display, blowData, errorMessage);
       break;
   }
 }
 
-void drawLongBlowGame(uint8_t index, DISPLAY_T* display, BlowData* blowData) {
+void drawLongBlowGame(uint8_t index, DISPLAY_T* display, BlowData* blowData, String* errorMessage) {
   index = index % NUM_LONG_BLOW_GAMES;
   switch (index) {
     case 0:
-      drawGameLongBlows_MonsterCombat(display, blowData);
+      drawGameLongBlows_MonsterCombat(display, blowData, errorMessage);
       break;
   }
 }
 
-void drawTrampolineGame(uint8_t index, DISPLAY_T* display, JumpData* jumpData) {
+void drawTrampolineGame(uint8_t index, DISPLAY_T* display, JumpData* jumpData, String* errorMessage) {
   index = index % NUM_TRAMPOLINE_GAMES;
   switch (index) {
     case 0:
-      drawGameTrampoline_safariZone(display, jumpData);
+      drawGameTrampoline_safariZone(display, jumpData, errorMessage);
       break;
   }
 }

@@ -5,8 +5,6 @@
 #include "sdHandler.h"
 #include "gfxHandler.hpp"
 
-#define MONSTERCATCHER_INI_PATH "/gameconfig.ini"
-
 #define TOTAL_MONSTER_NUMBER 151
 #define MAX_MONSTER_NUMBER 400 // The maximum number of monsters that the save game will ever be compatible. Should not be changed.
 
@@ -28,7 +26,7 @@ uint8_t attackFunction_rareCandy(DISPLAY_T* display, BlowData* blowData, bool pl
 #define SAFARI_MONSTER_RARITY_2 0x4000
 #define SAFARI_MONSTER_RARITY_3 0x6000 // Rare
 
-uint16_t getSafariMonster(uint8_t rarity); //rarity can between 1-4
+uint16_t getSafariMonster(String gameIniPath, uint8_t rarity, String* errorMessage); //rarity can between 1-4
 
 typedef uint8_t (*AttackFunctionType)(DISPLAY_T* display, BlowData* blowData, bool playerIsAttacking, int32_t animTime, bool draw);
 
@@ -49,7 +47,7 @@ struct MonsterData {
     uint8_t safariRarity = 0;
 };
 
-void loadAttackData(AttackData* attackData, String attackIdentifier);
-void loadMonsterData(MonsterData* monsterData, uint16_t monsterId);
+void loadAttackData(String gameIniPath, AttackData* attackData, String attackIdentifier, String* errorMessage);
+void loadMonsterData(String gameIniPath, MonsterData* monsterData, uint16_t monsterId, String* errorMessage);
 
 #endif /*__MONSTER_DETAILS_H__*/

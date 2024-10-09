@@ -33,11 +33,11 @@
 #define BITMAP_VCENTER       0b00010000
 #define BITMAP_VBOTTOM_ALIGN 0b00100000
 
-void initGames();
-void drawShortBlowGame(uint8_t index, DISPLAY_T* display, BlowData* blowData);
-void drawLongBlowGame(uint8_t index, DISPLAY_T* display, BlowData* blowData);
-void drawTrampolineGame(uint8_t index, DISPLAY_T* display, JumpData* jumpData);
+void initGames(String gamePath);
+void drawShortBlowGame(uint8_t index, DISPLAY_T* display, BlowData* blowData, String* errorMessage);
+void drawLongBlowGame(uint8_t index, DISPLAY_T* display, BlowData* blowData, String* errorMessage);
+void drawTrampolineGame(uint8_t index, DISPLAY_T* display, JumpData* jumpData, String* errorMessage);
 
-#define TRAINER_ANIM_PATH "/gfx/trainer/brendan.bmp"
+#define TRAINER_ANIM_PATH "gfx/trainer/brendan.bmp"
 
 #endif /* __GAMES_H__*/
