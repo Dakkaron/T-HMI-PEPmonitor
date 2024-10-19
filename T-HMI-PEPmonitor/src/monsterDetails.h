@@ -5,7 +5,7 @@
 #include "sdHandler.h"
 #include "gfxHandler.hpp"
 
-#define TOTAL_MONSTER_NUMBER 151
+#define TOTAL_MONSTER_NUMBER 386
 #define MAX_MONSTER_NUMBER 400 // The maximum number of monsters that the save game will ever be compatible. Should not be changed.
 
 #define ATTACK_SPRITE_NUMBER 16

@@ -12,11 +12,11 @@
 #include <SD.h>
 
 #include "gfxHandler.hpp"
-#include "games.hpp"
 #include "pressuresensor.h"
 #include "touchHandler.h"
 #include "wifiHandler.h"
 #include "sdHandler.h"
+#include "games.h"
 
 #include <OneButton.h>
 
@@ -126,15 +126,34 @@ void runGameSelection() {
   checkFailWithMessage(errorMessage);
   Serial.print("Number of games: ");
   Serial.println(numberOfGames);
+  String gamePath;
   if (numberOfGames == 1) {
-    String gamePath = getGamePath(0, &errorMessage);
-    checkFailWithMessage(errorMessage);
-    Serial.print("Game path: ");
-    Serial.println(gamePath);
-    initGames(gamePath);
+    gamePath = getGamePath(0, &errorMessage);
   } else {
-    // TODO: Add game selection mechanism
+    while (true) {
+      spr.fillSprite(TFT_BLACK);
+      spr.fillRect(15,55,130,130,TFT_BLUE);
+      spr.fillRect(160,55,130,130,TFT_RED);
+      spr.pushSprite(0,0);
+      if (touch.pressed()) {
+        Serial.println("Touch pressed");
+        if (isTouchInZone(15,55,130,130)) {
+          Serial.println("Selection Evolution");
+          gamePath = getGamePath(0, &errorMessage);
+          break;
+        } else if (isTouchInZone(145,55,130,130)) {
+          Serial.println("Selection Catch");
+          gamePath = getGamePath(1, &errorMessage);
+          break;
+        }
+      }
+    }
   }
+  checkFailWithMessage(errorMessage);
+  Serial.print("Game path: ");
+  Serial.println(gamePath);
+  initGames(gamePath, &errorMessage);
+  checkFailWithMessage(errorMessage);
 }
 
 void setup() {
@@ -224,10 +243,10 @@ void drawPEPDisplay() {
   blowData.ms = millis();
   String errorMessage;
   if (blowData.isLongBlows) {
-    drawLongBlowGame(blowData.cycleNumber, &spr, &blowData, &errorMessage);
+    drawLongBlowGame(&spr, &blowData, &errorMessage);
     drawProgressBar(&spr, blowData.currentlyBlowing ? (100 * (blowData.ms - blowData.blowStartMs) / LONG_BLOW_DURATION_MS) : 0, 0, PRESSURE_BAR_X, PRESSURE_BAR_Y+25, PRESSURE_BAR_WIDTH, PRESSURE_BAR_HEIGHT);
   } else {
-    drawShortBlowGame(blowData.cycleNumber, &spr, &blowData, &errorMessage);
+    drawShortBlowGame(&spr, &blowData, &errorMessage);
     drawProgressBar(&spr, blowData.currentlyBlowing ? (100 * (blowData.ms - blowData.blowStartMs) / SHORT_BLOW_DURATION_DISPLAY_MS) : 0, 0, PRESSURE_BAR_X, PRESSURE_BAR_Y+25, PRESSURE_BAR_WIDTH, PRESSURE_BAR_HEIGHT);
   }
   checkFailWithMessage(errorMessage);
@@ -254,7 +273,7 @@ String winScreenPath = "";
 void drawFinished() {
   if (winScreenPath == "") {
     String errorMessage;
-    winScreenPath = getRandomWinScreenPath(&errorMessage);
+    winScreenPath = getRandomWinScreenPathForCurrentGame(&errorMessage);
     checkFailWithMessage(errorMessage);
   }
   drawBmp(winScreenPath, 0, 0);
@@ -263,7 +282,7 @@ void drawFinished() {
 void drawTrampolineDisplay() {
   spr.fillSprite(TFT_BLACK);
   String errorMessage;
-  drawTrampolineGame(0, &spr, &jumpData, &errorMessage);
+  drawTrampolineGame(&spr, &jumpData, &errorMessage);
   checkFailWithMessage(errorMessage);
   if (jumpData.msLeft > 0) {
     drawProgressBar(&spr, (100L*(jumpData.totalTime-jumpData.msLeft))/jumpData.totalTime, 0, PRESSURE_BAR_X, PRESSURE_BAR_Y, PRESSURE_BAR_WIDTH, PRESSURE_BAR_HEIGHT);

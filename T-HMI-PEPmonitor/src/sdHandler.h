@@ -10,17 +10,19 @@
 #define SYSTEM_CONFIG_INI_PATH "/systemConfig.ini"
 #define INI_BUFFER_LEN 128
 
-#define WIN_SCREEN_PATH "/gfx/win"
+#define WIN_SCREEN_PATH "gfx/win"
 #define GAMES_ROOT_DIR "/games"
 
 uint16_t getNumberOfGames(String* errorMessage);
 String getGamePath(uint16_t gameId, String* errorMessage);
 
+void readGameConfig(String gamePath, GameConfig* gameConfig, String* errorMessage);
+
 void getIniSection(String iniPath, String section, char* resultBuffer, uint16_t len, String* errorMessage);
 String getIniValueFromSection(char* sectionData, String key, String* errorMessage);
 
 void readSystemConfig();
-String getRandomWinScreenPath(String* errorMessage);
+String getRandomWinScreenPath(String gamePath, String* errorMessage);
 
 String readFileToString(const char *path);
 String readFileLineToString(const char *path, uint32_t lineNr);

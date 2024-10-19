@@ -70,8 +70,18 @@ String getGamePath(uint16_t gameId, String* errorMessage) {
   return "";
 }
 
+void readGameConfig(String gamePath, GameConfig* gameConfig, String* errorMessage) {
+  char resBuffer[1024];
+  getIniSection(gamePath+"gameconfig.ini", "[game]", resBuffer, 1024, errorMessage);
+  gameConfig->name = getIniValueFromSection(resBuffer, "name", errorMessage);
+  gameConfig->templateName = getIniValueFromSection(resBuffer, "template", errorMessage);
+}
+
 void getIniSection(String iniPath, String section, char* resultBuffer, uint16_t len, String* errorMessage) {
   char lineBuffer[INI_BUFFER_LEN];
+  if (section.c_str()[0] != '[') {
+    section = "[" + section + "]";
+  }
   section = section + "\n";
 
   File file = SD_MMC.open(iniPath);
@@ -152,19 +162,20 @@ String getIniValueFromSection(char* sectionData, String key, String* errorMessag
   return String("");
 }
 
-void scanForWinScreens(String* errorMessage) {
+void scanForWinScreens(String gamePath, String* errorMessage) {
+  String gameWinScreenDir = gamePath + WIN_SCREEN_PATH;
   numberOfWinScreens = 0;
-  Serial.printf("Listing directory: %s\n", WIN_SCREEN_PATH);
+  Serial.printf("Searching directory for winscreens: %s\n", gameWinScreenDir.c_str());
 
-  File root = SD_MMC.open(WIN_SCREEN_PATH);
+  File root = SD_MMC.open(gameWinScreenDir.c_str());
   if (!root) {
     errorMessage->concat("Failed to open directory ");
-    errorMessage->concat(WIN_SCREEN_PATH);
+    errorMessage->concat(gameWinScreenDir);
     Serial.println(*errorMessage);
     return;
   }
   if (!root.isDirectory()) {
-    errorMessage->concat(WIN_SCREEN_PATH);
+    errorMessage->concat(gameWinScreenDir);
     errorMessage->concat(" is not a directory!");
     Serial.println(*errorMessage);
     return;
@@ -179,22 +190,23 @@ void scanForWinScreens(String* errorMessage) {
   }
 }
 
-String getRandomWinScreenPath(String* errorMessage) {
+String getRandomWinScreenPath(String gamePath, String* errorMessage) {
+  String gameWinScreenDir = gamePath + WIN_SCREEN_PATH;
   if (numberOfWinScreens == 0) {
-    scanForWinScreens(errorMessage);
+    scanForWinScreens(gamePath, errorMessage);
   }
   uint32_t selectedWinScreenNumber = random(0,numberOfWinScreens);
-  Serial.printf("Listing directory: %s\n", WIN_SCREEN_PATH);
+  Serial.printf("Getting winscreen path from directory: %s\n", gameWinScreenDir.c_str());
 
-  File root = SD_MMC.open(WIN_SCREEN_PATH);
+  File root = SD_MMC.open(gameWinScreenDir.c_str());
   if (!root) {
     errorMessage->concat("Failed to open directory ");
-    errorMessage->concat(WIN_SCREEN_PATH);
+    errorMessage->concat(gameWinScreenDir);
     Serial.println(*errorMessage);
     return "";
   }
   if (!root.isDirectory()) {
-    errorMessage->concat(WIN_SCREEN_PATH);
+    errorMessage->concat(gameWinScreenDir);
     errorMessage->concat(" is not a directory!");
     Serial.println(*errorMessage);
     return "";
@@ -205,7 +217,7 @@ String getRandomWinScreenPath(String* errorMessage) {
   while (file) {
     if (!file.isDirectory()) {
       if (i == selectedWinScreenNumber) {
-        return String(WIN_SCREEN_PATH) + "/" + file.name();
+        return gameWinScreenDir + "/" + file.name();
       }
       i++;
     }

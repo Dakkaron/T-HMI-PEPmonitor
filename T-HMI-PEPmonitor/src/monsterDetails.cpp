@@ -1,5 +1,32 @@
 #include "monsterDetails.h"
 
+String getRandomTokenCSV(String input) {
+  int tokenCount = 1;
+  for (int i = 0; i < input.length(); i++) {
+    if (input[i] == ',') {
+      tokenCount++;
+    }
+  }
+
+  int randomIndex = random(0, tokenCount);
+  int tokenIndex = 0;
+  String token = "";
+  
+  for (int i = 0; i <= input.length(); i++) {
+    if (input[i] == ',' || i == input.length()) {
+      if (tokenIndex == randomIndex) {
+        return token;
+      }
+      token = "";
+      tokenIndex++;
+    } else {
+      token += input[i];
+    }
+  }
+
+  return "";
+}
+
 uint8_t getMonsterSafariRarity(String gameIniPath, uint16_t monsterId, String* errorMessage) {
   char resBuffer[1024];
   getIniSection(gameIniPath, String("[monster_") + String(monsterId) + String("]"), (char*)resBuffer, 1024, errorMessage);
@@ -21,6 +48,13 @@ uint16_t getSafariMonster(String gameIniPath, uint8_t targetRarity, String* erro
     }
   }
   return id;
+}
+
+uint16_t getEvolutionTarget(char* sectionData, String* errorMessage) {
+  String value = getIniValueFromSection(sectionData, "evolvesTo", errorMessage);
+  String token = getRandomTokenCSV(value);
+  token.trim();
+  return atoi(token.c_str());
 }
 
 AttackFunctionType getAttackFunctionFromIdentifier(String attackFunctionIdentifier) {
@@ -46,6 +80,10 @@ AttackFunctionType getAttackFunctionFromIdentifier(String attackFunctionIdentifi
 
 void loadAttackData(String gameIniPath, AttackData* attackData, String attackIdentifier, String* errorMessage) {
   char resBuffer[1024];
+  if (attackIdentifier == "") {
+    Serial.println("Monster has no attack identifier!");
+    return;
+  }
   getIniSection(gameIniPath, String("[attack_") + attackIdentifier + String("]"), (char*)resBuffer, 1024, errorMessage);
   if (!errorMessage->isEmpty()) {
     return;
@@ -79,9 +117,9 @@ void loadMonsterData(String gameIniPath, MonsterData* monsterData, uint16_t mons
     monsterData->imagePath = getIniValueFromSection(resBuffer, "imagePath", errorMessage);
     String isBasicMonster = getIniValueFromSection(resBuffer, "basicMonster", errorMessage);
     monsterData->isBasicMonster = (isBasicMonster == "True") || (isBasicMonster == "true") || (isBasicMonster == "1");
-    monsterData->evolvesTo = atoi(getIniValueFromSection(resBuffer, "evolvesTo", &ignoreErrors).c_str());
+    monsterData->evolvesTo = getEvolutionTarget(resBuffer, &ignoreErrors);
     monsterData->safariRarity = atoi(getIniValueFromSection(resBuffer, "safariRarity", &ignoreErrors).c_str());
-    attackIdentifier = getIniValueFromSection(resBuffer, "attackIdentifier", errorMessage);
+    attackIdentifier = getIniValueFromSection(resBuffer, "attackIdentifier", &ignoreErrors);
     if (!errorMessage->isEmpty()) {
       return;
     }

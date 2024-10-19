@@ -8,6 +8,7 @@
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 #include "config.h"
+#include "sdHandler.h"
 
 #define CONNECTION_OK 0
 #define CONNECTION_NOWIFI 1

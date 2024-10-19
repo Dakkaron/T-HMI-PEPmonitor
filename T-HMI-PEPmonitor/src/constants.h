@@ -42,6 +42,11 @@ struct SystemConfig {
   bool trampolineEnabled = true;
 };
 
+struct GameConfig {
+  String name;
+  String templateName;
+};
+
 struct BlowData {
   bool currentlyBlowing = false;
   unsigned long ms = 0;
