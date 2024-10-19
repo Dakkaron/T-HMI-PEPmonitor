@@ -116,11 +116,13 @@ void getIniSection(String iniPath, String section, char* resultBuffer, uint16_t 
     }
     i++;
   }
-  errorMessage->concat("Section ");
-  errorMessage->concat(section);
-  errorMessage->concat(" not found in INI file ");
-  errorMessage->concat(iniPath);
-  Serial.println(*errorMessage);
+  if (!inCorrectSection) {
+    errorMessage->concat("Section ");
+    errorMessage->concat(section);
+    errorMessage->concat(" not found in INI file ");
+    errorMessage->concat(iniPath);
+    Serial.println(*errorMessage);
+  }
 }
 
 String getIniValueFromSection(char* sectionData, String key, String* errorMessage) {
