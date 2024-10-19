@@ -5,7 +5,6 @@
 #include "sdHandler.h"
 #include "gfxHandler.hpp"
 
-#define TOTAL_MONSTER_NUMBER 386
 #define MAX_MONSTER_NUMBER 400 // The maximum number of monsters that the save game will ever be compatible. Should not be changed.
 
 #define ATTACK_SPRITE_NUMBER 16
@@ -26,6 +25,8 @@ uint8_t attackFunction_rareCandy(DISPLAY_T* display, BlowData* blowData, bool pl
 #define SAFARI_MONSTER_RARITY_2 0x4000
 #define SAFARI_MONSTER_RARITY_3 0x6000 // Rare
 
+uint16_t getMonsterCount(String gameIniPath, String* errorMessage);
+uint16_t getRandomMonsterId(String gameIniPath, String* errorMessage);
 uint16_t getSafariMonster(String gameIniPath, uint8_t rarity, String* errorMessage); //rarity can between 1-4
 
 typedef uint8_t (*AttackFunctionType)(DISPLAY_T* display, BlowData* blowData, bool playerIsAttacking, int32_t animTime, bool draw);

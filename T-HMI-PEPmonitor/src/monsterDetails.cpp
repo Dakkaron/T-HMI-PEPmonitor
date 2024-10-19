@@ -37,11 +37,26 @@ uint8_t getMonsterSafariRarity(String gameIniPath, uint16_t monsterId, String* e
   return atoi(getIniValueFromSection(resBuffer, "safariRarity", &ignoreErrors).c_str());
 }
 
+uint16_t getMonsterCount(String gameIniPath, String* errorMessage) {
+  char resBuffer[1024];
+  getIniSection(gameIniPath, String("[game]"), (char*)resBuffer, 1024, errorMessage);
+  if (!errorMessage->isEmpty()) {
+    return 0;
+  }
+  String ignoreErrors;
+  return atoi(getIniValueFromSection(resBuffer, "monsterCount", &ignoreErrors).c_str());
+}
+
+uint16_t getRandomMonsterId(String gameIniPath, String* errorMessage) {
+  return random(1, getMonsterCount(gameIniPath, errorMessage)+1);
+}
+
 uint16_t getSafariMonster(String gameIniPath, uint8_t targetRarity, String* errorMessage) {
   uint16_t id = 0;
   targetRarity = _min(3, _max(1, targetRarity));
+  uint16_t monsterCount = getMonsterCount(gameIniPath, errorMessage);
   while (id == 0) {
-    id = random(1,TOTAL_MONSTER_NUMBER+1);
+    id = random(1, monsterCount+1);
     uint8_t monsterRarity = getMonsterSafariRarity(gameIniPath, id, errorMessage);
     if (monsterRarity == 0 || monsterRarity>targetRarity) {
       id = 0;

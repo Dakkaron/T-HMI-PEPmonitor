@@ -317,7 +317,8 @@ void loadPlayerMonsterId(String* errorMessage) {
   read = prefs.getInt("playerMonsterId", 1);
   Serial.print(F("Loaded monster ID: "));
   Serial.println(read);
-  loadMonsterData(monsterCatcherGameIniPath, &playerMonsterData, (uint16_t)max(1, read % (TOTAL_MONSTER_NUMBER+1)), errorMessage);
+  uint16_t monsterCount = getMonsterCount(monsterCatcherGameIniPath, errorMessage);
+  loadMonsterData(monsterCatcherGameIniPath, &playerMonsterData, (uint16_t)_max(1, read % (monsterCount+1)), errorMessage);
   Serial.print(F("Corrected to: "));
   Serial.println(playerMonsterData.id);
 }
@@ -352,7 +353,7 @@ void drawLongBlowGame_monsterCatcher(DISPLAY_T* display, BlowData* blowData, Str
 
     lastCycleMonsterSelected = blowData->cycleNumber;
     Serial.print(F("Choosing new enemy: "));
-    loadMonsterData(monsterCatcherGameIniPath, &enemyMonsterData, (uint16_t)random(1, TOTAL_MONSTER_NUMBER + 1), errorMessage);
+    loadMonsterData(monsterCatcherGameIniPath, &enemyMonsterData, getRandomMonsterId(monsterCatcherGameIniPath, errorMessage), errorMessage);
     Serial.println(enemyMonsterData.id);
     TFT_eSprite* enemySpriteRefs[] = {
       &enemySprite[0],
@@ -436,7 +437,7 @@ void drawShortBlowGame_monsterCatcher(DISPLAY_T* display, BlowData* blowData, St
       } else {
         if (enemyMonsterData.id==0) {
           while (!enemyMonsterData.isBasicMonster) {
-            loadMonsterData(monsterCatcherGameIniPath, &enemyMonsterData, random(1, TOTAL_MONSTER_NUMBER + 1), errorMessage);
+            loadMonsterData(monsterCatcherGameIniPath, &enemyMonsterData, getRandomMonsterId(monsterCatcherGameIniPath, errorMessage), errorMessage);
           }
         }
         loadMonsterData(monsterCatcherGameIniPath, &playerMonsterData, enemyMonsterData.id, errorMessage);
