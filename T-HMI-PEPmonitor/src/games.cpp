@@ -6,9 +6,9 @@ void initGames(String gamePath, String* errorMessage) {
   currentGamePath = gamePath;
   readGameConfig(gamePath, &gameConfig, errorMessage);
   if (gameConfig.templateName == "monster") {
-    initGames_monsterCatcher(gamePath);
+    initGames_monsterCatcher(gamePath, &gameConfig, errorMessage);
   } else if (gameConfig.templateName == "race") {
-    initGames_racing(gamePath);
+    initGames_racing(gamePath, &gameConfig, errorMessage);
   } else {
     errorMessage->concat("Invalid game template ");
     errorMessage->concat(gameConfig.templateName);

@@ -297,3 +297,30 @@ void drawProgressBar(DISPLAY_T* display, uint16_t val, uint16_t maxVal, uint16_t
   display->print('/');
   display->print(maxVal);
 }
+
+void printShaded(DISPLAY_T* display, String text) {
+  printShaded(display, text, 1, 0xFFFF, 0x0000);
+}
+
+void printShaded(DISPLAY_T* display, String text, uint8_t shadeStrength) {
+  printShaded(display, text, shadeStrength, 0xFFFF, 0x0000);
+}
+
+void printShaded(DISPLAY_T* display, String text, uint8_t shadeStrength, uint16_t textColor) {
+  printShaded(display, text, shadeStrength, textColor, 0x0000);
+}
+
+void printShaded(DISPLAY_T* display, String text, uint8_t shadeStrength, uint16_t textColor, uint16_t shadeColor) {
+  int16_t x = display->getCursorX();
+  int16_t y = display->getCursorY();
+  display->setTextColor(shadeColor);
+  for (int16_t xOffset = -(int8_t)shadeStrength; xOffset<=shadeStrength; xOffset+=2) {
+    for (int16_t yOffset = -(int8_t)shadeStrength; yOffset<=shadeStrength; yOffset+=2) {
+      display->setCursor(x+xOffset, y+yOffset);
+      display->print(text);
+    }
+  }
+  display->setTextColor(textColor);
+  display->setCursor(x, y);
+  display->print(text);
+}

@@ -513,12 +513,12 @@ void drawTrampolineGame_monsterCatcher(DISPLAY_T* display, JumpData* jumpData, S
 }
 
 
-void initGames_monsterCatcher(String gamePath) {
+void initGames_monsterCatcher(String gamePath, GameConfig* gameConfig, String* errorMessage) {
   Serial.print("Game path: ");
   Serial.println(gamePath);
   monsterCatcherGamePath = gamePath;
   monsterCatcherGameIniPath = gamePath + "gameconfig.ini";
-  prefs.begin("game-monsters");
+  prefs.begin(gameConfig->prefsNamespace.c_str());
   if (prefs.getBytes("levels", monsterLevels, MAX_MONSTER_NUMBER) == 0) {
     for (int16_t i=0; i<MAX_MONSTER_NUMBER; i++) {
       monsterLevels[i] = 0;

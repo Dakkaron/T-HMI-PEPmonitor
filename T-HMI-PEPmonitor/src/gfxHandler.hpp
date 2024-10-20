@@ -24,5 +24,9 @@ void loadBmpAnim(DISPLAY_T** display, String filename, uint8_t animFrames);
 void loadBmpAnim(DISPLAY_T** display, String filename, uint8_t animFrames, uint8_t flipped);
 void drawProgressBar(DISPLAY_T* display, uint16_t progress, uint16_t greenOffset, int16_t x, int16_t y, int16_t w, int16_t h);
 void drawProgressBar(DISPLAY_T* display, uint16_t val, uint16_t maxVal, uint16_t greenOffset, int16_t x, int16_t y, int16_t w, int16_t h);
+void printShaded(DISPLAY_T* display, String text, uint8_t shadeStrength, uint16_t textColor, uint16_t shadeColor);
+void printShaded(DISPLAY_T* display, String text, uint8_t shadeStrength, uint16_t textColor);
+void printShaded(DISPLAY_T* display, String text, uint8_t shadeStrength);
+void printShaded(DISPLAY_T* display, String text);
 
 #endif /*__GFXHANDLER_H__*/

@@ -45,6 +45,7 @@ struct SystemConfig {
 struct GameConfig {
   String name;
   String templateName;
+  String prefsNamespace;
 };
 
 struct BlowData {

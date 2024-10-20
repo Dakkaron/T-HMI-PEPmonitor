@@ -254,9 +254,7 @@ void drawPEPDisplay() {
   drawProgressBar(&spr, blowData.pressure, 10, PRESSURE_BAR_X, PRESSURE_BAR_Y, PRESSURE_BAR_WIDTH, PRESSURE_BAR_HEIGHT);
   spr.setCursor(PRESSURE_BAR_X + 20, PRESSURE_BAR_Y - 14);
   spr.setTextSize(2);
-  spr.print(blowData.blowCount);
-  spr.print("/");
-  spr.print(blowData.cycleNumber);
+  printShaded(&spr, String(blowData.blowCount) + "/" + String(blowData.cycleNumber));
   spr.setTextSize(1);
   spr.setCursor(1,1);
   spr.println(1000L/_max(1,millis()-lastMs)); //FPS counter

@@ -18,7 +18,7 @@
 #define DRAW_ENEMY_DEAD       0b00010000
 #define DRAW_ENEMY_DODGE      0b00100000
 
-void initGames_monsterCatcher(String gamePath);
+void initGames_monsterCatcher(String gamePath, GameConfig* gameConfig, String* errorMessage);
 void drawShortBlowGame_monsterCatcher(DISPLAY_T* display, BlowData* blowData, String* errorMessage);
 void drawLongBlowGame_monsterCatcher(DISPLAY_T* display, BlowData* blowData, String* errorMessage);
 void drawTrampolineGame_monsterCatcher(DISPLAY_T* display, JumpData* jumpData, String* errorMessage);

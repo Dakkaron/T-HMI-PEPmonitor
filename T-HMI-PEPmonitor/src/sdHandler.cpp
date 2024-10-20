@@ -75,6 +75,7 @@ void readGameConfig(String gamePath, GameConfig* gameConfig, String* errorMessag
   getIniSection(gamePath+"gameconfig.ini", "[game]", resBuffer, 1024, errorMessage);
   gameConfig->name = getIniValueFromSection(resBuffer, "name", errorMessage);
   gameConfig->templateName = getIniValueFromSection(resBuffer, "template", errorMessage);
+  gameConfig->prefsNamespace = getIniValueFromSection(resBuffer, "prefsNamespace", errorMessage);
 }
 
 void getIniSection(String iniPath, String section, char* resultBuffer, uint16_t len, String* errorMessage) {

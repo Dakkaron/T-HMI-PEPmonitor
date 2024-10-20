@@ -22,12 +22,12 @@ TFT_eSprite nitroLSprite =          TFT_eSprite(&tft);
 TFT_eSprite nitroSSprite =          TFT_eSprite(&tft);
 TFT_eSprite nitroEffectSprite[] =  {TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft)};
 
-void initGames_racing(String gamePath) {
+void initGames_racing(String gamePath, GameConfig* gameConfig, String* errorMessage) {
   Serial.print("Game path: ");
   Serial.println(gamePath);
   racerGamePath = gamePath;
   racerGameIniPath = gamePath + "gameconfig.ini";
-  prefs.begin("game-racer");
+  prefs.begin(gameConfig->prefsNamespace.c_str());
   nitro = prefs.getUInt("nitro", 0);
   for (int8_t i=0; i<10; i++) {
     playerCarSprite[i].createSprite(70, 37);
@@ -247,6 +247,7 @@ void drawShortBlowGame_racing(DISPLAY_T* display, BlowData* blowData, String* er
 
 int8_t lastCheckedBlowCount = -1;
 int8_t currentPosition = 31;
+bool savedBlows=false;
 unsigned long lastCheckedBlowEndMs = 0;
 void drawLongBlowGame_racing(DISPLAY_T* display, BlowData* blowData, String* errorMessage) {
   int32_t animTime = ((int32_t)blowData->ms) - ((int32_t)blowData->blowEndMs);
@@ -278,26 +279,37 @@ void drawLongBlowGame_racing(DISPLAY_T* display, BlowData* blowData, String* err
   display->print(currentPosition);
 
   if (nitro > 0) {
-    display->setTextSize(3);
     display->setCursor(265, 12);
-    display->print(nitro);
-    display->print("x");
+    display->setTextSize(3);
+    printShaded(display, String(nitro) + "x");
     nitroSSprite.pushToSprite(display, 300, 5, 0x0000);
+  }
+
+  if (blowData->cycleNumber==CYCLES-1 && blowData->blowCount==LONG_BLOW_NUMBER_MAX-1 && !savedBlows) {
+    savedBlows = true;
+    prefs.putUInt("nitro", nitro);
+    Serial.print("Saved ");
+    Serial.print(nitro);
+    Serial.println(" nitro.");
   }
 }
 
-bool saved=false;
+bool savedTrampoline=false;
 void drawTrampolineGame_racing(DISPLAY_T* display, JumpData* jumpData, String* errorMessage) {
   uint8_t earnedNitro = (jumpData->jumpCount / 100);
   uint8_t currentBottle = 0;
+  int32_t bottleSpacingX = (nitroLSprite.width()+5);
   for (uint8_t currentBottle=0; currentBottle<earnedNitro; currentBottle++) {
-    nitroLSprite.pushToSprite(display, 50 + 50*currentBottle, 70, 0x0000);
+    nitroLSprite.pushToSprite(display, 50 + bottleSpacingX*currentBottle, 70, 0x0000);
   }
-  nitroLSprite.pushToSprite(display, 50 + 50*currentBottle, 70, 0x0000);
-  display->fillRect(50+50*currentBottle, 70, nitroLSprite.width(), nitroLSprite.height()*(100-(jumpData->jumpCount%100))/100, 0x0000);
-  if (!saved && jumpData->msLeft) {
-    saved = true;
+  nitroLSprite.pushToSprite(display, 50 + bottleSpacingX*(earnedNitro), 70, 0x0000);
+  display->fillRect(50+bottleSpacingX*(earnedNitro), 70, nitroLSprite.width(), nitroLSprite.height()*(100-(jumpData->jumpCount%100))/100, 0x0000);
+  if (!savedTrampoline && jumpData->msLeft<0) {
+    savedTrampoline = true;
     nitro += earnedNitro;
     prefs.putUInt("nitro", nitro);
+    Serial.print("Saved ");
+    Serial.print(nitro);
+    Serial.println(" nitro.");
   } 
 }
