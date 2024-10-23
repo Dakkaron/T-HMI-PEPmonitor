@@ -391,7 +391,7 @@ void drawShortBlowGame_monsterCatcher(DISPLAY_T* display, BlowData* blowData, St
         playerSprite[(blowData->ms/250) % 2].pushToSprite(display, 48, 88);
         display->fillRect(160,55,130,130,TFT_BLUE);
         enemySprite[(blowData->ms/250) % 2].pushToSprite(display, 193, 88);
-        display->pushSprite(0,0);
+        display->pushSpriteFast(0,0);
         if (touch.pressed()) {
           Serial.println("Touch pressed");
           if (isTouchInZone(15,55,130,130)) {

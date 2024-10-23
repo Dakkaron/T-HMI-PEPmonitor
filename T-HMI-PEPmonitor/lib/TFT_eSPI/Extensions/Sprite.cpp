@@ -682,6 +682,33 @@ void TFT_eSprite::pushSprite(int32_t x, int32_t y)
   else _tft->pushImage(x, y, _dwidth, _dheight, _img8, (bool)(_bpp == 8));
 }
 
+void TFT_eSprite::pushSpriteFast(int32_t x, int32_t y)
+{
+  if (!_created) return;
+  uint16_t transp = 0x4444;
+  if (_bpp == 16)
+  {
+    uint16_t* backBuffer   = _img == (uint16_t*)_img8_1 ? (uint16_t*)_img8_2 : (uint16_t*)_img8_1;
+    uint8_t   backBufferId = _img == (uint16_t*)_img8_1 ? 2 : 1;
+    bool oldSwapBytes = _tft->getSwapBytes();
+    _tft->setSwapBytes(false);
+    _tft->pushImageFast(x, y, _dwidth, _dheight, _img, backBuffer);
+    _tft->setSwapBytes(oldSwapBytes);
+  }
+  else if (_bpp == 8)
+  {
+    uint8_t* backBuffer    = _img8 == _img8_1 ? _img8_2 : _img8_1;
+    uint8_t  backBufferId  = _img8 == _img8_1 ? 2 : 1;
+    _tft->pushImageFast(x, y, _dwidth, _dheight, _img8, backBuffer, (bool)true);
+    frameBuffer(backBufferId);
+  }
+  else if (_bpp == 4)
+  {
+    _tft->pushImage(x, y, _dwidth, _dheight, _img4, (uint8_t)(transp & 0x0F), false, _colorMap);
+  }
+  else _tft->pushImage(x, y, _dwidth, _dheight, _img8, 0, (bool)false);
+}
+
 
 /***************************************************************************************
 ** Function name:           pushSprite

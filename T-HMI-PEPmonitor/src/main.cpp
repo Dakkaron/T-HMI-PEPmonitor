@@ -49,7 +49,7 @@ void switchMode() {
         spr.setTextColor(TFT_WHITE);
         spr.setCursor(1, 16);
         spr.print("Verbinde...");
-        spr.pushSprite(0,0);
+        spr.pushSpriteFast(0,0);
         trampolineConnectionStatus = connectToTrampoline();
         Serial.print("-1> CONN STAT: ");
         Serial.println(trampolineConnectionStatus);
@@ -62,7 +62,7 @@ void switchMode() {
         spr.setTextColor(TFT_WHITE);
         spr.setCursor(1, 16);
         spr.print("Keine Verbindung!");
-        spr.pushSprite(0,0);
+        spr.pushSpriteFast(0,0);
         delay(5000);
         break;
       }
@@ -115,7 +115,7 @@ void checkFailWithMessage(String message) {
     spr.setCursor(1, 16);
     spr.println("FEHLER:");
     spr.println(message);
-    spr.pushSprite(0, 0);
+    spr.pushSpriteFast(0, 0);
     while (true) {};
   }
 }
@@ -134,7 +134,7 @@ void runGameSelection() {
       spr.fillSprite(TFT_BLACK);
       spr.fillRect(15,55,130,130,TFT_BLUE);
       spr.fillRect(160,55,130,130,TFT_RED);
-      spr.pushSprite(0,0);
+      spr.pushSpriteFast(0,0);
       if (touch.pressed()) {
         Serial.println("Touch pressed");
         if (isTouchInZone(15,55,130,130)) {
@@ -174,9 +174,9 @@ void setup() {
   // Initialize the HX711
   hx711.begin();
   
-  spr.createSprite(SCREEN_WIDTH, SCREEN_HEIGHT);
-  spr.setColorDepth(8); //redundant
-
+  spr.setColorDepth(8);
+  spr.createSprite(SCREEN_WIDTH, SCREEN_HEIGHT, 2);
+  
   initTouch();
   tft.init();
   tft.setRotation(SCREEN_ROTATION);
@@ -191,7 +191,7 @@ void setup() {
   spr.setCursor(1, 16);
   spr.println("Nicht");
   spr.println("blasen!");
-  spr.pushSprite(0, 0);
+  spr.pushSpriteFast(0, 0);
 
   Serial.println(F("done"));
 
@@ -264,7 +264,7 @@ void drawPEPDisplay() {
   spr.print(leftPad(String(batteryVoltage%1000), 3, "0"));
   spr.println("V");
   lastMs = millis();
-  spr.pushSprite(0, 0);
+  spr.pushSpriteFast(0, 0);
 }
 
 String winScreenPath = "";
@@ -308,7 +308,7 @@ void drawTrampolineDisplay() {
   spr.print(leftPad(String(batteryVoltage%1000), 3, "0"));
   spr.print("V");
   lastMs = millis();
-  spr.pushSprite(0, 0);
+  spr.pushSpriteFast(0, 0);
 }
 
 
@@ -325,7 +325,7 @@ void displayRotatePEP() {
     } else {
       spr.print("5mm");
     }
-    spr.pushSprite(0, 0);
+    spr.pushSpriteFast(0, 0);
     delay(200);
   }
   tft.invertDisplay(0);

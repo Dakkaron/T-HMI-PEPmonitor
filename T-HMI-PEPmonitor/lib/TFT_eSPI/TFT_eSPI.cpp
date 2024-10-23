@@ -1533,6 +1533,66 @@ void TFT_eSPI::pushImage(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t *d
 
 
 /***************************************************************************************
+** Function name:           pushImageFast
+** Description:             plot 16-bit sprite or image with 1 colour being transparent
+***************************************************************************************/
+void TFT_eSPI::pushImageFast(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t *dataNew, uint16_t *dataOld)
+{
+  PI_CLIP;
+
+  begin_tft_write();
+  inTransaction = true;
+
+  dataNew += dx + dy * w;
+  dataOld += dx + dy * w;
+
+
+  uint16_t  lineBuf[dw]; // Use buffer to minimise setWindow call count
+
+  while (dh--)
+  {
+    int32_t len = dw;
+    uint16_t* ptr = dataNew;
+    uint16_t* ptrOld = dataOld;
+    int32_t px = x, sx = x;
+    bool move = true;
+    uint16_t np = 0;
+
+    while (len--)
+    {
+      if (*ptrOld != *ptr)
+      {
+        if (move) { move = false; sx = px; }
+        lineBuf[np] = *ptr;
+        np++;
+      }
+      else
+      {
+        move = true;
+        if (np)
+        {
+          setWindow(sx, y, sx + np - 1, y);
+          pushPixels((uint16_t*)lineBuf, np);
+          np = 0;
+        }
+      }
+      px++;
+      ptr++;
+      ptrOld++;
+    }
+    if (np) { setWindow(sx, y, sx + np - 1, y); pushPixels((uint16_t*)lineBuf, np); }
+
+    y++;
+    dataNew += w;
+    dataOld += w;
+  }
+
+  inTransaction = lockTransaction;
+  end_tft_write();
+}
+
+
+/***************************************************************************************
 ** Function name:           pushImage - for FLASH (PROGMEM) stored images
 ** Description:             plot 16-bit image
 ***************************************************************************************/
@@ -1878,6 +1938,241 @@ void TFT_eSPI::pushImage(int32_t x, int32_t y, int32_t w, int32_t h, uint8_t *da
     }
   }
 
+  _swapBytes = swap; // Restore old value
+  inTransaction = lockTransaction;
+  end_tft_write();
+}
+
+
+/***************************************************************************************
+** Function name:           pushImage
+** Description:             plot 8 or 4 or 1 bit image or sprite, only updating data that differes between old and new buffer
+***************************************************************************************/
+void TFT_eSPI::pushImageFast(int32_t x, int32_t y, int32_t w, int32_t h, uint8_t *dataNew, uint8_t *dataOld, bool bpp8, uint16_t *cmap)
+{
+  PI_CLIP;
+
+  begin_tft_write();
+  inTransaction = true;
+  bool swap = _swapBytes;
+
+
+  // Line buffer makes plotting faster
+  uint16_t  lineBuf[dw];
+
+  if (bpp8) { // 8 bits per pixel
+    _swapBytes = false;
+
+    dataNew += dx + dy * w;
+    dataOld += dx + dy * w;
+
+    uint8_t  blue[] = {0, 11, 21, 31}; // blue 2 to 5-bit colour lookup table
+
+    _lastColor = -1; // Set to illegal value
+
+    // Used to store last shifted colour
+    uint8_t msbColor = 0;
+    uint8_t lsbColor = 0;
+
+    while (dh--) {
+      int32_t len = dw;
+      uint8_t* ptr = dataNew;
+      uint8_t* ptrOld = dataOld;
+      uint8_t* linePtr = (uint8_t*)lineBuf;
+
+      int32_t px = x, sx = x;
+      bool move = true;
+      uint16_t np = 0;
+
+      while (len--) {
+        if (*ptrOld != *ptr) {
+          if (move) { move = false; sx = px; }
+          uint8_t color = *ptr;
+
+          // Shifts are slow so check if colour has changed first
+          if (color != _lastColor) {
+            //          =====Green=====     ===============Red==============
+            msbColor = (color & 0x1C)>>2 | (color & 0xC0)>>3 | (color & 0xE0);
+            //          =====Green=====    =======Blue======
+            lsbColor = (color & 0x1C)<<3 | blue[color & 0x03];
+            _lastColor = color;
+          }
+          *linePtr++ = msbColor;
+          *linePtr++ = lsbColor;
+          np++;
+        }
+        else {
+          /*// TMP START
+          uint8_t color = 0xF0;
+
+          // Shifts are slow so check if colour has changed first
+          if (color != _lastColor) {
+            //          =====Green=====     ===============Red==============
+            msbColor = (color & 0x1C)>>2 | (color & 0xC0)>>3 | (color & 0xE0);
+            //          =====Green=====    =======Blue======
+            lsbColor = (color & 0x1C)<<3 | blue[color & 0x03];
+          }
+          *linePtr++ = msbColor;
+          *linePtr++ = lsbColor;
+          np++;
+          // TMP END
+          */
+          move = true;
+          if (np) {
+            setWindow(sx, y, sx + np - 1, y);
+            pushPixels(lineBuf, np);
+            linePtr = (uint8_t*)lineBuf;
+            np = 0;
+          }
+        }
+        px++;
+        ptr++;
+        ptrOld++;
+      }
+
+      if (np) { setWindow(sx, y, sx + np - 1, y); pushPixels(lineBuf, np); }
+      y++;
+      dataNew += w;
+      dataOld += w;
+    }
+  }
+  else if (cmap != nullptr) // 4bpp with color map
+  {
+    _swapBytes = true;
+
+    w = (w+1) & 0xFFFE; // here we try to recreate iwidth from dwidth.
+    bool splitFirst = ((dx & 0x01) != 0);
+    if (splitFirst) {
+      dataNew += ((dx - 1 + dy * w) >> 1);
+      dataOld += ((dx - 1 + dy * w) >> 1);
+    }
+    else {
+      dataNew += ((dx + dy * w) >> 1);
+      dataOld += ((dx + dy * w) >> 1);
+    }
+
+    while (dh--) {
+      uint32_t len = dw;
+      uint8_t * ptr = dataNew;
+      uint8_t * ptrOld = dataOld;
+
+      int32_t px = x, sx = x;
+      bool move = true;
+      uint16_t np = 0;
+
+      uint8_t index;  // index into cmap.
+      uint8_t indexOld;  // index into cmap.
+
+      if (splitFirst) {
+        index = (*ptr & 0x0F);  // odd = bits 3 .. 0
+        indexOld = (*ptrOld & 0x0F);  // odd = bits 3 .. 0
+        if (index != indexOld) {
+          move = false; sx = px;
+          lineBuf[np] = cmap[index];
+          np++;
+        }
+        px++; ptr++;
+        len--;
+      }
+
+      while (len--)
+      {
+        uint8_t color = *ptr;
+        uint8_t colorOld = *ptrOld;
+
+        // find the actual color you care about.  There will be two pixels here!
+        // but we may only want one at the end of the row
+        uint16_t index = ((color & 0xF0) >> 4) & 0x0F;  // high bits are the even numbers
+        uint16_t indexOld = ((colorOld & 0xF0) >> 4) & 0x0F;  // high bits are the even numbers
+        if (index != indexOld) {
+          if (move) {
+            move = false; sx = px;
+          }
+          lineBuf[np] = cmap[index];
+          np++; // added a pixel
+        }
+        else {
+          move = true;
+          if (np) {
+            setWindow(sx, y, sx + np - 1, y);
+            pushPixels(lineBuf, np);
+            np = 0;
+          }
+        }
+        px++;
+
+        if (len--)
+        {
+          index = color & 0x0F; // the odd number is 3 .. 0
+          indexOld = colorOld & 0x0F; // the odd number is 3 .. 0
+          if (index != indexOld) {
+            if (move) {
+              move = false; sx = px;
+             }
+            lineBuf[np] = cmap[index];
+            np++;
+          }
+          else {
+            move = true;
+            if (np) {
+              setWindow(sx, y, sx + np - 1, y);
+              pushPixels(lineBuf, np);
+              np = 0;
+            }
+          }
+          px++;
+        }
+        else {
+          break;  // we are done with this row.
+        }
+        ptr++;  // we only increment ptr once in the loop (deliberate)
+      }
+
+      if (np) {
+        setWindow(sx, y, sx + np - 1, y);
+        pushPixels(lineBuf, np);
+        np = 0;
+      }
+      dataNew += (w>>1);
+      dataOld += (w>>1);
+      y++;
+    }
+  }
+  else { // 1 bit per pixel
+    _swapBytes = false;
+
+    uint32_t ww =  (w+7)>>3; // Width of source image line in bytes
+    uint16_t np = 0;
+
+    for (int32_t yp = dy;  yp < dy + dh; yp++)
+    {
+      int32_t px = x, sx = x;
+      bool move = true;
+      for (int32_t xp = dx; xp < dx + dw; xp++)
+      {
+        if (dataNew[(xp>>3)] & (0x80 >> (xp & 0x7))) {
+          if (move) {
+            move = false;
+            sx = px;
+          }
+          np++;
+        }
+        else {
+          move = true;
+          if (np) {
+            setWindow(sx, y, sx + np - 1, y);
+            pushBlock(bitmap_fg, np);
+            np = 0;
+          }
+        }
+        px++;
+      }
+      if (np) { setWindow(sx, y, sx + np - 1, y); pushBlock(bitmap_fg, np); np = 0; }
+      y++;
+      dataNew += ww;
+      dataOld += ww;
+    }
+  }
   _swapBytes = swap; // Restore old value
   inTransaction = lockTransaction;
   end_tft_write();
@@ -6148,6 +6443,8 @@ void TFT_eSPI::getSetup(setup_t &tft_settings)
 #include "Extensions/Button.cpp"
 
 #include "Extensions/Sprite.cpp"
+
+#include "Extensions/Framebuffer.cpp"
 
 #ifdef SMOOTH_FONT
   #include "Extensions/Smooth_font.cpp"

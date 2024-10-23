@@ -121,6 +121,7 @@ class TFT_eSprite : public TFT_eSPI {
            // Push the sprite to the TFT screen, this fn calls pushImage() in the TFT class.
            // Optionally a "transparent" colour can be defined, pixels of that colour will not be rendered
   void     pushSprite(int32_t x, int32_t y);
+  void     pushSpriteFast(int32_t x, int32_t y);
   void     pushSprite(int32_t x, int32_t y, uint16_t transparent);
 
            // Push a windowed area of the sprite to the TFT at tx, ty
