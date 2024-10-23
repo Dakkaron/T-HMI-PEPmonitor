@@ -16,7 +16,10 @@ void readPressure(Adafruit_HX711* hx711, BlowData* blowData) {
                         (blowDuration) > (blowData->isLongBlows ? LONG_BLOW_DURATION_MS+SIMULATE_BLOWS_PAUSE_DURATION : SIMULATE_BLOWS_SHORT_BLOW_DURATION+SIMULATE_BLOWS_PAUSE_DURATION);
     blowData->pressure = isBlowing ? SHORT_BLOW_MIN_STRENGTH + 5 : 1; 
   #else // !SIMULATE_BLOWING
-    int32_t sensorValue = (hx711->readChannelBlocking(CHAN_A_GAIN_64) / (blowData->isLongBlows ? PRESSURE_SENSOR_LONG_BLOW_DIVISOR : PRESSURE_SENSOR_SHORT_BLOW_DIVISOR)); // Dropping the least significant 15 bits
+    if (hx711->isBusy()) {
+      return;
+    }
+    int32_t sensorValue = (hx711->readChannel(CHAN_A_GAIN_64) / (blowData->isLongBlows ? PRESSURE_SENSOR_LONG_BLOW_DIVISOR : PRESSURE_SENSOR_SHORT_BLOW_DIVISOR)); // Dropping the least significant 15 bits
     #ifdef LOG_BLOW_PRESSURE
       Serial.print(F("Channel A (Gain 64): "));
       Serial.print(sensorValue);
