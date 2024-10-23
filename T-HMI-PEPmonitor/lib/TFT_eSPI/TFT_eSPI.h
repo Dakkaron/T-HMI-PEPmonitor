@@ -606,6 +606,7 @@ class TFT_eSPI : public Print { friend class TFT_eSprite; // Sprite class has ac
            // These are used to render images or sprites stored in RAM arrays (used by Sprite class for 16bpp Sprites)
   void     pushImage(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t *data);
   void     pushImage(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t *data, uint16_t transparent);
+  void     pushImageFast(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t *dataNew, uint16_t *dataOld);
 
            // These are used to render images stored in FLASH (PROGMEM)
   void     pushImage(int32_t x, int32_t y, int32_t w, int32_t h, const uint16_t *data, uint16_t transparent);
@@ -616,6 +617,7 @@ class TFT_eSPI : public Print { friend class TFT_eSprite; // Sprite class has ac
            // Set bpp8 true for 8bpp sprites, false otherwise. The cmap pointer must be specified for 4bpp
   void     pushImage(int32_t x, int32_t y, int32_t w, int32_t h, uint8_t  *data, bool bpp8 = true, uint16_t *cmap = nullptr);
   void     pushImage(int32_t x, int32_t y, int32_t w, int32_t h, uint8_t  *data, uint8_t  transparent, bool bpp8 = true, uint16_t *cmap = nullptr);
+  void     pushImageFast(int32_t x, int32_t y, int32_t w, int32_t h, uint8_t  *dataNew, uint8_t *dataOld, bool bpp8 = true, uint16_t *cmap = nullptr);
            // FLASH version
   void     pushImage(int32_t x, int32_t y, int32_t w, int32_t h, const uint8_t *data, bool bpp8,  uint16_t *cmap = nullptr);
 
@@ -1007,5 +1009,8 @@ fastBlend(A alpha, F fgc, B bgc)
 
 // Load the Sprite Class
 #include "Extensions/Sprite.h"
+
+// Load the Framebuffer Class
+#include "Extensions/Framebuffer.h"
 
 #endif // ends #ifndef _TFT_eSPIH_

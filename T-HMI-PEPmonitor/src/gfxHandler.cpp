@@ -282,8 +282,7 @@ void drawProgressBar(DISPLAY_T* display, uint16_t percent, uint16_t greenOffset,
   display->setTextSize(1);
   display->setTextColor(TFT_WHITE);
   display->setCursor(x, y - 11);
-  display->print(percent);
-  display->print('%');
+  printShaded(display, String(percent) + "%");
 }
 
 void drawProgressBar(DISPLAY_T* display, uint16_t val, uint16_t maxVal, uint16_t greenOffset, int16_t x, int16_t y, int16_t w, int16_t h) {
@@ -293,9 +292,7 @@ void drawProgressBar(DISPLAY_T* display, uint16_t val, uint16_t maxVal, uint16_t
   display->setTextSize(1);
   display->setTextColor(TFT_WHITE);
   display->setCursor(x, y - 11);
-  display->print(val);
-  display->print('/');
-  display->print(maxVal);
+  printShaded(display, String(val) + "/" + String(maxVal));
 }
 
 void printShaded(DISPLAY_T* display, String text) {

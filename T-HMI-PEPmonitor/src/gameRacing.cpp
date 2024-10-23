@@ -279,9 +279,9 @@ void drawLongBlowGame_racing(DISPLAY_T* display, BlowData* blowData, String* err
   display->print(currentPosition);
 
   if (nitro > 0) {
-    display->setCursor(265, 12);
+    display->setCursor(247, 12);
     display->setTextSize(3);
-    printShaded(display, String(nitro) + "x");
+    printShaded(display, (nitro<10 ? " " : "") + String(nitro) + "x");
     nitroSSprite.pushToSprite(display, 300, 5, 0x0000);
   }
 
