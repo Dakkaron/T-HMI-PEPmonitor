@@ -352,7 +352,7 @@ void printShaded(DISPLAY_T* display, String text, uint8_t shadeStrength, uint16_
   display->print(text);
 }
 
-void drawSelectionPage(DISPLAY_T* display, uint16_t startNr, uint16_t nr, bool drawArrows, String* errorMessage) {
+void drawGameSelectionPage(DISPLAY_T* display, uint16_t startNr, uint16_t nr, bool drawArrows, String* errorMessage) {
   uint8_t columns = _min(4, nr);
   uint8_t rows = nr>4 ? 2 : 1;
   uint8_t cWidth = (290 - 10*columns) / columns;
@@ -383,12 +383,12 @@ int16_t checkSelectionPageSelection(uint16_t startNr, uint16_t nr, bool drawArro
   return -1;
 }
 
-uint16_t displaySelection(DISPLAY_T* display, uint16_t nr, String* errorMessage) {
+uint16_t displayGameSelection(DISPLAY_T* display, uint16_t nr, String* errorMessage) {
   uint16_t startNr = 0;
 
   while (true) {
     display->fillSprite(TFT_BLACK);
-    drawSelectionPage(display, startNr, _min(nr, 8), nr>8, errorMessage);
+    drawGameSelectionPage(display, startNr, _min(nr, 8), nr>8, errorMessage);
     int16_t selection = checkSelectionPageSelection(startNr, _min(nr, 8), nr>8);
     display->pushSpriteFast(0, 0);
     if (selection != -1) {

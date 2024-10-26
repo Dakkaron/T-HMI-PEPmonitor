@@ -130,7 +130,7 @@ void runGameSelection() {
   if (numberOfGames == 1) {
     gamePath = getGamePath(0, &errorMessage);
   } else {
-    gamePath = getGamePath(displaySelection(&spr, numberOfGames, &errorMessage), &errorMessage);
+    gamePath = getGamePath(displayGameSelection(&spr, numberOfGames, &errorMessage), &errorMessage);
   }
   checkFailWithMessage(errorMessage);
   Serial.print("Game path: ");

@@ -31,6 +31,6 @@ void printShaded(DISPLAY_T* display, String text, uint8_t shadeStrength, uint16_
 void printShaded(DISPLAY_T* display, String text, uint8_t shadeStrength, uint16_t textColor);
 void printShaded(DISPLAY_T* display, String text, uint8_t shadeStrength);
 void printShaded(DISPLAY_T* display, String text);
-uint16_t displaySelection(DISPLAY_T* display, uint16_t nr, String* errorMessage);
+uint16_t displayGameSelection(DISPLAY_T* display, uint16_t nr, String* errorMessage);
 
 #endif /*__GFXHANDLER_H__*/
