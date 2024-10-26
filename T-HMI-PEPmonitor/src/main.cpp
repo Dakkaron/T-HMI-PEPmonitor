@@ -115,7 +115,7 @@ void checkFailWithMessage(String message) {
     spr.setCursor(1, 16);
     spr.println("FEHLER:");
     spr.println(message);
-    spr.pushSpriteFast(0, 0);
+    spr.pushSprite(0, 0);
     while (true) {};
   }
 }
@@ -130,24 +130,7 @@ void runGameSelection() {
   if (numberOfGames == 1) {
     gamePath = getGamePath(0, &errorMessage);
   } else {
-    while (true) {
-      spr.fillSprite(TFT_BLACK);
-      spr.fillRect(15,55,130,130,TFT_BLUE);
-      spr.fillRect(160,55,130,130,TFT_RED);
-      spr.pushSpriteFast(0,0);
-      if (touch.pressed()) {
-        Serial.println("Touch pressed");
-        if (isTouchInZone(15,55,130,130)) {
-          Serial.println("Selection Evolution");
-          gamePath = getGamePath(0, &errorMessage);
-          break;
-        } else if (isTouchInZone(145,55,130,130)) {
-          Serial.println("Selection Catch");
-          gamePath = getGamePath(1, &errorMessage);
-          break;
-        }
-      }
-    }
+    gamePath = getGamePath(displaySelection(&spr, numberOfGames, &errorMessage), &errorMessage);
   }
   checkFailWithMessage(errorMessage);
   Serial.print("Game path: ");

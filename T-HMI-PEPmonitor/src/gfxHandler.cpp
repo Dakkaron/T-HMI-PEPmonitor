@@ -32,6 +32,32 @@ void loadBmpAnim(DISPLAY_T** display, String filename, uint8_t animFrames) {
   loadBmpAnim(display, filename, animFrames, 0);
 }
 
+void getBmpDimensions(String filename, int16_t* w, int16_t* h) {
+  File bmpFS;
+  bmpFS = SD_MMC.open(filename);
+
+  if (!bmpFS)
+  {
+    Serial.print("File not found: ");
+    Serial.println(filename);
+    Serial.println("#");
+    return;
+  }
+  uint16_t headerBytes = read16(bmpFS);
+  if (headerBytes == 0x4D42) {
+    read32(bmpFS);
+    read32(bmpFS);
+    read32(bmpFS);
+    read32(bmpFS);
+    *w = read32(bmpFS);
+    *h = read32(bmpFS);
+  } else {
+    Serial.print("Wrong file format: ");
+    Serial.println(headerBytes);
+  }
+  bmpFS.close();
+}
+
 /*
  * animFrames -> number of frames to export, 1 == no animation, still image
  */
@@ -158,10 +184,12 @@ void loadBmpAnim(DISPLAY_T** displays, String filename, uint8_t animFrames, uint
 }
 
 
-void drawBmp(String filename, int16_t x, int16_t y) {
-  Serial.print("File: ");
-  Serial.println(filename);
-  Serial.println("#");
+void drawBmp(String filename, int16_t x, int16_t y, bool debugLog) {
+  if (debugLog) {
+    Serial.print("File: ");
+    Serial.println(filename);
+    Serial.println("#");
+  }
 
   File bmpFS;
 
@@ -238,10 +266,12 @@ void drawBmp(String filename, int16_t x, int16_t y) {
           bmpFS.read((uint8_t*)tptr, padding);
         }
         // Push the pixel row to screen, pushImage will crop the line if needed
-        tft.pushImage(0, h - 1 - row, w, 1, (uint16_t*)lineBuffer);
+        tft.pushImage(x, y + h - 1 - row, w, 1, (uint16_t*)lineBuffer, 0x0000);
       }
-      Serial.print("Loaded in "); Serial.print(millis() - startTime);
-      Serial.println(" ms");
+      if (debugLog) {
+        Serial.print("Loaded in "); Serial.print(millis() - startTime);
+        Serial.println(" ms");
+      }
     } else {
       Serial.print("BMP format not recognized: ");
       Serial.print(colorPanes);
@@ -320,4 +350,49 @@ void printShaded(DISPLAY_T* display, String text, uint8_t shadeStrength, uint16_
   display->setTextColor(textColor);
   display->setCursor(x, y);
   display->print(text);
+}
+
+void drawSelectionPage(DISPLAY_T* display, uint16_t startNr, uint16_t nr, bool drawArrows, String* errorMessage) {
+  uint8_t columns = _min(4, nr);
+  uint8_t rows = nr>4 ? 2 : 1;
+  uint8_t cWidth = (290 - 10*columns) / columns;
+  uint8_t cHeight = rows==1 ? 220 : 105; 
+  for (uint8_t c = 0; c<columns; c++) {
+    for (uint8_t r = 0; r<rows; r++) {
+      String gamePath = getGamePath(c + r*columns, errorMessage);
+      display->fillRect(20 + c*(cWidth + 10), 10+(r*(cHeight+10)), cWidth, cHeight, TFT_BLUE);
+      int16_t imgW, imgH;
+      getBmpDimensions(gamePath + "logo.bmp", &imgW, &imgH);
+      drawBmp(gamePath + "logo.bmp", 20 + c*(cWidth + 10) + cWidth/2 - imgW/2, 10+(r*cHeight+10) + cHeight/2 - imgH/2, false);
+    }
+  }
+}
+
+int16_t checkSelectionPageSelection(uint16_t startNr, uint16_t nr, bool drawArrows) {
+  uint8_t columns = _min(4, nr);
+  uint8_t rows = nr>4 ? 2 : 1;
+  uint8_t cWidth = (290 - 10*columns) / columns;
+  uint8_t cHeight = rows==1 ? 220 : 105; 
+  for (uint8_t c = 0; c<columns; c++) {
+    for (uint8_t r = 0; r<rows; r++) {
+      if (touch.pressed() && isTouchInZone(20 + c*(cWidth + 10), 10+(r*(cHeight+10)), cWidth, cHeight)) {
+        return startNr + c + r*columns;
+      }
+    }
+  }
+  return -1;
+}
+
+uint16_t displaySelection(DISPLAY_T* display, uint16_t nr, String* errorMessage) {
+  uint16_t startNr = 0;
+
+  while (true) {
+    display->fillSprite(TFT_BLACK);
+    drawSelectionPage(display, startNr, _min(nr, 8), nr>8, errorMessage);
+    int16_t selection = checkSelectionPageSelection(startNr, _min(nr, 8), nr>8);
+    display->pushSpriteFast(0, 0);
+    if (selection != -1) {
+      return selection;
+    }
+  }
 }
