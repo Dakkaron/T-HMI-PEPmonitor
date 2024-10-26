@@ -111,6 +111,7 @@ void drawRace(DISPLAY_T* display, BlowData* blowData, int32_t animTime) {
   int32_t enemyY = -1;
   int32_t enemy2Y = -1;
   int32_t x,w,roadYOffset;
+  int32_t lastX, lastW;
   int32_t speed = 25;
   if (animTime <= 2000 && (blowData->lastBlowStatus & LAST_BLOW_FAILED)) {
     enemyY = 50 + (150*(2000-animTime) / 2000);
@@ -136,7 +137,13 @@ void drawRace(DISPLAY_T* display, BlowData* blowData, int32_t animTime) {
       break;
   }
   for (int32_t y=50;y<190;y++) {
+    lastX = x;
+    lastW = w;
     calculateRoad(y, speed, blowData->ms, &x, &w, &roadYOffset);
+    if (y==50) {
+      lastX = x;
+      lastW = w;
+    }
     // Draw road surface
     display->drawFastHLine(x, y, w, (roadYOffset/6) % 2 ? 0x5AEB : 0x8410);
     // Draw embankment
@@ -147,18 +154,38 @@ void drawRace(DISPLAY_T* display, BlowData* blowData, int32_t animTime) {
       display->drawFastHLine(x+w/2-w/20, y, w/10, 0xffff);
     }
 
-    // Draw wall
-    display->drawFastVLine(x-w/5, y-w, w, (roadYOffset/6) % 2 ? 0xbdf7 : 0xce59);
-    display->drawFastVLine(x-w/5-1, y-w, w, (roadYOffset/6) % 2 ? 0xbdf7 : 0xce59);
-    display->drawFastVLine(x-w/5-2, y-w, w, (roadYOffset/6) % 2 ? 0xbdf7 : 0xce59);
-    display->drawFastVLine(x-w/5-3, y-w, w, (roadYOffset/6) % 2 ? 0xbdf7 : 0xce59);
-    display->drawFastVLine(x+w+w/5, y-w, w, (roadYOffset/6) % 2 ? 0xbdf7 : 0xce59);
-    display->drawFastVLine(x+w+w/5+1, y-w, w, (roadYOffset/6) % 2 ? 0xbdf7 : 0xce59);
-    display->drawFastVLine(x+w+w/5+2, y-w, w, (roadYOffset/6) % 2 ? 0xbdf7 : 0xce59);
-    display->drawFastVLine(x+w+w/5+3, y-w, w, (roadYOffset/6) % 2 ? 0xbdf7 : 0xce59);
-
     // Draw roof
     display->drawFastHLine(x-w/5, y-w, w+2*w/5, (roadYOffset/6) % 2 ? 0x5AEB : 0x8410);
+
+    // Draw wall
+    int32_t dxTotal = (lastX-lastW/5) - (x-w/5);
+    if (dxTotal>0) { // Only draw left wall if visible
+      for (int32_t dx = _min(dxTotal, 0); dx < _max(dxTotal + 1, 1); dx++) {
+        display->drawFastVLine(x-w/5 + dx, y-w, w, (roadYOffset/6) % 2 ? 0xbdf7 : 0xce59);
+      }
+    }
+    dxTotal = (lastX+lastW+lastW/5) - (x+w+w/5);
+    if (dxTotal<0) { // Only draw right wall if visible
+      for (int32_t dx = _min(dxTotal, 0); dx < _max(dxTotal + 1, 1); dx++) {
+        display->drawFastVLine(x+w+w/5 + dx, y-w, w, (roadYOffset/6) % 2 ? 0xbdf7 : 0xce59);
+      }
+
+      // Draw emergency escape sign
+      if ((roadYOffset % 40) == 0) {
+        for (int32_t dx = _min(dxTotal, 0); dx < _max(dxTotal + 1, 1); dx++) {
+          display->drawFastVLine(x+w+w/5 + dx, y-w/2, w/10, 0x0540);
+          display->drawPixel(x+w+w/5 + dx, y-w/2, 0x0000);
+          display->drawPixel(x+w+w/5 + dx, y-w/2+w/10, 0x0000);
+        }
+      }
+
+      // Draw escape door
+      if ((roadYOffset % 40) > 1 && (roadYOffset % 40) < 3) {
+        for (int32_t dx = _min(dxTotal, 0); dx < _max(dxTotal + 1, 1); dx++) {
+          display->drawFastVLine(x+w+w/5 + dx, y-w/2, w/2, 0x3166);
+        }
+      }
+    }
 
     // Draw lamp light
     /*if (((roadYOffset/2) % 6) <= 2) {
