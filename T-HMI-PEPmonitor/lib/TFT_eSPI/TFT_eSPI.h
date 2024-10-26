@@ -1010,7 +1010,4 @@ fastBlend(A alpha, F fgc, B bgc)
 // Load the Sprite Class
 #include "Extensions/Sprite.h"
 
-// Load the Framebuffer Class
-#include "Extensions/Framebuffer.h"
-
 #endif // ends #ifndef _TFT_eSPIH_

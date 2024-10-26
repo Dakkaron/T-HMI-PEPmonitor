@@ -6444,8 +6444,6 @@ void TFT_eSPI::getSetup(setup_t &tft_settings)
 
 #include "Extensions/Sprite.cpp"
 
-#include "Extensions/Framebuffer.cpp"
-
 #ifdef SMOOTH_FONT
   #include "Extensions/Smooth_font.cpp"
 #endif
