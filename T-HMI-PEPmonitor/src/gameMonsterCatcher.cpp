@@ -2,6 +2,7 @@
 
 String monsterCatcherGamePath;
 String monsterCatcherGameIniPath;
+uint16_t maxMonsterCount;
 
 TFT_eSprite playerSprite[] = {TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft)};
 TFT_eSprite enemySprite[] = {TFT_eSprite(&tft), TFT_eSprite(&tft)};
@@ -9,7 +10,7 @@ TFT_eSprite safariBushSprite[] {TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprit
 TFT_eSprite ballCaughtIndicator = TFT_eSprite(&tft);
 MonsterData playerMonsterData;
 MonsterData enemyMonsterData;
-uint8_t monsterLevels[MAX_MONSTER_NUMBER];
+uint8_t* monsterLevels;
 String loadedAttacks[2] = {"",""}; //-1 == no attack loaded
 TFT_eSprite attackSprites[2][ATTACK_SPRITE_NUMBER] {
   {TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft),
@@ -25,7 +26,7 @@ void savePlayerMonsterId();
 uint16_t getRandomPreviouslyCaughtMonster() {
   uint16_t monsterId = 0;
   while (true) {
-    monsterId = random(0, MAX_MONSTER_NUMBER);
+    monsterId = random(0, maxMonsterCount);
     if (monsterLevels[monsterId] > 0) {
       return monsterId;
     }
@@ -294,7 +295,7 @@ void drawCombat(DISPLAY_T* display, BlowData* blowData, uint8_t numberOfAttacks,
     enemySprite[(blowData->ms / 500) % 2].pushToSprite(display, 200 + xOffset, 50);
   }
   if (monsterLevels[enemyMonsterData.id] > 0) {
-    ballCaughtIndicator.pushToSprite(display, 190195, 50);
+    ballCaughtIndicator.pushToSprite(display, 190, 32);
   }
   display->setCursor(200, 33);
   display->setTextSize(2);
@@ -329,7 +330,7 @@ void savePlayerMonsterId() {
     Serial.println(playerMonsterData.id);
     if (monsterLevels[playerMonsterData.id] == 0) {
       monsterLevels[playerMonsterData.id] = 1;
-      prefs.putBytes("levels", monsterLevels, MAX_MONSTER_NUMBER);
+      prefs.putBytes("levels", monsterLevels, maxMonsterCount);
     }
     prefs.putInt("playerMonsterId", playerMonsterData.id);
   #else
@@ -518,9 +519,11 @@ void initGames_monsterCatcher(String gamePath, GameConfig* gameConfig, String* e
   Serial.println(gamePath);
   monsterCatcherGamePath = gamePath;
   monsterCatcherGameIniPath = gamePath + "gameconfig.ini";
+  maxMonsterCount = getMaxMonsterCount(monsterCatcherGameIniPath, errorMessage);
+  monsterLevels = (uint8_t*)calloc(maxMonsterCount, sizeof(uint8_t));
   prefs.begin(gameConfig->prefsNamespace.c_str());
-  if (prefs.getBytes("levels", monsterLevels, MAX_MONSTER_NUMBER) == 0) {
-    for (int16_t i=0; i<MAX_MONSTER_NUMBER; i++) {
+  if (prefs.getBytes("levels", monsterLevels, maxMonsterCount) == 0) {
+    for (int16_t i=0; i<maxMonsterCount; i++) {
       monsterLevels[i] = 0;
     }
     monsterLevels[1] = 1;

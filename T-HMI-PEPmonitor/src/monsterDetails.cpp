@@ -37,6 +37,16 @@ uint8_t getMonsterSafariRarity(String gameIniPath, uint16_t monsterId, String* e
   return atoi(getIniValueFromSection(resBuffer, "safariRarity", &ignoreErrors).c_str());
 }
 
+uint16_t getMaxMonsterCount(String gameIniPath, String* errorMessage) {
+  char resBuffer[1024];
+  getIniSection(gameIniPath, String("[game]"), (char*)resBuffer, 1024, errorMessage);
+  if (!errorMessage->isEmpty()) {
+    return 0;
+  }
+  String ignoreErrors;
+  return atoi(getIniValueFromSection(resBuffer, "maxMonsterCount", &ignoreErrors).c_str());
+}
+
 uint16_t getMonsterCount(String gameIniPath, String* errorMessage) {
   char resBuffer[1024];
   getIniSection(gameIniPath, String("[game]"), (char*)resBuffer, 1024, errorMessage);
