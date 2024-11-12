@@ -3,6 +3,48 @@
 
 uint32_t numberOfWinScreens;
 
+
+uint32_t getNumberOfProfiles() {
+  uint32_t count = 0;
+  String errorMessage = "";
+  char resBuffer[1024];
+  while (errorMessage.isEmpty()) {
+    getIniSection(PROFILE_DATA_INI_PATH, "[profile_" + String(count) + "]", resBuffer, 1024, &errorMessage);
+    count++;
+  }
+  return count;
+}
+
+void readProfileData(uint32_t profileId, ProfileData* profileData, String* errorMessage) {
+  char resBuffer[2048];
+  getIniSection(PROFILE_DATA_INI_PATH, "[profile_" + String(profileId) + "]", resBuffer, 2048, errorMessage);
+  profileData->name = getIniValueFromSection(resBuffer, "name", errorMessage);
+  profileData->imagePath = getIniValueFromSection(resBuffer, "imagePath", errorMessage);
+  profileData->cycles = atoi(getIniValueFromSection(resBuffer, "cycles", errorMessage).c_str());
+  String profileType = getIniValueFromSection(resBuffer, "type", errorMessage);
+  if (profileType == "blow") {
+    profileData->type = PROFILE_TYPE_BLOW;
+  } else if (profileType == "trampoline") {
+    profileData->type = PROFILE_TYPE_TRAMPOLINE;
+  }
+  for (uint8_t taskId=0; taskId<10; taskId++) {
+    String taskType = getIniValueFromSection(resBuffer, "task_" + String(taskId) + "_type", errorMessage);
+    if (taskType == "shortBlows") {
+      profileData->taskType[taskId] = PROFILE_TASK_TYPE_SHORTBLOWS;
+    } else if (taskType == "longBlows") {
+      profileData->taskType[taskId] = PROFILE_TASK_TYPE_LONGBLOWS;
+    } else if (taskType == "equalBlows") {
+      profileData->taskType[taskId] = PROFILE_TASK_TYPE_EQUALBLOWS;
+    } else if (taskType == "trampoline") {
+      profileData->taskType[taskId] = PROFILE_TASK_TYPE_TRAMPOLINE;
+    } else {
+      break;
+    }
+    profileData->tasks++;
+    
+  }
+}
+
 uint16_t getNumberOfGames(String* errorMessage) {
   Serial.println("getNumberOfGames()");
   File root = SD_MMC.open(GAMES_ROOT_DIR);
@@ -229,9 +271,6 @@ String getRandomWinScreenPath(String gamePath, String* errorMessage) {
   return "";
 }
 
-
-void readSystemConfig() {
-}
 
 String readFileToString(const char *path) {
   File file = SD_MMC.open(path);
