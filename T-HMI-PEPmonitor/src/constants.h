@@ -14,7 +14,7 @@
 #define PRESSURE_SENSOR_LONG_BLOW_DIVISOR  11000L //(32768L/3L)
 #define PRESSURE_SENSOR_SHORT_BLOW_DIVISOR 20000L //(32768L/6L)
 #define PRESSURE_SENSOR_CUTOFF_LIMIT 500
-#define PRESSURE_SENSOR_BLOWING_THRESHOLD 45
+#define PRESSURE_SENSOR_BLOWING_THRESHOLD 60
 #define PRESSURE_SENSOR_SMOOTHING_NUM_READINGS 10
 #define PRESSURE_SENSOR_MAX_SKIPS 10;
 
@@ -34,6 +34,14 @@
 #define SENSOR_MODE_PEPS 1
 #define SENSOR_MODE_TRAMPOLINE 2
 
+#define PROFILE_TYPE_BLOW 1
+#define PROFILE_TYPE_TRAMPOLINE 2
+
+#define PROFILE_TASK_TYPE_SHORTBLOWS 1
+#define PROFILE_TASK_TYPE_LONGBLOWS 2
+#define PROFILE_TASK_TYPE_EQUALBLOWS 3
+#define PROFILE_TASK_TYPE_TRAMPOLINE 4
+
 struct SystemConfig {
   uint16_t longBlowGameCount = 1;
   uint16_t shortBlowGameCount = 1;
@@ -46,6 +54,18 @@ struct GameConfig {
   String name;
   String templateName;
   String prefsNamespace;
+};
+
+struct ProfileData {
+  String name;
+  String imagePath;
+  uint8_t type;
+  uint8_t cycles;
+  uint8_t tasks;
+  uint8_t taskType[10];
+  uint8_t taskRepetitions[10];
+  uint32_t taskTime[10];
+  uint32_t taskTargetStrength[10];
 };
 
 struct BlowData {
