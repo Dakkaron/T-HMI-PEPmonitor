@@ -124,6 +124,13 @@ void loadBmpAnim(DISPLAY_T** displays, String filename, uint8_t animFrames, uint
       uint8_t lineBuffer[w * bytesPerPixel];
 
       for (frameNr = 0; frameNr < animFrames; frameNr++) {
+        if (displays[frameNr]->created() && (displays[frameNr]->width()!=w || displays[frameNr]->height()!=frameH)) {
+          displays[frameNr]->deleteSprite();
+        }
+        if (!displays[frameNr]->created()) {
+          displays[frameNr]->createSprite(w, frameH);
+        }
+
         Serial.print("Loading frame: ");
         Serial.println(frameNr);
         for (row = 0; row < frameH; row++) {
@@ -386,11 +393,15 @@ int16_t checkSelectionPageSelection(uint16_t startNr, uint16_t nr, bool drawArro
 uint16_t displayGameSelection(DISPLAY_T* display, uint16_t nr, String* errorMessage) {
   uint16_t startNr = 0;
 
-  while (true) {
+  for (uint32_t i = 0;i<2;i++) {
     display->fillSprite(TFT_BLACK);
     drawGameSelectionPage(display, startNr, _min(nr, 8), nr>8, errorMessage);
-    int16_t selection = checkSelectionPageSelection(startNr, _min(nr, 8), nr>8);
     display->pushSpriteFast(0, 0);
+  }
+
+  while (true) {
+    handleSerial();
+    int16_t selection = checkSelectionPageSelection(startNr, _min(nr, 8), nr>8);
     if (selection != -1) {
       return selection;
     }
