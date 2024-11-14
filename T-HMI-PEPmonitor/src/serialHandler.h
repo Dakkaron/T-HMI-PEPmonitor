@@ -6,7 +6,8 @@
 #include <FS.h>
 #include <SPI.h>
 #include <SD.h>
+#include "constants.h"
 
-void checkForDownloadMode();
+void handleSerial();
 
 #endif /* __SERIAL_HANDLER_H__ */

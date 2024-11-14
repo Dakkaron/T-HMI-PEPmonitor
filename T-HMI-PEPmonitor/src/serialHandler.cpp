@@ -33,18 +33,37 @@ void handleUploadFileMode() {
       bytesRead++;
     }
   }
+  file.close();
   Serial.println("Done writing file");
+}
+
+void handlePrintVersion() {
+  Serial.print("PEPit Version '");
+  Serial.print(VERSION);
+  Serial.println("'");
 }
 
 char serialCommandBuffer[16];
 uint32_t serialCommandCharacterCount = 0;
-void checkForDownloadMode() {
+void handleSerial() {
   if (Serial.available() > 0) {
-    serialCommandBuffer[serialCommandCharacterCount++] = Serial.read();
+    char charRead = Serial.read();
+    serialCommandBuffer[serialCommandCharacterCount++] = charRead;
+    //Serial.print(charRead);
     serialCommandBuffer[serialCommandCharacterCount] = 0;
-    if (strcmp(serialCommandBuffer, "UL") == 0) {
+    if (strcmp(serialCommandBuffer, "UL ") == 0) {
       handleUploadFileMode();
+    } else if (strcmp(serialCommandBuffer, "VER ") == 0) {
+      handlePrintVersion();
     }
+
+    if (charRead == 32 || charRead == 0) { // Check for space or 0
+      for (uint32_t i=0;i<16;i++) {
+        serialCommandBuffer[i] = 0;
+      }
+      serialCommandCharacterCount = 0;
+    }
+
     if (serialCommandCharacterCount>15) {
       serialCommandCharacterCount = 0;
     }
