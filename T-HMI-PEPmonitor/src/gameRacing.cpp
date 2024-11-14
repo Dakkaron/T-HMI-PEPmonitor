@@ -130,18 +130,21 @@ void drawRace_desert(DISPLAY_T* display, float x, int32_t y, float w, int32_t ro
     display->drawFastVLine(x+w*1.2 + dx, y-railTopHeight, (roadYOffset % 12) == 6 ? railTopHeight : railThickness, (roadYOffset/6) % 2 ? 0xbdf7 : 0xce59);
   }
 
+  // Draw lamp mast
   if (((roadYOffset) % 12) == 1) {
     for (int32_t dx = _min(dxTotal, 0); dx < _max(dxTotal + 1, 1); dx++) {
       display->drawFastVLine(x-w*0.2 + dx, y-lampHeight, lampHeight, (roadYOffset/6) % 2 ? 0xbdf7 : 0xce59);
     }
-    display->drawFastHLine(x-w*0.2, y-lampHeight, w*(0.2+0.5+0.125), (roadYOffset/6) % 2 ? 0xbdf7 : 0xce59);
+    for (uint32_t i=0;i<(w*0.02);i++) {
+      display->drawFastHLine(x-w*0.2, y-lampHeight+i, w*(0.2+0.5+0.125), (roadYOffset/6) % 2 ? 0xbdf7 : 0xce59);
+    }
   }
 
+  // Draw lamp
   if (((roadYOffset) % 12) == 1) {
-    display->drawFastHLine(x + w*(0.5 - 0.125), y-lampHeight+1, w/4, 0xffff);
-    display->drawFastHLine(x + w*(0.5 - 0.125), y-lampHeight+2, w/4, 0xffff);
-    display->drawFastHLine(x + w*(0.5 - 0.125), y-lampHeight+3, w/4, 0xffff);
-    display->drawFastHLine(x + w*(0.5 - 0.125), y-lampHeight+4, w/4, 0xffff);
+    for (uint32_t i=1;i<(w*0.05)+1;i++) {
+      display->drawFastHLine(x + w*(0.5 - 0.125), y-lampHeight+i, w/4, 0xffff);
+    }
   }
 }
 
@@ -198,10 +201,9 @@ void drawRace_tunnel(DISPLAY_T* display, float x, int32_t y, float w, int32_t ro
 
   //Draw lamp
   if (((roadYOffset/2) % 6) == 1) {
-    display->drawFastHLine(x + w/2 - w/4, y-wallHeight+1, w/2, 0xffff);
-    display->drawFastHLine(x + w/2 - w/4, y-wallHeight+2, w/2, 0xffff);
-    display->drawFastHLine(x + w/2 - w/4, y-wallHeight+3, w/2, 0xffff);
-    display->drawFastHLine(x + w/2 - w/4, y-wallHeight+4, w/2, 0xffff);
+    for (uint32_t i=1;i<(w*0.05)+1;i++) {
+      display->drawFastHLine(x + w*(0.5 - 0.25), y-wallHeight+i, w*0.5, 0xffff);
+    }
   }
 }
 
@@ -281,7 +283,8 @@ void drawRace(DISPLAY_T* display, BlowData* blowData, int32_t animTime) {
     playerTurnType = TURN_HARD_RIGHT;
     nitroEffectXOffset = -10;
   }
-  playerCarSprite[playerTurnType*2 + ((blowData->ms/200) % 2)].pushToSprite(display, 125, 150, 0x0000);
+  uint32_t playerCarSpriteId = playerTurnType*2 + ((blowData->ms/200) % 2);
+  playerCarSprite[playerCarSpriteId].pushToSprite(display, 160-playerCarSprite[playerCarSpriteId].width()/2, 187-playerCarSprite[playerCarSpriteId].height(), 0x0000);
   if (nitro>0 && animTime <= 2000 && !(blowData->lastBlowStatus & LAST_BLOW_FAILED)) {
     uint8_t animFrame = _max(0,_min(5,(2000-animTime)/400));
     nitroEffectSprite[animFrame].pushToSprite(display, 125 + nitroEffectXOffset, 170 + (animFrame <= 2 ? 6 : 0), 0x0000);
