@@ -11,6 +11,7 @@ XPT2046::XPT2046(SPIClass &spi, byte cs, uint8_t tirq) {
     _tirq = tirq;
 
     pinMode(_cs, OUTPUT);
+    pinMode(_tirq, INPUT);
     digitalWrite(_cs, HIGH);
 
     _hmin = 0;
