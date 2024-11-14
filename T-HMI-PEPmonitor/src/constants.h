@@ -2,6 +2,8 @@
 #define __CONSTANTS_H__
 #include <Arduino.h>
 
+#define VERSION "0.1"
+
 #define LAST_BLOW_SUCCEEDED 0B00000001
 #define LAST_BLOW_FAILED    0B00000010
 #define NEW_BLOW            0B00000100

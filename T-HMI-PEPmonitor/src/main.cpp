@@ -17,6 +17,7 @@
 #include "wifiHandler.h"
 #include "sdHandler.h"
 #include "games.h"
+#include "serialHandler.h"
 
 #include <OneButton.h>
 
@@ -151,6 +152,9 @@ void setup() {
   pinMode(PWR_EN_PIN, OUTPUT);
   digitalWrite(PWR_EN_PIN, HIGH);
 
+  Serial.print("PEPit Version '");
+  Serial.print(VERSION);
+  Serial.println("'");
   Serial.print("Initializing peripherals....");
   delay(1000);
 
@@ -205,6 +209,9 @@ void setup() {
     Serial.printf("? Detected SdCard insert: %.2f GB\r\n", SD_MMC.cardSize() / 1024.0 / 1024.0 / 1024.0);
   }
   Serial.println(F("done"));
+  Serial.print("PEPit Version '");
+  Serial.print(VERSION);
+  Serial.println("' initialized");
 
   runGameSelection();
 }
@@ -318,6 +325,7 @@ uint32_t showDisplayRotate = 0;
 void loop() {
   buttonPwr.tick();
   buttonUsr.tick();
+  handleSerial();
   if (sensorMode == SENSOR_MODE_PEPS) {
     if (blowData.cycleNumber >= CYCLES) {
       drawFinished();
