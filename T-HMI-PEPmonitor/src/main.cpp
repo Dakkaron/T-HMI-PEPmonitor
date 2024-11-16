@@ -30,6 +30,7 @@ uint8_t sensorMode = SENSOR_MODE_PEPS;
 OneButton buttonPwr(BUTTON2_PIN, false, false);
 OneButton buttonUsr(BUTTON1_PIN, false, false);
 
+TFT_eSprite batteryIcon[] = {TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft)};
 
 void power_off() {
     digitalWrite(PWR_ON_PIN, LOW);
@@ -213,6 +214,10 @@ void setup() {
   Serial.print(VERSION);
   Serial.println("' initialized");
 
+  loadBmp(&batteryIcon[0], "/gfx/battery_low.bmp");
+  loadBmp(&batteryIcon[1], "/gfx/battery_half.bmp");
+  loadBmp(&batteryIcon[2], "/gfx/battery_full.bmp");
+
   runGameSelection();
 }
 
@@ -228,9 +233,31 @@ String leftPad(String s, uint16_t len, String c) {
 }
 
 uint32_t lastMs = 0;
+// Draws battery icon, battery voltage, FPS
+void drawSystemStats() {
+  uint32_t batteryVoltage = readBatteryVoltage();
+  if (batteryVoltage < 3500) {
+    batteryIcon[0].pushToSprite(&spr, 1, 1, 0x0000);
+  } else if (batteryVoltage < 3800) {
+    batteryIcon[1].pushToSprite(&spr, 1, 1, 0x0000);
+  } else if (batteryVoltage < 4100) {
+    batteryIcon[2].pushToSprite(&spr, 1, 1, 0x0000);
+  } else if (batteryVoltage < 4400) {
+    batteryIcon[0].pushToSprite(&spr, 1, 1, 0x0000);
+  } else if (batteryVoltage < 4600) {
+    batteryIcon[1].pushToSprite(&spr, 1, 1, 0x0000);
+  } else {
+    batteryIcon[2].pushToSprite(&spr, 1, 1, 0x0000);
+  }
+  spr.setTextSize(1);
+  spr.setCursor(34,1);
+  spr.print(String(1000L/_max(1,blowData.ms-lastMs))); //FPS counter
+  spr.setCursor(34,11);
+  spr.print(String(batteryVoltage/1000) + "." + leftPad(String(batteryVoltage%1000), 3, "0") + "V"); // Battery voltage
+}
+
 void drawPEPDisplay() {
   spr.fillSprite(TFT_BLACK);
-  blowData.ms = millis();
   String errorMessage;
   if (blowData.isLongBlows) {
     drawLongBlowGame(&spr, &blowData, &errorMessage);
@@ -245,15 +272,7 @@ void drawPEPDisplay() {
   spr.setCursor(PRESSURE_BAR_X + 20, PRESSURE_BAR_Y - 14);
   spr.setTextSize(2);
   printShaded(&spr, String(blowData.blowCount) + "/" + String(blowData.cycleNumber));
-  spr.setTextSize(1);
-  spr.setCursor(1,1);
-  spr.println(1000L/_max(1,millis()-lastMs)); //FPS counter
-  uint32_t batteryVoltage = readBatteryVoltage();
-  spr.print(batteryVoltage/1000); // Battery voltage
-  spr.print(".");
-  spr.print(leftPad(String(batteryVoltage%1000), 3, "0"));
-  spr.println("V");
-  lastMs = millis();
+  drawSystemStats();
   spr.pushSpriteFast(0, 0);
 }
 
@@ -265,6 +284,7 @@ void drawFinished() {
     checkFailWithMessage(errorMessage);
   }
   drawBmp(winScreenPath, 0, 0);
+  drawSystemStats();
 }
 
 void drawTrampolineDisplay() {
@@ -289,15 +309,7 @@ void drawTrampolineDisplay() {
     }
     spr.print(secondsLeft % 60);
   }
-  spr.setTextSize(1);
-  spr.setCursor(1,1);
-  spr.println(1000L/_max(1,millis()-lastMs)); //FPS counter
-  uint32_t batteryVoltage = readBatteryVoltage();
-  spr.print(batteryVoltage/1000); // Battery voltage
-  spr.print(".");
-  spr.print(leftPad(String(batteryVoltage%1000), 3, "0"));
-  spr.print("V");
-  lastMs = millis();
+  drawSystemStats();
   spr.pushSpriteFast(0, 0);
 }
 
@@ -323,6 +335,11 @@ void displayRotatePEP() {
 
 uint32_t showDisplayRotate = 0;
 void loop() {
+  lastMs = blowData.ms;
+  blowData.ms = millis();
+  jumpData.ms = blowData.ms;
+
+
   buttonPwr.tick();
   buttonUsr.tick();
   handleSerial();
@@ -336,18 +353,18 @@ void loop() {
     if (blowData.pressure>PRESSURE_SENSOR_BLOWING_THRESHOLD && !blowData.currentlyBlowing) {
       Serial.print(F("Blowing... "));
       blowData.currentlyBlowing = true;
-      blowData.blowStartMs = millis();
+      blowData.blowStartMs = blowData.ms;
       blowData.maxPressure = 0;
       blowData.cumulativeError = 0;
       blowData.lastBlowStatus |= NEW_BLOW;
     } else if (blowData.pressure<=PRESSURE_SENSOR_BLOWING_THRESHOLD && blowData.currentlyBlowing) {
-      blowData.blowEndMs = millis();
+      blowData.blowEndMs = blowData.ms;
       Serial.print(blowData.blowEndMs-blowData.blowStartMs);
       Serial.println(F("ms"));
       blowData.currentlyBlowing = false;
       if (blowData.isLongBlows) { // long blows
         Serial.print(F("Ending long blow"));
-        if (millis()-blowData.blowStartMs > LONG_BLOW_DURATION_MS) {
+        if (blowData.ms-blowData.blowStartMs > LONG_BLOW_DURATION_MS) {
           blowData.blowCount++;
           blowData.lastBlowStatus = LAST_BLOW_SUCCEEDED;
           Serial.println(F(" successfully"));
