@@ -6,6 +6,12 @@
 #define TURN_HARD_LEFT 3
 #define TURN_HARD_RIGHT 4
 
+#define HORIZON_Y 60
+#define BASELINE_Y 190
+#define ROAD_WIDTH 260.0f
+#define SPEED 0.03f
+#define SPEED_NITRO 0.045f
+
 uint8_t nitro;
 String racerGamePath;
 String racerGameIniPath;
@@ -29,29 +35,14 @@ void initGames_racing(String gamePath, GameConfig* gameConfig, String* errorMess
   racerGameIniPath = gamePath + "gameconfig.ini";
   prefs.begin(gameConfig->prefsNamespace.c_str());
   nitro = prefs.getUInt("nitro", 0);
-  for (int8_t i=0; i<10; i++) {
-    playerCarSprite[i].createSprite(70, 37);
-  }
-  for (int8_t i=0; i<5; i++) {
-    nitroEffectSprite[i].createSprite(58,8);
-  }
   for (int8_t i=0; i<4; i++) {
-    pitstopCarSprite[i].createSprite(128, 60);
     loadBmp(&pitstopCarSprite[i], racerGamePath + "gfx/car"+i+"_top.bmp", FLIPPED_H);
-
-    enemyCarSprite[i][0].createSprite(70, 37);
-    enemyCarSprite[i][1].createSprite(53, 28);
-    enemyCarSprite[i][2].createSprite(35, 19);
-    enemyCarSprite[i][3].createSprite(18, 10);
-    pitstopWheelSprite.createSprite(17,18);
     loadBmp(&pitstopWheelSprite, racerGamePath + "gfx/wheel.bmp");
     loadBmp(&enemyCarSprite[i][0], racerGamePath + "gfx/car"+i+"_0_0.bmp");
     loadBmp(&enemyCarSprite[i][1], racerGamePath + "gfx/car"+i+"_0.75.bmp");
     loadBmp(&enemyCarSprite[i][2], racerGamePath + "gfx/car"+i+"_0.5.bmp");
     loadBmp(&enemyCarSprite[i][3], racerGamePath + "gfx/car"+i+"_0.25.bmp");
   }
-  nitroLSprite.createSprite(54,96);
-  nitroSSprite.createSprite(17,30);
   TFT_eSprite* nitroSpriteRefs[] = { // Reload player anim at the beginning of the round
     &nitroEffectSprite[0],
     &nitroEffectSprite[1],
@@ -76,20 +67,21 @@ void initGames_racing(String gamePath, GameConfig* gameConfig, String* errorMess
 
 uint8_t currentTurnType;
 int32_t roadXOffset = 0;
-uint32_t roadBaseOffset = 0;
+float roadBaseOffset = 0;
 uint32_t roadLastMs = 0;
 uint8_t enemySpriteId = 0;
 void calculateRoad(float y, float speed, unsigned long ms, float* x, float* w, int32_t* roadYOffset) {
   if (roadLastMs==0) {
     roadLastMs = ms;
   }
-  *w = 0.007*(y*y+10);
+  *w = ROAD_WIDTH*(float)(y-HORIZON_Y)/(BASELINE_Y-HORIZON_Y);
   *x = 160.0 - *w*0.5;
-  float yInv = 200.0-y;
+  float yInv = BASELINE_Y+HORIZON_Y-y;
   *x += ((float)roadXOffset)*(yInv*yInv)*0.0001;
-  roadBaseOffset += (ms-roadLastMs)*speed;
+  roadBaseOffset += (float)(ms-roadLastMs)*speed;
   roadLastMs = ms;
-  *roadYOffset = (((yInv*yInv) + roadBaseOffset)*0.0011); // /900.0);
+  float wP = 1.0-*w/(float)ROAD_WIDTH;
+  *roadYOffset = (wP*wP*wP * 25.0 + roadBaseOffset);
 }
 
 void drawEnemyCar(DISPLAY_T* display, int32_t x, int32_t y, int32_t w, int32_t enemyY) {
@@ -187,7 +179,7 @@ void drawRace_tunnel(DISPLAY_T* display, float x, int32_t y, float w, int32_t ro
     }
 
     // Draw escape door
-    if ((roadYOffset % 40) > 1 && (roadYOffset % 40) < 3) {
+    if ((roadYOffset % 40) > 1 && (roadYOffset % 40) < 4) {
       for (int32_t dx = _min(dxTotal, 0); dx < _max(dxTotal + 1, 1); dx++) {
         display->drawFastVLine(x+w*1.2 + dx, y-w*0.5, w*0.5, 0x3166);
       }
@@ -213,34 +205,34 @@ void drawRace(DISPLAY_T* display, BlowData* blowData, int32_t animTime) {
   float x,w;
   int32_t roadYOffset;
   float lastX, lastW;
-  float speed = 25;
+  float speed = SPEED;
   if (animTime <= 2000 && (blowData->lastBlowStatus & LAST_BLOW_FAILED)) {
     enemyY = 50 + (150*(2000-animTime) / 2000);
   } else if (animTime <= 2000) {
     enemyY = animTime / 10;
     if (nitro>0) {
       enemy2Y = enemyY + 40;
-      speed = 40;
+      speed = SPEED_NITRO;
     }
   }
   switch (currentTurnType) {
     case TURN_LEFT:
-      roadXOffset -= roadXOffset>-33 ? 1 : 0;
+      roadXOffset -= roadXOffset>-25 ? 1 : 0;
       break;
     case TURN_RIGHT:
-      roadXOffset += roadXOffset<33 ? 1 : 0;
+      roadXOffset += roadXOffset<25 ? 1 : 0;
       break;
     case TURN_HARD_LEFT:
-      roadXOffset -= roadXOffset>-83 ? 2 : 0;
+      roadXOffset -= roadXOffset>-45 ? 2 : 0;
       break;
     case TURN_HARD_RIGHT:
-      roadXOffset += roadXOffset<83 ? 2 : 0;
+      roadXOffset += roadXOffset<45 ? 2 : 0;
       break;
   }
-  for (int32_t y=0;y<30;y++) {
+  for (int32_t y=0;y<HORIZON_Y;y++) {
     display->drawFastHLine(0, y, 320, 0x31b4);
   }
-  for (int32_t y=30;y<190;y++) {
+  for (int32_t y=HORIZON_Y;y<190;y++) {
     lastX = x;
     lastW = w;
     calculateRoad(y, speed, blowData->ms, &x, &w, &roadYOffset);
