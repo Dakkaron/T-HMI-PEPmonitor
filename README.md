@@ -20,3 +20,12 @@ Dieses Open Source Gerät hilft Kindern Spaß bei der Pysiotherapie mit dem Pari
 ## Wichtigste Features
 
 - **Automatische Überwachung der Therapie**: Das Gerät verfügt über einen Luftdrucksensor der mit dem Manometeranschluss des Pari PEP-S verbunden wird. Darüber kann das Gerät erkennen wie lange und mit welchem Druck in das Pari PEP-S geblasen wird. 
+
+
+## Aufsetzen der Entwicklungsumgebung (Nur nötig für Entwicker)
+
+- Installiere VS Code
+- Installiere das Platform.io Plugin
+- Linux: Erstelle `~/.platformio/boards/` falls der Ordner noch nicht existiert
+- Windows: Erstelle `%HOMEPATH%\.platformio\boards` falls der Ordner noch nicht existiert
+- Kopiere `lilygo-t-hmi.json` in den Ordner vom letzten Schritt
