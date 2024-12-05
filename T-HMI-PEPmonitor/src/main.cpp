@@ -328,17 +328,26 @@ void drawTrampolineDisplay() {
 
 
 void displayRotatePEP() {
-  for (uint8_t i=0;i<25;i++) {
-    tft.invertDisplay(i%2);
+  spr.fillSprite(TFT_BLACK);
+  spr.pushSpriteFast(0, 0);
     spr.fillSprite(TFT_BLACK);
-    spr.setTextSize(5);
-    spr.setTextColor(TFT_WHITE);
-    spr.setCursor(20, 20);
+  spr.setTextSize(4);
+  spr.setCursor(5,5);
     if (blowData.isLongBlows) {
+    drawBmp("/gfx/peps_2.5.bmp", 0, 0);
       spr.print("2.5mm");
     } else {
+    drawBmp("/gfx/peps_5.bmp", 0, 0);
       spr.print("5mm");
     }
+  spr.fillRect(230, 170, 80, 60, 0x18db);
+  spr.setCursor(245, 185);
+  spr.print("OK");
+  spr.pushSpriteFast(0, 0);
+
+  while (!isTouchInZone(230, 170, 80, 60)) {}
+  tft.fillScreen(TFT_BLACK);
+  spr.fillScreen(TFT_BLACK);
     spr.pushSpriteFast(0, 0);
     delay(200);
   }

@@ -382,7 +382,7 @@ int16_t checkSelectionPageSelection(uint16_t startNr, uint16_t nr, bool drawArro
   uint8_t cHeight = rows==1 ? 220 : 105; 
   for (uint8_t c = 0; c<columns; c++) {
     for (uint8_t r = 0; r<rows; r++) {
-      if (touch.pressed() && isTouchInZone(20 + c*(cWidth + 10), 10+(r*(cHeight+10)), cWidth, cHeight)) {
+      if (isTouchInZone(20 + c*(cWidth + 10), 10+(r*(cHeight+10)), cWidth, cHeight)) {
         return startNr + c + r*columns;
       }
     }
