@@ -22,6 +22,7 @@ void initGames_monsterCatcher(String gamePath, GameConfig* gameConfig, String* e
 void drawShortBlowGame_monsterCatcher(DISPLAY_T* display, BlowData* blowData, String* errorMessage);
 void drawLongBlowGame_monsterCatcher(DISPLAY_T* display, BlowData* blowData, String* errorMessage);
 void drawTrampolineGame_monsterCatcher(DISPLAY_T* display, JumpData* jumpData, String* errorMessage);
+void displayProgressionMenu_monsterCatcher(DISPLAY_T *display, String *errorMessage);
 
 #define TRAINER_ANIM_PATH "gfx/trainer/brendan.bmp"
 

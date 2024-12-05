@@ -22,6 +22,7 @@ void initGames_racing(String gamePath, GameConfig* gameConfig, String* errorMess
 void drawShortBlowGame_racing(DISPLAY_T* display, BlowData* blowData, String* errorMessage);
 void drawLongBlowGame_racing(DISPLAY_T* display, BlowData* blowData, String* errorMessage);
 void drawTrampolineGame_racing(DISPLAY_T* display, JumpData* jumpData, String* errorMessage);
+void displayProgressionMenu_racing(DISPLAY_T *display, String *errorMessage);
 
 #define TRAINER_ANIM_PATH "gfx/trainer/brendan.bmp"
 

@@ -397,3 +397,7 @@ void drawTrampolineGame_racing(DISPLAY_T* display, JumpData* jumpData, String* e
     Serial.println(" nitro.");
   } 
 }
+
+void displayProgressionMenu_racing(DISPLAY_T* display, String* errorMessage) {
+
+}

@@ -235,6 +235,7 @@ String leftPad(String s, uint16_t len, String c) {
 uint32_t lastMs = 0;
 // Draws battery icon, battery voltage, FPS
 void drawSystemStats() {
+  static uint32_t lowBatteryCount = 0;
   uint32_t batteryVoltage = readBatteryVoltage();
   if (batteryVoltage < 3500) {
     batteryIcon[0].pushToSprite(&spr, 1, 1, 0x0000);
@@ -248,6 +249,17 @@ void drawSystemStats() {
     batteryIcon[1].pushToSprite(&spr, 1, 1, 0x0000);
   } else {
     batteryIcon[2].pushToSprite(&spr, 1, 1, 0x0000);
+  }
+  if (batteryVoltage<BATTERY_LOW_WARNING_VOLTAGE && (blowData.ms/1000)%2) {
+    batteryIcon[0].pushToSprite(&spr, 144, 110, 0x0000);
+  }
+  if (batteryVoltage<BATTERY_LOW_SHUTDOWN_VOLTAGE) {
+    lowBatteryCount++;
+  } else {
+    lowBatteryCount = 0;
+  }
+  if (lowBatteryCount>100) {
+    power_off();
   }
   spr.setTextSize(1);
   spr.setCursor(34,1);

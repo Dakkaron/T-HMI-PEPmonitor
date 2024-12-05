@@ -48,3 +48,13 @@ void drawTrampolineGame(DISPLAY_T* display, JumpData* jumpData, String* errorMes
     errorMessage->concat("No game loaded!");
   }
 }
+
+void displayProgressionMenu(DISPLAY_T *display, String *errorMessage) {
+  if (gameConfig.templateName == "monster") {
+    displayProgressionMenu_monsterCatcher(display, errorMessage);
+  } else if (gameConfig.templateName == "race") {
+    displayProgressionMenu_racing(display, errorMessage);
+  } else {
+    errorMessage->concat("No game loaded!");
+  }
+}
