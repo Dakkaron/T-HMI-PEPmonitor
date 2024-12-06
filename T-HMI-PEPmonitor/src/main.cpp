@@ -237,7 +237,7 @@ uint32_t lastMs = 0;
 void drawSystemStats() {
   static uint32_t lowBatteryCount = 0;
   uint32_t batteryVoltage = readBatteryVoltage();
-  if (batteryVoltage < 3500) {
+  if (batteryVoltage < 3600) {
     batteryIcon[0].pushToSprite(&spr, 1, 1, 0x0000);
   } else if (batteryVoltage < 3800) {
     batteryIcon[1].pushToSprite(&spr, 1, 1, 0x0000);
@@ -330,27 +330,27 @@ void drawTrampolineDisplay() {
 void displayRotatePEP() {
   spr.fillSprite(TFT_BLACK);
   spr.pushSpriteFast(0, 0);
-    spr.fillSprite(TFT_BLACK);
+  spr.fillSprite(TFT_BLACK);
   spr.setTextSize(4);
   spr.setCursor(5,5);
-    if (blowData.isLongBlows) {
+  if (blowData.isLongBlows) {
     drawBmp("/gfx/peps_2.5.bmp", 0, 0);
-      spr.print("2.5mm");
-    } else {
+    spr.print("2.5mm");
+  } else {
     drawBmp("/gfx/peps_5.bmp", 0, 0);
-      spr.print("5mm");
-    }
+    spr.print("5mm");
+  }
   spr.fillRect(230, 170, 80, 60, 0x18db);
   spr.setCursor(245, 185);
   spr.print("OK");
   spr.pushSpriteFast(0, 0);
 
   while (!isTouchInZone(230, 170, 80, 60)) {}
+  
   tft.fillScreen(TFT_BLACK);
   spr.fillScreen(TFT_BLACK);
-    spr.pushSpriteFast(0, 0);
-    delay(200);
-  }
+  spr.pushSpriteFast(0, 0);
+  delay(200);
   tft.invertDisplay(0);
 }
 
