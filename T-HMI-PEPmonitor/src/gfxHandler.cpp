@@ -1,4 +1,12 @@
 #include "gfxHandler.hpp"
+#include <SD_MMC.h>
+#include <FS.h>
+#include <SPI.h>
+#include <SD.h>
+#include <algorithm>
+#include "touchHandler.h"
+#include "sdHandler.h"
+#include "serialHandler.h"
 
 TFT_eSPI tft = TFT_eSPI();
 TFT_eSprite spr = TFT_eSprite(&tft);
@@ -294,6 +302,109 @@ void drawBmp(String filename, int16_t x, int16_t y, bool debugLog) {
   bmpFS.close();
 }
 
+void drawBmp(DISPLAY_T* sprite, String filename, int16_t x, int16_t y, bool debugLog) {
+  if (debugLog) {
+    Serial.print("File: ");
+    Serial.println(filename);
+    Serial.println("#");
+  }
+
+  File bmpFS;
+
+  // Open requested file on SD card
+  bmpFS = SD_MMC.open(filename);
+
+  if (!bmpFS)
+  {
+    Serial.print("File not found: ");
+    Serial.println(filename);
+    Serial.println("#");
+    return;
+  }
+
+  uint32_t seekOffset;
+  uint16_t w, h, row, col, frameNr;
+  uint8_t  r, g, b, a;
+
+  uint32_t startTime = millis();
+
+  uint16_t headerBytes = read16(bmpFS);
+  if (headerBytes == 0x4D42) {
+    read32(bmpFS);
+    read32(bmpFS);
+    seekOffset = read32(bmpFS);
+    read32(bmpFS);
+    w = read32(bmpFS);
+    h = read32(bmpFS);
+
+    uint16_t colorPanes = read16(bmpFS);
+    uint16_t bitDepth = read16(bmpFS);
+    uint16_t compression = read16(bmpFS);
+
+    if ((colorPanes == 1) && (((bitDepth == 24) && (compression == 0)) || ((bitDepth == 32) && (compression == 3)))) { // BITMAPINFOHEADER
+      uint8_t bytesPerPixel = bitDepth/8;
+      
+      sprite->setSwapBytes(true);
+      bmpFS.seek(seekOffset);
+
+      uint16_t padding;
+      if (bitDepth == 24) {
+        padding = (4 - ((w * 3) & 3)) & 3;
+      } else if (bitDepth == 32) {
+        padding = 0;
+      }
+      uint8_t lineBuffer[w * bytesPerPixel];
+
+      for (row = 0; row < h; row++) {
+        bmpFS.read(lineBuffer, sizeof(lineBuffer));
+        uint8_t*  bptr = lineBuffer;
+        uint16_t* tptr = (uint16_t*)lineBuffer;
+        // Convert 24 to 16 bit colours
+        for (uint16_t col = 0; col < w; col++) {
+          b = *bptr++;
+          g = *bptr++;
+          r = *bptr++;
+          if (bytesPerPixel == 4) {
+            a = *bptr++;
+            if (a == 0) {
+              *tptr++ = 0x0000;
+            } else {
+              uint16_t res = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+              if (res == 0x0000) {
+                res = 0x0001;
+              }
+              *tptr++ = res;
+            }
+          } else {
+            *tptr++ = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+          }
+        }
+        // Read any line padding
+        if (padding) {
+          bmpFS.read((uint8_t*)tptr, padding);
+        }
+        // Push the pixel row to screen, pushImage will crop the line if needed
+        sprite->pushImage(x, y + h - 1 - row, w, 1, (uint16_t*)lineBuffer, 0x0000);
+      }
+      if (debugLog) {
+        Serial.print("Loaded in "); Serial.print(millis() - startTime);
+        Serial.println(" ms");
+      }
+    } else {
+      Serial.print("BMP format not recognized: ");
+      Serial.print(colorPanes);
+      Serial.print(" ");
+      Serial.print(bitDepth);
+      Serial.print(" ");
+      Serial.println(compression);
+    }
+  } else {
+    Serial.print("Wrong file format: ");
+    Serial.println(headerBytes);
+  }
+  bmpFS.close();
+}
+
 
 void drawProgressBarCommon(DISPLAY_T* display, uint16_t percent, uint16_t greenOffset, int16_t x, int16_t y, int16_t w, int16_t h) {
   display->drawRect(x, y, w, h, TFT_WHITE);
@@ -406,4 +517,40 @@ uint16_t displayGameSelection(DISPLAY_T* display, uint16_t nr, String* errorMess
       return selection;
     }
   }
+}
+
+void drawImageButton(DISPLAY_T* display, String path, int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color, uint16_t textColor) {
+  display->drawRect(x, y, w, h, color);
+  int16_t bmpW, bmpH;
+  getBmpDimensions(path, &bmpW, &bmpH);
+  drawBmp(display, path, x + w/2 - bmpW/2, y + h/2 - bmpH/2);
+}
+
+
+void drawButton(DISPLAY_T* display, String text, int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color, uint16_t textColor) {
+  display->drawRect(x, y, w, h, color);
+  uint8_t textDatumBak = display->getTextDatum();
+  display->setTextDatum(CC_DATUM);
+  uint32_t textColorBak = display->textcolor;
+  display->setTextColor(textColor);
+  display->drawString(text, x + w/2, y + h/2);
+  display->setTextDatum(textDatumBak);
+  display->setTextColor(textColorBak);
+}
+
+
+bool checkButton(int16_t x, int16_t y, int16_t w, int16_t h) {
+  return isTouchInZone(x, y, w, h);
+}
+
+
+bool drawAndCheckImageButton(DISPLAY_T* display, String path, int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
+  drawImageButton(display, path, x, y, w, h, color);
+  return isTouchInZone(x, y, w, h);
+}
+
+
+bool drawAndCheckButton(DISPLAY_T* display, String text, int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
+  drawButton(display, text, x, y, w, h, color);
+  return isTouchInZone(x, y, w, h);
 }
