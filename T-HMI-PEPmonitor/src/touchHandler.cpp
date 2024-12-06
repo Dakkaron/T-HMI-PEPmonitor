@@ -19,6 +19,9 @@ void initTouch() {
 }
 
 bool isTouchInZone(int16_t x, int16_t y, int16_t w, int16_t h) {
+  if (!touch.pressed()) {
+    return false;
+  }
   int16_t tx = touch.X();
   int16_t ty = touch.Y();
   int16_t tz = touch.RawZ();
