@@ -218,6 +218,10 @@ void setup() {
   loadBmp(&batteryIcon[1], "/gfx/battery_half.bmp");
   loadBmp(&batteryIcon[2], "/gfx/battery_full.bmp");
 
+  drawKeyboard(&spr, 0x001f, 0xffff);
+  spr.pushSpriteFast(0, 0);
+  String output;
+  checkKeyboard(&spr, &output, 5, 0x001f, 0xffff);
   runGameSelection();
 }
 

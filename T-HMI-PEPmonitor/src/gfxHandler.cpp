@@ -520,15 +520,14 @@ uint16_t displayGameSelection(DISPLAY_T* display, uint16_t nr, String* errorMess
 }
 
 void drawImageButton(DISPLAY_T* display, String path, int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color, uint16_t textColor) {
-  display->drawRect(x, y, w, h, color);
+  display->fillRect(x, y, w, h, color);
   int16_t bmpW, bmpH;
   getBmpDimensions(path, &bmpW, &bmpH);
   drawBmp(display, path, x + w/2 - bmpW/2, y + h/2 - bmpH/2);
 }
 
-
 void drawButton(DISPLAY_T* display, String text, int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color, uint16_t textColor) {
-  display->drawRect(x, y, w, h, color);
+  display->fillRect(x, y, w, h, color);
   uint8_t textDatumBak = display->getTextDatum();
   display->setTextDatum(CC_DATUM);
   uint32_t textColorBak = display->textcolor;
@@ -553,4 +552,68 @@ bool drawAndCheckImageButton(DISPLAY_T* display, String path, int16_t x, int16_t
 bool drawAndCheckButton(DISPLAY_T* display, String text, int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
   drawButton(display, text, x, y, w, h, color);
   return isTouchInZone(x, y, w, h);
+}
+
+
+
+#define KEYBOARD_PADDING 2
+#define KEYBOARD_TYPING_AREA_HEIGHT 50
+#define KEYBOARD_LAYERS 1
+#define KEYBOARD_ROWS 4
+#define KEYBOARD_COLS 13
+#define KEY_BACKSPACE 1
+#define KEY_ENTER 2
+#define KEY_SHIFT 3
+char keyboardMatrix[KEYBOARD_LAYERS][KEYBOARD_ROWS][KEYBOARD_COLS] = {
+  { // Normal layer
+    {'1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '[', ']', KEY_BACKSPACE},
+    {'q', 'w', 'e', 'r', 't', 'z', 'u', 'i', 'o', 'p', '+', '{', '}'},
+    {'a', 's', 'd', 'f', 'g', 'h', 'i', 'j', 'k', 'l', '@', '~', KEY_ENTER},
+    {'y', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '-', ' ', '\0', KEY_SHIFT},
+  }
+}; 
+static uint32_t currentKeyboardLayer = 0;
+void drawKeyboard(DISPLAY_T* display, uint16_t keyColor, uint16_t textColor) {
+  int16_t keyW = SCREEN_WIDTH/KEYBOARD_COLS;
+  int16_t keyH = (SCREEN_HEIGHT-KEYBOARD_TYPING_AREA_HEIGHT)/KEYBOARD_ROWS;
+  for (int16_t row=0; row<KEYBOARD_ROWS; row++) {
+    for (int16_t col=0; col<KEYBOARD_COLS; col++) {
+      char c = keyboardMatrix[currentKeyboardLayer][row][col];
+      if (c>32) {
+        String character = " ";
+        character.setCharAt(0, c);
+        drawButton(display, character, keyW*col+KEYBOARD_PADDING, KEYBOARD_TYPING_AREA_HEIGHT+keyH*row+KEYBOARD_PADDING, keyW-2*KEYBOARD_PADDING, keyH-2*KEYBOARD_PADDING, keyColor, textColor);
+      } else if (c==KEY_BACKSPACE) {
+        drawButton(display, "<-", keyW*col+KEYBOARD_PADDING, KEYBOARD_TYPING_AREA_HEIGHT+keyH*row+KEYBOARD_PADDING, keyW-2*KEYBOARD_PADDING, keyH-2*KEYBOARD_PADDING, keyColor, textColor);
+      }
+    }
+  }
+}
+
+void checkKeyboard(DISPLAY_T* display, String* output, uint32_t maxCharacters, uint16_t keyColor, uint16_t textColor) {
+  *output = "";
+  int16_t keyW = SCREEN_WIDTH/KEYBOARD_COLS;
+  int16_t keyH = (SCREEN_HEIGHT-KEYBOARD_TYPING_AREA_HEIGHT)/KEYBOARD_ROWS;
+  while (output->length()<maxCharacters) {
+    for (int16_t row=0; row<KEYBOARD_ROWS; row++) {
+      for (int16_t col=0; col<KEYBOARD_COLS; col++) {
+        if (checkButton(keyW*col, KEYBOARD_TYPING_AREA_HEIGHT+keyH*row, keyW, keyH)) {
+          display->fillSprite(TFT_BLACK);
+          drawKeyboard(display, keyColor, textColor);
+          *output = *output + keyboardMatrix[currentKeyboardLayer][row][col];
+          uint8_t textDatumBak = display->getTextDatum();
+          display->setTextDatum(TL_DATUM);
+          uint32_t textColorBak = display->textcolor;
+          display->setTextColor(textColor);
+          display->drawString(*output, 10, 10);
+          Serial.print("Drawing output: ");
+          Serial.println(*output);
+          display->setTextDatum(textDatumBak);
+          display->setTextColor(textColorBak);
+          display->pushSpriteFast(0,0);
+          while (touch.pressed()) {}
+        }
+      }
+    }
+  }
 }
