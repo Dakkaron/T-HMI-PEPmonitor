@@ -7,9 +7,11 @@
 #include "touchHandler.h"
 #include "sdHandler.h"
 #include "serialHandler.h"
+#include "powerHandler.h"
 
 TFT_eSPI tft = TFT_eSPI();
 TFT_eSprite spr = TFT_eSprite(&tft);
+TFT_eSprite batteryIcon[] = {TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft)};
 
 uint16_t read16(fs::File &f) {
   uint16_t result;
@@ -198,8 +200,11 @@ void loadBmpAnim(DISPLAY_T** displays, String filename, uint8_t animFrames, uint
   bmpFS.close();
 }
 
-
 void drawBmp(String filename, int16_t x, int16_t y, bool debugLog) {
+  drawBmpSlice(filename, x, y, -1, debugLog);
+}
+
+void drawBmpSlice(String filename, int16_t x, int16_t y, int16_t maxH, bool debugLog) {
   if (debugLog) {
     Serial.print("File: ");
     Serial.println(filename);
@@ -242,7 +247,8 @@ void drawBmp(String filename, int16_t x, int16_t y, bool debugLog) {
       uint8_t bytesPerPixel = bitDepth/8;
       
       tft.setSwapBytes(true);
-      bmpFS.seek(seekOffset);
+      maxH = maxH == -1 ? h : maxH;
+      bmpFS.seek(seekOffset + (h-maxH)*w*bytesPerPixel);
 
       uint16_t padding;
       if (bitDepth == 24) {
@@ -252,7 +258,7 @@ void drawBmp(String filename, int16_t x, int16_t y, bool debugLog) {
       }
       uint8_t lineBuffer[w * bytesPerPixel];
 
-      for (row = 0; row < h; row++) {
+      for (row = h-maxH; row < h; row++) {
         bmpFS.read(lineBuffer, sizeof(lineBuffer));
         uint8_t*  bptr = lineBuffer;
         uint16_t* tptr = (uint16_t*)lineBuffer;
@@ -503,6 +509,8 @@ int16_t checkSelectionPageSelection(uint16_t startNr, uint16_t nr, bool drawArro
 
 uint16_t displayGameSelection(DISPLAY_T* display, uint16_t nr, String* errorMessage) {
   uint16_t startNr = 0;
+  uint32_t ms = millis();
+  uint32_t lastMs = millis();
 
   for (uint32_t i = 0;i<2;i++) {
     display->fillSprite(TFT_BLACK);
@@ -511,12 +519,66 @@ uint16_t displayGameSelection(DISPLAY_T* display, uint16_t nr, String* errorMess
   }
 
   while (true) {
+    lastMs = ms;
+    ms = millis();
     handleSerial();
     int16_t selection = checkSelectionPageSelection(startNr, _min(nr, 8), nr>8);
     if (selection != -1) {
       return selection;
     }
+    display->fillRect(0,0,70,20,TFT_BLACK);
+    drawSystemStats(ms, lastMs);
+    display->pushSpriteFast(0,0);
   }
+}
+
+
+String leftPad(String s, uint16_t len, String c) {
+  while (s.length()<len) {
+    s = c + s;
+  }
+  return s;
+}
+
+// Draws battery icon, battery voltage, FPS
+void drawSystemStats(uint32_t ms, uint32_t lastMs) {
+  static int32_t lowBatteryCount = -1;
+  uint32_t batteryVoltage = readBatteryVoltage();
+  if (lowBatteryCount == -1) { //check to run only once
+    lowBatteryCount = 0;
+    loadBmp(&batteryIcon[0], "/gfx/battery_low.bmp");
+    loadBmp(&batteryIcon[1], "/gfx/battery_half.bmp");
+    loadBmp(&batteryIcon[2], "/gfx/battery_full.bmp");
+  }
+  if (batteryVoltage < 3600) {
+    batteryIcon[0].pushToSprite(&spr, 1, 1, 0x0000);
+  } else if (batteryVoltage < 3800) {
+    batteryIcon[1].pushToSprite(&spr, 1, 1, 0x0000);
+  } else if (batteryVoltage < 4100) {
+    batteryIcon[2].pushToSprite(&spr, 1, 1, 0x0000);
+  } else if (batteryVoltage < 4400) {
+    batteryIcon[0].pushToSprite(&spr, 1, 1, 0x0000);
+  } else if (batteryVoltage < 4600) {
+    batteryIcon[1].pushToSprite(&spr, 1, 1, 0x0000);
+  } else {
+    batteryIcon[2].pushToSprite(&spr, 1, 1, 0x0000);
+  }
+  if (batteryVoltage<BATTERY_LOW_WARNING_VOLTAGE && (ms/1000)%2) {
+    batteryIcon[0].pushToSprite(&spr, 144, 110, 0x0000);
+  }
+  if (batteryVoltage<BATTERY_LOW_SHUTDOWN_VOLTAGE) {
+    lowBatteryCount++;
+  } else {
+    lowBatteryCount = 0;
+  }
+  if (lowBatteryCount>100) {
+    power_off();
+  }
+  spr.setTextSize(1);
+  spr.setCursor(34,1);
+  spr.print(String(1000L/_max(1,ms-lastMs))); //FPS counter
+  spr.setCursor(34,11);
+  spr.print(String(batteryVoltage/1000) + "." + leftPad(String(batteryVoltage%1000), 3, "0") + "V"); // Battery voltage
 }
 
 void drawImageButton(DISPLAY_T* display, String path, int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color, uint16_t textColor) {

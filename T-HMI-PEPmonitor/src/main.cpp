@@ -18,6 +18,7 @@
 #include "sdHandler.h"
 #include "games.h"
 #include "serialHandler.h"
+#include "powerHandler.h"
 
 #include <OneButton.h>
 
@@ -30,12 +31,7 @@ uint8_t sensorMode = SENSOR_MODE_PEPS;
 OneButton buttonPwr(BUTTON2_PIN, false, false);
 OneButton buttonUsr(BUTTON1_PIN, false, false);
 
-TFT_eSprite batteryIcon[] = {TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft)};
 
-void power_off() {
-    digitalWrite(PWR_ON_PIN, LOW);
-    Serial.println("power_off");
-}
 
 
 uint8_t trampolineConnectionStatus = CONNECTION_NOTCONNECTED;
@@ -214,63 +210,11 @@ void setup() {
   Serial.print(VERSION);
   Serial.println("' initialized");
 
-  loadBmp(&batteryIcon[0], "/gfx/battery_low.bmp");
-  loadBmp(&batteryIcon[1], "/gfx/battery_half.bmp");
-  loadBmp(&batteryIcon[2], "/gfx/battery_full.bmp");
-
-  drawKeyboard(&spr, 0x001f, 0xffff);
-  spr.pushSpriteFast(0, 0);
-  String output;
-  checkKeyboard(&spr, &output, 5, 0x001f, 0xffff);
   runGameSelection();
 }
 
-uint32_t readBatteryVoltage() {
-    return (analogRead(BAT_ADC_PIN) * 162505) / 100000;
-}
-
-String leftPad(String s, uint16_t len, String c) {
-  while (s.length()<len) {
-    s = c + s;
-  }
-  return s;
-}
 
 uint32_t lastMs = 0;
-// Draws battery icon, battery voltage, FPS
-void drawSystemStats() {
-  static uint32_t lowBatteryCount = 0;
-  uint32_t batteryVoltage = readBatteryVoltage();
-  if (batteryVoltage < 3600) {
-    batteryIcon[0].pushToSprite(&spr, 1, 1, 0x0000);
-  } else if (batteryVoltage < 3800) {
-    batteryIcon[1].pushToSprite(&spr, 1, 1, 0x0000);
-  } else if (batteryVoltage < 4100) {
-    batteryIcon[2].pushToSprite(&spr, 1, 1, 0x0000);
-  } else if (batteryVoltage < 4400) {
-    batteryIcon[0].pushToSprite(&spr, 1, 1, 0x0000);
-  } else if (batteryVoltage < 4600) {
-    batteryIcon[1].pushToSprite(&spr, 1, 1, 0x0000);
-  } else {
-    batteryIcon[2].pushToSprite(&spr, 1, 1, 0x0000);
-  }
-  if (batteryVoltage<BATTERY_LOW_WARNING_VOLTAGE && (blowData.ms/1000)%2) {
-    batteryIcon[0].pushToSprite(&spr, 144, 110, 0x0000);
-  }
-  if (batteryVoltage<BATTERY_LOW_SHUTDOWN_VOLTAGE) {
-    lowBatteryCount++;
-  } else {
-    lowBatteryCount = 0;
-  }
-  if (lowBatteryCount>100) {
-    power_off();
-  }
-  spr.setTextSize(1);
-  spr.setCursor(34,1);
-  spr.print(String(1000L/_max(1,blowData.ms-lastMs))); //FPS counter
-  spr.setCursor(34,11);
-  spr.print(String(batteryVoltage/1000) + "." + leftPad(String(batteryVoltage%1000), 3, "0") + "V"); // Battery voltage
-}
 
 void drawPEPDisplay() {
   spr.fillSprite(TFT_BLACK);
@@ -288,19 +232,32 @@ void drawPEPDisplay() {
   spr.setCursor(PRESSURE_BAR_X + 20, PRESSURE_BAR_Y - 14);
   spr.setTextSize(2);
   printShaded(&spr, String(blowData.blowCount) + "/" + String(blowData.cycleNumber));
-  drawSystemStats();
+  drawSystemStats(blowData.ms, lastMs);
   spr.pushSpriteFast(0, 0);
 }
 
-String winScreenPath = "";
 void drawFinished() {
-  if (winScreenPath == "") {
+  static uint32_t winscreenTimeout = 0;
+  static String winScreenPath = "";
+  if (winscreenTimeout == 0) {
+    winscreenTimeout = millis() + WIN_SCREEN_TIMEOUT;
     String errorMessage;
     winScreenPath = getRandomWinScreenPathForCurrentGame(&errorMessage);
     checkFailWithMessage(errorMessage);
+    spr.frameBuffer(1);
+    spr.fillSprite(TFT_BLUE);
+    spr.frameBuffer(2);
+    spr.fillSprite(TFT_BLUE);
+    drawBmp(winScreenPath, 0, 0);
+  } else if (millis() > winscreenTimeout) {
+    power_off();
   }
-  drawBmp(winScreenPath, 0, 0);
-  drawSystemStats();
+  drawBmpSlice(winScreenPath, 0, 0, 30);
+  spr.frameBuffer(1);
+  spr.fillRect(0,0,80,30,TFT_BLUE);
+  drawSystemStats(blowData.ms, lastMs);
+  spr.pushSpriteFast(0,0);
+  sleep(1);
 }
 
 void drawTrampolineDisplay() {
@@ -325,7 +282,7 @@ void drawTrampolineDisplay() {
     }
     spr.print(secondsLeft % 60);
   }
-  drawSystemStats();
+  drawSystemStats(blowData.ms, lastMs);
   spr.pushSpriteFast(0, 0);
 }
 
@@ -355,7 +312,6 @@ void displayRotatePEP() {
   spr.fillScreen(TFT_BLACK);
   spr.pushSpriteFast(0, 0);
   delay(200);
-  tft.invertDisplay(0);
 }
 
 uint32_t showDisplayRotate = 0;
@@ -373,7 +329,6 @@ void loop() {
       drawFinished();
       return;
     }
-    spr.invertDisplay(0);
     readPressure(&hx711, &blowData);
     if (blowData.pressure>PRESSURE_SENSOR_BLOWING_THRESHOLD && !blowData.currentlyBlowing) {
       Serial.print(F("Blowing... "));

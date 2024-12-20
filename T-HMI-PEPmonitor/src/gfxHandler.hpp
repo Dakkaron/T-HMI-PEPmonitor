@@ -13,6 +13,7 @@ extern TFT_eSprite spr;
 
 void getBmpDimensions(String filename, int16_t* w, int16_t* h);
 void drawBmp(String filename, int16_t x, int16_t y, bool debugLog = true);
+void drawBmpSlice(String filename, int16_t x, int16_t y, int16_t maxH, bool debugLog = true);
 void drawBmp(DISPLAY_T* sprite, String filename, int16_t x, int16_t y, bool debugLog = true);
 void loadBmp(DISPLAY_T* display, String filename);
 void loadBmp(DISPLAY_T* display, String filename, uint8_t flipped);
@@ -24,6 +25,7 @@ void printShaded(DISPLAY_T* display, String text, uint8_t shadeStrength, uint16_
 void printShaded(DISPLAY_T* display, String text, uint8_t shadeStrength, uint16_t textColor);
 void printShaded(DISPLAY_T* display, String text, uint8_t shadeStrength);
 void printShaded(DISPLAY_T* display, String text);
+void drawSystemStats(uint32_t ms, uint32_t lastMs);
 void drawImageButton(DISPLAY_T* display, String path, int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
 void drawButton(DISPLAY_T* display, String text, int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
 bool checkButton(int16_t x, int16_t y, int16_t w, int16_t h);
