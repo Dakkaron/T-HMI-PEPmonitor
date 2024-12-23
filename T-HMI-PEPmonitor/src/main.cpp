@@ -143,7 +143,7 @@ void setup() {
   pinMode(BK_LIGHT_PIN, OUTPUT);
   digitalWrite(BK_LIGHT_PIN, HIGH);
 
-  Serial.begin(115200);
+  Serial.begin(5000000);
   delay(1000);
 
   pinMode(PWR_EN_PIN, OUTPUT);
