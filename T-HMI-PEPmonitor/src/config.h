@@ -8,7 +8,7 @@
 #define SHORT_BLOW_NUMBER_MAX 5
 #define CYCLES 3
 
-#define TOUCH_SCREEN_Z_THRESHOLD 230 // Increase this value if you get ghost touches
+#define TOUCH_SCREEN_Z_THRESHOLD 20 // Increase this value if you get ghost touches
 
 /*
  * DEBUG OPTIONS
