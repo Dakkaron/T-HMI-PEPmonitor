@@ -521,6 +521,7 @@ uint16_t displayGameSelection(DISPLAY_T* display, uint16_t nr, String* errorMess
   }
 
   while (true) {
+    buttonPwr.tick();
     lastMs = ms;
     ms = millis();
     handleSerial();
@@ -531,6 +532,9 @@ uint16_t displayGameSelection(DISPLAY_T* display, uint16_t nr, String* errorMess
     display->fillRect(0,0,70,20,TFT_BLACK);
     drawSystemStats(ms, lastMs);
     display->pushSpriteFast(0,0);
+    if (millis()>GAME_SELECTION_POWEROFF_TIMEOUT) {
+      power_off();
+    }
   }
 }
 
