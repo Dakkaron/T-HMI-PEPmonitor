@@ -143,7 +143,9 @@ void setup() {
   pinMode(BK_LIGHT_PIN, OUTPUT);
   digitalWrite(BK_LIGHT_PIN, HIGH);
 
-  Serial.begin(5000000);
+  Serial.setRxBufferSize(10240);
+  Serial.setTxBufferSize(1024);
+  Serial.begin(115200);
   delay(1000);
 
   pinMode(PWR_EN_PIN, OUTPUT);
@@ -209,7 +211,6 @@ void setup() {
   Serial.print("PEPit Version '");
   Serial.print(VERSION);
   Serial.println("' initialized");
-
   runGameSelection();
 }
 

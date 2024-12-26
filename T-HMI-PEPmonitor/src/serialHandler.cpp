@@ -1,7 +1,7 @@
 #include "serialHandler.h"
 
 
-void readFileToSerial(const char *path, bool readAsHex, bool printFileSize) {
+void readFileToSerialSlow(const char *path, bool readAsHex, bool printFileSize) {
   Serial.printf("Reading file: %s\n", path);
 
   File file = SD_MMC.open(path);
@@ -17,7 +17,9 @@ void readFileToSerial(const char *path, bool readAsHex, bool printFileSize) {
   Serial.println("Read from file: ");
   while (file.available()) {
     if (readAsHex) {
-      Serial.print(file.read(), 16);
+      char hexBuffer[3];
+      sprintf(hexBuffer, "%02x", file.read());
+      Serial.print(hexBuffer);
       Serial.print(" ");
       byteNr++;
       if (byteNr % 16 == 0) {
@@ -27,6 +29,43 @@ void readFileToSerial(const char *path, bool readAsHex, bool printFileSize) {
       Serial.write(file.read());
     }
   }
+  Serial.println();
+}
+
+void readFileToSerial(const char *path, bool readAsHex, bool printFileSize) {
+  Serial.printf("Reading file: %s\n", path);
+
+  File file = SD_MMC.open(path);
+  if (!file) {
+    Serial.println("Failed to open file for reading");
+    return;
+  }
+
+  uint8_t byteNr = 0;
+  uint32_t fileSize = file.size();
+  if (printFileSize) {
+    Serial.println(fileSize);
+  }
+  uint8_t* fileBuffer = new uint8_t[fileSize];
+  file.read(fileBuffer, fileSize);
+
+  Serial.println("Read from file: ");
+  if (readAsHex) {
+    for (uint32_t i=0;i<fileSize;i++) {
+      char hexBuffer[3];
+      sprintf(hexBuffer, "%02x", fileBuffer[i]);
+      Serial.print(hexBuffer);
+      Serial.print(" ");
+      byteNr++;
+      if (byteNr % 16 == 0) {
+        Serial.println();
+      }
+    }
+  } else {
+    Serial.write(fileBuffer, fileSize);
+  }
+  delete[] fileBuffer;
+  Serial.println();
 }
 
 bool dirExists(const char *dirname) {
@@ -53,20 +92,25 @@ void listDir(const char *dirname, uint8_t levels) {
 
   File file = root.openNextFile();
   while (file) {
-    if (file.isDirectory()) {
+    String fileName = file.name();
+    if (fileName.endsWith("System Volume Information")) {
+      // Skipping pesky System Volume Information folder
+    } else if (file.isDirectory()) {
       Serial.print("  DIR : ");
-      Serial.println(file.name());
+      Serial.println(fileName);
       if (levels) {
         listDir(file.path(), levels - 1);
       }
     } else {
       Serial.print("  FILE: ");
-      Serial.print(file.name());
+      Serial.print(fileName);
       Serial.print("  SIZE: ");
       Serial.println(file.size());
     }
     file = root.openNextFile();
   }
+  Serial.println();
+  Serial.print("$ ");
 }
 
 String readSerialLine() {
@@ -83,7 +127,90 @@ String readSerialLine() {
   }
 }
 
+
 void handleUploadFileMode() {
+  Serial.println("Upload mode");
+  String path = readSerialLine();
+  Serial.print("Writing to file: '");
+  Serial.print(path);
+  Serial.println("'");
+
+  uint32_t fileLength = atoi(readSerialLine().c_str());
+  Serial.print("Number of bytes: '");
+  Serial.print(fileLength);
+  Serial.println("'");
+
+  uint8_t* fileBuffer = new uint8_t[fileLength+1];
+
+  if (SD_MMC.exists(path)) {
+    Serial.println("Deleting existing file");
+    SD_MMC.remove(path);
+  }
+
+  File file = SD_MMC.open(path, FILE_WRITE, true);
+  Serial.readBytes(fileBuffer, fileLength);
+  fileBuffer[fileLength] = 0;
+  Serial.println("[Result:]");
+  Serial.print((char*)fileBuffer);
+  Serial.println("[Result end]");
+  file.write(fileBuffer, fileLength);
+
+  delete[] fileBuffer;
+  file.close();
+  Serial.println();
+  Serial.println("Done writing file");
+}
+
+void handleUploadFileModeMedium() {
+  Serial.println("Upload mode");
+  String path = readSerialLine();
+  Serial.print("Writing to file: '");
+  Serial.print(path);
+  Serial.println("'");
+
+  uint32_t fileLength = atoi(readSerialLine().c_str());
+  Serial.print("Number of bytes: '");
+  Serial.print(fileLength);
+  Serial.println("'");
+
+  uint8_t* fileBuffer = new uint8_t[fileLength+1];
+
+  if (SD_MMC.exists(path)) {
+    Serial.println("Deleting existing file");
+    SD_MMC.remove(path);
+  }
+
+  File file = SD_MMC.open(path, FILE_WRITE, true);
+
+  int32_t remainingBytes = fileLength;
+  while (remainingBytes>0) {
+    //Serial.readBytes(&(fileBuffer[fileLength-remainingBytes]), _min(remainingBytes, 512));
+    //remainingBytes -= 512;
+    if (Serial.available()>0) {
+      char read = Serial.read();
+      Serial.print(read);
+      fileBuffer[fileLength-remainingBytes] = read;
+      remainingBytes--;
+      if (remainingBytes%1024 == 0) {
+        Serial.println(remainingBytes);
+      }
+    }
+  }
+  fileBuffer[fileLength] = 0;
+  
+  Serial.println("[Result:]");
+  Serial.print((char*)fileBuffer);
+  Serial.println("[Result end]");
+  
+  file.write(fileBuffer, fileLength);
+
+  delete[] fileBuffer;
+  file.close();
+  Serial.println();
+  Serial.println("Done writing file");
+}
+
+void handleUploadFileModeSlow() {
   Serial.println("Upload mode");
   String path = readSerialLine();
   Serial.print("Writing to file: '");
@@ -108,6 +235,10 @@ void handleUploadFileMode() {
       file.print(readCharacter);
       Serial.print(readCharacter);
       bytesRead++;
+      if (bytesRead % 100 == 0) {
+        Serial.println();
+        Serial.println(bytesRead);
+      }
     }
   }
   file.close();
@@ -129,6 +260,30 @@ void handleLs() {
     String path = line.substring(0,line.indexOf(" "));
     uint32_t levels = atoi(line.substring(line.indexOf(" ")+1).c_str());
     listDir(path.c_str(), levels);
+  }
+}
+
+void handleMkdir() {
+  String line = readSerialLine();
+  String path = line.substring(0,line.indexOf(" "));
+  if (!SD_MMC.mkdir(path)) {
+    Serial.println("Error: could not create directory!");
+  }
+}
+
+void handleRmdir() {
+  String line = readSerialLine();
+  String path = line.substring(0,line.indexOf(" "));
+  if (!SD_MMC.rmdir(path)) {
+    Serial.println("Error: could not delete directory!");
+  }
+}
+
+void handleRm() {
+  String line = readSerialLine();
+  String path = line.substring(0,line.indexOf(" "));
+  if (!SD_MMC.remove(path)) {
+    Serial.println("Error: could not delete file!");
   }
 }
 
@@ -156,6 +311,12 @@ void handleSerial() {
       readFileToSerial(readSerialLine().c_str(), true, false);
     } else if (strcasecmp(serialCommandBuffer, "catxl ") == 0) {
       readFileToSerial(readSerialLine().c_str(), true, true);
+    } else if (strcasecmp(serialCommandBuffer, "mkdir ") == 0) {
+      handleMkdir();
+    } else if (strcasecmp(serialCommandBuffer, "rmdir ") == 0) {
+      handleRmdir();
+    } else if (strcasecmp(serialCommandBuffer, "rm ") == 0) {
+      handleRm();
     }
 
     if (charRead == 32 || charRead == 0 || charRead == 10) { // Check for space, \n or \0

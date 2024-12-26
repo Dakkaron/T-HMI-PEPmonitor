@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import serial
 import time
 import re
@@ -5,8 +6,13 @@ import os.path
 import os
 import readline
 import atexit
+import esptool
+import serial.serialutil
 
 MAX_RETRIES = 5
+MAX_READ_RETRIES = 1
+PORT_NAME = "/dev/ttyACM"
+BAUD_RATE = 115200
 
 histfile = os.path.join(os.path.expanduser("~"), ".pepit_fm_history")
 try:
@@ -18,9 +24,22 @@ except FileNotFoundError:
 
 atexit.register(readline.write_history_file, histfile)
 
+for i in range(10):
+    try:
+        ser = serial.Serial(f"{PORT_NAME}{i}", 115200, timeout=10)
+        print(f"Port {PORT_NAME}{i} connected")
+        break
+    except serial.serialutil.SerialException:
+        print(f"Port {PORT_NAME}{i} not found")
 
-ser = serial.Serial("/dev/ttyACM0", 5000000, timeout=20)
-
+def reset():
+    global ser
+    print("Resetting...")
+    ser.close()
+    esp32 = esptool.get_default_connected_device(["/dev/ttyACM0", "/dev/ttyACM1", "/dev/ttyACM2"], None, 1, BAUD_RATE)
+    esp32.hard_reset()
+    time.sleep(3)
+    ser = serial.Serial(PORT_NAME, 115200, timeout=20)
 
 def writeFile(path, data):
     if isinstance(path,str):
@@ -30,9 +49,20 @@ def writeFile(path, data):
     ser.flush()
     ser.reset_input_buffer()
     ser.reset_output_buffer()
+    print(b" ul "+path)
+    print(str(len(data)).encode("utf-8"))
+    print(len(data))
     ser.write(b" ul "+path+b"\n")
     ser.write(str(len(data)).encode("utf-8")+b"\n")
-    ser.write(data)
+    for i in range(1+len(data)):
+        ser.write(data[i:i+1])
+        ser.flush()
+    res = b""
+    time.sleep(5)
+    while ser.in_waiting > 0:
+        res += ser.read(ser.in_waiting)
+        time.sleep(0.01)
+    print(res.decode("utf-8", errors="ignore"))
 
 def readFile(path, retry=0):
     if retry>=MAX_RETRIES:
@@ -51,8 +81,11 @@ def readFile(path, retry=0):
         if len(read) <= 0:
             readRetry += 1
             print("Nothing here, retrying")
-        elif readRetry >= MAX_RETRIES:
+        else:
+            readRetry = 0
+        if readRetry > MAX_READ_RETRIES:
             print(f"Failed to download {path} due to nothing to read. Retrying.")
+            reset()
             return readFile(path, retry + 1)
         res += read
     lines = res.strip().splitlines()
@@ -60,16 +93,29 @@ def readFile(path, retry=0):
         fileLen = int(lines[-2])
     except:
         print(f"Failed to download {path} due to wrong fileLen. Retrying.")
+        reset()
         time.sleep(20)
         return readFile(path, retry + 1)
     print(f"File len: {fileLen}")
     out = ser.read(fileLen)
+    readRetry = 0
     for i in range(3):
         if len(out)<fileLen:
-            out += ser.read(fileLen - len(out))
-    print(len(out))
+            read = ser.read(fileLen - len(out))
+            out += read
+            if len(read) <= 0:
+                readRetry += 1
+                print("Nothing here, retrying")
+            else:
+                readRetry = 0
+            if readRetry > MAX_READ_RETRIES:
+                print(f"Failed to download {path} due to nothing to read. Retrying.")
+                reset()
+                return readFile(path, retry + 1)
+    print(f"Bytes read: {len(out)}")
     if len(out) != fileLen:
         print(f"Failed to download {path}, retrying.")
+        reset()
         return readFile(path, retry + 1)
     return out
 
@@ -202,6 +248,7 @@ if __name__ == "__main__":
         elif cmd == "cat":
             res = readFile(param)
             res = res.decode("utf-8")
+            print("File content:")
             print(res)
         elif cmd == "ul":
             path = param.split(" ")
@@ -219,3 +266,8 @@ if __name__ == "__main__":
             dlr(path[0], path[1])
         elif inp == "exit":
             exit()
+        elif inp == "reset":
+            reset()
+            exit()
+        else:
+            print(f"Unknown command: {inp}")
