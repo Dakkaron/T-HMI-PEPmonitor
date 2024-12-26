@@ -2,8 +2,8 @@
 #define __GAMES_H__
 
 #include <Arduino.h>
-#include "gfxHandler.hpp"
-#include "sdHandler.h"
+#include "hardware/gfxHandler.hpp"
+#include "hardware/sdHandler.h"
 
 void initGames(String gamePath, String* errorMessage);
 void drawShortBlowGame(DISPLAY_T* display, BlowData* blowData, String* errorMessage);

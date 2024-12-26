@@ -1,7 +1,7 @@
 #include "gameLua.h"
 #include <LuaWrapper.h>
-#include "sdHandler.h"
-#include "gfxHandler.hpp"
+#include "hardware/sdHandler.h"
+#include "hardware/gfxHandler.hpp"
 
 LuaWrapper lua;
 static String luaGamePath;
@@ -49,8 +49,8 @@ static int lua_wrapper_loadBmp(lua_State* luaState) {
 static int lua_wrapper_drawSprite(lua_State* luaState) {
   Serial.println("Draw sprite");
   int16_t handle = luaL_checkinteger(luaState, 1);
-  int16_t x = luaL_checkinteger(luaState, 2);
-  int16_t y = luaL_checkinteger(luaState, 3);
+  int16_t x = luaL_checknumber(luaState, 2);
+  int16_t y = luaL_checknumber(luaState, 3);
   sprites[handle].pushToSprite(currentDisplay, x, y);
   Serial.println("Draw sprite done");
   return 0;
@@ -58,8 +58,8 @@ static int lua_wrapper_drawSprite(lua_State* luaState) {
 
 static int lua_wrapper_drawString(lua_State* luaState) {
   String s = luaL_checkstring(luaState, 1);
-  int16_t x = luaL_checkinteger(luaState, 2);
-  int16_t y = luaL_checkinteger(luaState, 3);
+  int16_t x = luaL_checknumber(luaState, 2);
+  int16_t y = luaL_checknumber(luaState, 3);
   currentDisplay->drawString(s, x, y);
   return 0;
 }

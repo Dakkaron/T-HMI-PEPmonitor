@@ -5,11 +5,10 @@
 #include "config.h"
 #include "constants.h"
 #include "EEPROM.h"
-#include "gfxHandler.hpp"
-#include "sdHandler.h"
-#include "touchHandler.h"
-#include "monsterDetails.h"
-#include "prefsHandler.h"
+#include "hardware/gfxHandler.hpp"
+#include "hardware/sdHandler.h"
+#include "hardware/touchHandler.h"
+#include "hardware/prefsHandler.h"
 
 #define DRAW_PLAYER_ALIVE     0b00000001
 #define DRAW_PLAYER_DEAD      0b00000010

@@ -2,8 +2,8 @@
 #define __MONSTER_DETAILS_H__
 
 #include <Arduino.h>
-#include "sdHandler.h"
-#include "gfxHandler.hpp"
+#include "hardware/sdHandler.h"
+#include "hardware/gfxHandler.hpp"
 
 #define ATTACK_SPRITE_NUMBER 16
 

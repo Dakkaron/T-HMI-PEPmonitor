@@ -12,16 +12,14 @@
 #include <SD.h>
 #include <OneButton.h>
 
-#include "gfxHandler.hpp"
-#include "pressuresensor.h"
-#include "touchHandler.h"
-#include "wifiHandler.h"
-#include "sdHandler.h"
-#include "games.h"
-#include "serialHandler.h"
-#include "powerHandler.h"
-
-#include "gameLua.h"
+#include "hardware/gfxHandler.hpp"
+#include "hardware/pressuresensor.h"
+#include "hardware/touchHandler.h"
+#include "hardware/wifiHandler.h"
+#include "hardware/sdHandler.h"
+#include "games/games.h"
+#include "hardware/serialHandler.h"
+#include "hardware/powerHandler.h"
 
 
 OneButton buttonUsr(BUTTON1_PIN, false, false);

@@ -4,10 +4,10 @@
 #include "config.h"
 #include "constants.h"
 #include "EEPROM.h"
-#include "gfxHandler.hpp"
-#include "sdHandler.h"
-#include "touchHandler.h"
-#include "prefsHandler.h"
+#include "hardware/gfxHandler.hpp"
+#include "hardware/sdHandler.h"
+#include "hardware/touchHandler.h"
+#include "hardware/prefsHandler.h"
 
 void luaDemoTest();
 

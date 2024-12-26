@@ -1,4 +1,4 @@
-#include "pressuresensor.h"
+#include "hardware/pressuresensor.h"
 
 uint32_t readings[PRESSURE_SENSOR_SMOOTHING_NUM_READINGS];
 uint8_t readIndex = 0;

@@ -4,10 +4,10 @@
 #include <SPI.h>
 #include <SD.h>
 #include <algorithm>
-#include "touchHandler.h"
-#include "sdHandler.h"
-#include "serialHandler.h"
-#include "powerHandler.h"
+#include "hardware/touchHandler.h"
+#include "hardware/sdHandler.h"
+#include "hardware/serialHandler.h"
+#include "hardware/powerHandler.h"
 
 TFT_eSPI tft = TFT_eSPI();
 TFT_eSprite spr = TFT_eSprite(&tft);
