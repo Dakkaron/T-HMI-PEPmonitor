@@ -10,6 +10,7 @@
 #include <FS.h>
 #include <SPI.h>
 #include <SD.h>
+#include <OneButton.h>
 
 #include "gfxHandler.hpp"
 #include "pressuresensor.h"
@@ -22,19 +23,14 @@
 
 #include "gameLua.h"
 
-#include <OneButton.h>
+
+OneButton buttonUsr(BUTTON1_PIN, false, false);
 
 Adafruit_HX711 hx711(HX7711_DATA_PIN, HX7711_CLOCK_PIN);
 BlowData blowData;
 JumpData jumpData;
 
 uint8_t sensorMode = SENSOR_MODE_PEPS;
-
-OneButton buttonPwr(BUTTON2_PIN, false, false);
-OneButton buttonUsr(BUTTON1_PIN, false, false);
-
-
-
 
 uint8_t trampolineConnectionStatus = CONNECTION_NOTCONNECTED;
 void switchMode() {
