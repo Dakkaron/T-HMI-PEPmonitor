@@ -12,21 +12,21 @@
 #define SPEED 0.03f
 #define SPEED_NITRO 0.045f
 
-uint8_t nitro;
-String racerGamePath;
-String racerGameIniPath;
+static uint8_t nitro;
+static String racerGamePath;
+static String racerGameIniPath;
 
-TFT_eSprite playerCarSprite[] =    {TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft),
-                                    TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft)};
-TFT_eSprite pitstopCarSprite[] =   {TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft)};
-TFT_eSprite pitstopWheelSprite =    TFT_eSprite(&tft);
-TFT_eSprite enemyCarSprite[][4] = {{TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft)},
-                                   {TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft)},
-                                   {TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft)},
-                                   {TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft)}};
-TFT_eSprite nitroLSprite =          TFT_eSprite(&tft);
-TFT_eSprite nitroSSprite =          TFT_eSprite(&tft);
-TFT_eSprite nitroEffectSprite[] =  {TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft)};
+static TFT_eSprite playerCarSprite[] =    {TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft),
+                                           TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft)};
+static TFT_eSprite pitstopCarSprite[] =   {TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft)};
+static TFT_eSprite pitstopWheelSprite =    TFT_eSprite(&tft);
+static TFT_eSprite enemyCarSprite[][4] = {{TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft)},
+                                          {TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft)},
+                                          {TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft)},
+                                          {TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft)}};
+static TFT_eSprite nitroLSprite =          TFT_eSprite(&tft);
+static TFT_eSprite nitroSSprite =          TFT_eSprite(&tft);
+static TFT_eSprite nitroEffectSprite[] =  {TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft)};
 
 void initGames_racing(String gamePath, GameConfig* gameConfig, String* errorMessage) {
   Serial.print("Game path: ");

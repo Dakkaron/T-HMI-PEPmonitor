@@ -483,11 +483,13 @@ void drawGameSelectionPage(DISPLAY_T* display, uint16_t startNr, uint16_t nr, bo
   uint8_t cHeight = rows==1 ? 220 : 105; 
   for (uint8_t c = 0; c<columns; c++) {
     for (uint8_t r = 0; r<rows; r++) {
-      String gamePath = getGamePath(c + r*columns, errorMessage);
-      display->fillRect(20 + c*(cWidth + 10), 10+(r*(cHeight+10)), cWidth, cHeight, TFT_BLUE);
-      int16_t imgW, imgH;
-      getBmpDimensions(gamePath + "logo.bmp", &imgW, &imgH);
-      drawBmp(gamePath + "logo.bmp", 20 + c*(cWidth + 10) + cWidth/2 - imgW/2, 10+(r*cHeight+10) + cHeight/2 - imgH/2, false);
+      if (c + r*columns < nr) {
+        String gamePath = getGamePath(c + r*columns, errorMessage);
+        display->fillRect(20 + c*(cWidth + 10), 10+(r*(cHeight+10)), cWidth, cHeight, TFT_BLUE);
+        int16_t imgW, imgH;
+        getBmpDimensions(gamePath + "logo.bmp", &imgW, &imgH);
+        drawBmp(gamePath + "logo.bmp", 20 + c*(cWidth + 10) + cWidth/2 - imgW/2, 10+(r*cHeight+10) + cHeight/2 - imgH/2, false);
+      }
     }
   }
 }

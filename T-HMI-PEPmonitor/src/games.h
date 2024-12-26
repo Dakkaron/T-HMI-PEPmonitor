@@ -2,8 +2,7 @@
 #define __GAMES_H__
 
 #include <Arduino.h>
-#include "gameMonsterCatcher.h"
-#include "gameRacing.h"
+#include "gfxHandler.hpp"
 #include "sdHandler.h"
 
 void initGames(String gamePath, String* errorMessage);

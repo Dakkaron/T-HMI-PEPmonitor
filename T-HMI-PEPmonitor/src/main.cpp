@@ -20,6 +20,8 @@
 #include "serialHandler.h"
 #include "powerHandler.h"
 
+#include "gameLua.h"
+
 #include <OneButton.h>
 
 Adafruit_HX711 hx711(HX7711_DATA_PIN, HX7711_CLOCK_PIN);
