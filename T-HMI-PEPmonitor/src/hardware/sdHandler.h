@@ -22,6 +22,7 @@ void readProfileData(uint32_t profileId, ProfileData* profileData, String* error
 void readGameConfig(String gamePath, GameConfig* gameConfig, String* errorMessage);
 
 void getIniSection(String iniPath, String section, char* resultBuffer, uint16_t len, String* errorMessage);
+bool isKeyInSection(char* sectionData, String key);
 String getIniValueFromSection(char* sectionData, String key, String* errorMessage);
 
 String getRandomWinScreenPath(String gamePath, String* errorMessage);

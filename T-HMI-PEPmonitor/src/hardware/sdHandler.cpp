@@ -21,13 +21,10 @@ void readProfileData(uint32_t profileId, ProfileData* profileData, String* error
   profileData->name = getIniValueFromSection(resBuffer, "name", errorMessage);
   profileData->imagePath = getIniValueFromSection(resBuffer, "imagePath", errorMessage);
   profileData->cycles = atoi(getIniValueFromSection(resBuffer, "cycles", errorMessage).c_str());
-  String profileType = getIniValueFromSection(resBuffer, "type", errorMessage);
-  if (profileType == "blow") {
-    profileData->type = PROFILE_TYPE_BLOW;
-  } else if (profileType == "trampoline") {
-    profileData->type = PROFILE_TYPE_TRAMPOLINE;
-  }
   for (uint8_t taskId=0; taskId<10; taskId++) {
+    if (!isKeyInSection(resBuffer, "task_" + String(taskId) + "_type")) {
+      break;
+    }
     String taskType = getIniValueFromSection(resBuffer, "task_" + String(taskId) + "_type", errorMessage);
     if (taskType == "shortBlows") {
       profileData->taskType[taskId] = PROFILE_TASK_TYPE_SHORTBLOWS;
@@ -38,10 +35,21 @@ void readProfileData(uint32_t profileId, ProfileData* profileData, String* error
     } else if (taskType == "trampoline") {
       profileData->taskType[taskId] = PROFILE_TASK_TYPE_TRAMPOLINE;
     } else {
-      break;
+      errorMessage->concat("Unknown task type "+taskType+". Needs to be either of shortBlows, longBlows, equalBlows or trampoline.\n");
     }
-    profileData->tasks++;
-    
+    String ignoreErrors;
+    if (profileData->taskType[taskId] == PROFILE_TASK_TYPE_TRAMPOLINE) {
+      profileData->taskRepetitions[taskId] = atoi(getIniValueFromSection(resBuffer, "task_"+String(taskId)+"_repetitions", errorMessage).c_str());
+      profileData->taskChangeImagePath[taskId] = getIniValueFromSection(resBuffer, "task_"+String(taskId)+"_change_image_path", &ignoreErrors).c_str();
+      profileData->taskTime[taskId] = atoi(getIniValueFromSection(resBuffer, "task_"+String(taskId)+"_time", errorMessage).c_str());
+    } else {
+
+    }
+    profileData->taskRepetitions[taskId] = atoi(getIniValueFromSection(resBuffer, "task_"+String(taskId)+"_repetitions", errorMessage).c_str());
+    profileData->taskChangeImagePath[taskId] = getIniValueFromSection(resBuffer, "task_"+String(taskId)+"_change_image_path", &ignoreErrors).c_str();
+    profileData->taskTime[taskId] = atoi(getIniValueFromSection(resBuffer, "task_"+String(taskId)+"_time", errorMessage).c_str());
+    profileData->taskTargetStrength[taskId] = atoi(getIniValueFromSection(resBuffer, "task_"+String(taskId)+"_targetStrength", errorMessage).c_str());
+    profileData->tasks++; 
   }
 }
 
@@ -50,12 +58,12 @@ uint16_t getNumberOfGames(String* errorMessage) {
   File root = SD_MMC.open(GAMES_ROOT_DIR);
 
   if (!root) {
-    errorMessage->concat("Failed to open /games directory!");
+    errorMessage->concat("Failed to open /games directory!\n");
     Serial.println(*errorMessage);
     return 0;
   }
   if (!root.isDirectory()) {
-    errorMessage->concat("/games is not a directory!");
+    errorMessage->concat("/games is not a directory!\n");
     Serial.println(*errorMessage);
     return 0;
   }
@@ -84,12 +92,12 @@ String getGamePath(uint16_t gameId, String* errorMessage) {
   File root = SD_MMC.open(GAMES_ROOT_DIR);
 
   if (!root) {
-    errorMessage->concat("Failed to open /games directory!");
+    errorMessage->concat("Failed to open /games directory!\n");
     Serial.println(*errorMessage);
     return "";
   }
   if (!root.isDirectory()) {
-    errorMessage->concat("/games is not a directory!");
+    errorMessage->concat("/games is not a directory!\n");
     Serial.println(*errorMessage);
     return "";
   }
@@ -131,6 +139,7 @@ void getIniSection(String iniPath, String section, char* resultBuffer, uint16_t 
   if (!file) {
     errorMessage->concat("Failed to open INI file ");
     errorMessage->concat(iniPath);
+    errorMessage->concat("\n");
     Serial.println(*errorMessage);
     return;
   }
@@ -164,9 +173,17 @@ void getIniSection(String iniPath, String section, char* resultBuffer, uint16_t 
     errorMessage->concat(section);
     errorMessage->concat(" not found in INI file ");
     errorMessage->concat(iniPath);
+    errorMessage->concat("\n");
     Serial.println(*errorMessage);
   }
 }
+
+bool isKeyInSection(char* sectionData, String key) {
+  String errorMessage;
+  getIniValueFromSection(sectionData, key, &errorMessage);
+  return errorMessage.isEmpty();
+}
+
 
 String getIniValueFromSection(char* sectionData, String key, String* errorMessage) {
   int16_t lineStartMarker;
@@ -202,7 +219,7 @@ String getIniValueFromSection(char* sectionData, String key, String* errorMessag
   }
   errorMessage->concat("Key ");
   errorMessage->concat(key);
-  errorMessage->concat(" not found in INI section.");
+  errorMessage->concat(" not found in INI section.\n");
   Serial.println(*errorMessage);
   return String("");
 }
@@ -216,12 +233,14 @@ void scanForWinScreens(String gamePath, String* errorMessage) {
   if (!root) {
     errorMessage->concat("Failed to open directory ");
     errorMessage->concat(gameWinScreenDir);
+    errorMessage->concat("\n");
     Serial.println(*errorMessage);
     return;
   }
   if (!root.isDirectory()) {
     errorMessage->concat(gameWinScreenDir);
     errorMessage->concat(" is not a directory!");
+    errorMessage->concat("\n");
     Serial.println(*errorMessage);
     return;
   }
@@ -247,12 +266,13 @@ String getRandomWinScreenPath(String gamePath, String* errorMessage) {
   if (!root) {
     errorMessage->concat("Failed to open directory ");
     errorMessage->concat(gameWinScreenDir);
+    errorMessage->concat("\n");
     Serial.println(*errorMessage);
     return "";
   }
   if (!root.isDirectory()) {
     errorMessage->concat(gameWinScreenDir);
-    errorMessage->concat(" is not a directory!");
+    errorMessage->concat(" is not a directory!\n");
     Serial.println(*errorMessage);
     return "";
   }
