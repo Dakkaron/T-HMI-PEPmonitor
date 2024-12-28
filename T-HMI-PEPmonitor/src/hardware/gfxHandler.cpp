@@ -8,6 +8,7 @@
 #include "hardware/sdHandler.h"
 #include "hardware/serialHandler.h"
 #include "hardware/powerHandler.h"
+#include "config.h"
 
 TFT_eSPI tft = TFT_eSPI();
 TFT_eSprite spr = TFT_eSprite(&tft);
@@ -476,13 +477,38 @@ void printShaded(DISPLAY_T* display, String text, uint8_t shadeStrength, uint16_
   display->print(text);
 }
 
+void drawProfileSelectionPage(DISPLAY_T* display, uint16_t startNr, uint16_t nr, bool drawArrows, String* errorMessage) {
+  int32_t columns = _min(4, nr);
+  int32_t rows = nr>4 ? 2 : 1;
+  int32_t cWidth = (290 - 10*columns) / columns;
+  int32_t cHeight = rows==1 ? 220 : 105;
+  for (int32_t c = 0; c<columns; c++) {
+    for (int32_t r = 0; r<rows; r++) {
+      int32_t profileId = c + r*columns;
+      if (profileId < nr) {
+        ProfileData profileData;
+        readProfileData(profileId, &profileData, errorMessage);
+        display->fillRect(20 + c*(cWidth + 10), 10+(r*(cHeight+10)), cWidth, cHeight, TFT_BLUE);
+        int16_t imgW, imgH;
+        getBmpDimensions(profileData.imagePath, &imgW, &imgH);
+        drawBmp(profileData.imagePath, 20 + c*(cWidth + 10) + cWidth/2 - imgW/2, 10+(r*cHeight+10) + cHeight/2 - imgH/2, false);
+        uint8_t textDatumBackup = display->getTextDatum();
+        display->setTextDatum(BC_DATUM);
+        display->setTextSize(1);
+        display->drawString(profileData.name, 20 + c*(cWidth + 10) + cWidth/2, 10+(r*cHeight+10) + cHeight - 12);
+        display->setTextDatum(textDatumBackup);
+      }
+    }
+  }
+}
+
 void drawGameSelectionPage(DISPLAY_T* display, uint16_t startNr, uint16_t nr, bool drawArrows, String* errorMessage) {
-  uint8_t columns = _min(4, nr);
-  uint8_t rows = nr>4 ? 2 : 1;
-  uint8_t cWidth = (290 - 10*columns) / columns;
-  uint8_t cHeight = rows==1 ? 220 : 105; 
-  for (uint8_t c = 0; c<columns; c++) {
-    for (uint8_t r = 0; r<rows; r++) {
+  int32_t columns = _min(4, nr);
+  int32_t rows = nr>4 ? 2 : 1;
+  int32_t cWidth = (290 - 10*columns) / columns;
+  int32_t cHeight = rows==1 ? 220 : 105; 
+  for (int32_t c = 0; c<columns; c++) {
+    for (int32_t r = 0; r<rows; r++) {
       if (c + r*columns < nr) {
         String gamePath = getGamePath(c + r*columns, errorMessage);
         display->fillRect(20 + c*(cWidth + 10), 10+(r*(cHeight+10)), cWidth, cHeight, TFT_BLUE);
@@ -495,12 +521,12 @@ void drawGameSelectionPage(DISPLAY_T* display, uint16_t startNr, uint16_t nr, bo
 }
 
 int16_t checkSelectionPageSelection(uint16_t startNr, uint16_t nr, bool drawArrows) {
-  uint8_t columns = _min(4, nr);
-  uint8_t rows = nr>4 ? 2 : 1;
-  uint8_t cWidth = (290 - 10*columns) / columns;
-  uint8_t cHeight = rows==1 ? 220 : 105; 
-  for (uint8_t c = 0; c<columns; c++) {
-    for (uint8_t r = 0; r<rows; r++) {
+  int32_t columns = _min(4, nr);
+  int32_t rows = nr>4 ? 2 : 1;
+  int32_t cWidth = (290 - 10*columns) / columns;
+  int32_t cHeight = rows==1 ? 220 : 105; 
+  for (uint32_t c = 0; c<columns; c++) {
+    for (uint32_t r = 0; r<rows; r++) {
       if (isTouchInZone(20 + c*(cWidth + 10), 10+(r*(cHeight+10)), cWidth, cHeight)) {
         return startNr + c + r*columns;
       }
@@ -522,11 +548,12 @@ uint16_t displayGameSelection(DISPLAY_T* display, uint16_t nr, String* errorMess
 
   while (true) {
     buttonPwr.tick();
+    buttonUsr.tick();
     lastMs = ms;
     ms = millis();
     handleSerial();
     int16_t selection = checkSelectionPageSelection(startNr, _min(nr, 8), nr>8);
-    if (selection != -1) {
+    if (selection != -1 && selection<nr) {
       return selection;
     }
     display->fillRect(0,0,70,20,TFT_BLACK);
@@ -538,6 +565,35 @@ uint16_t displayGameSelection(DISPLAY_T* display, uint16_t nr, String* errorMess
   }
 }
 
+uint16_t displayProfileSelection(DISPLAY_T* display, uint16_t nr, String* errorMessage) {
+  uint16_t startNr = 0;
+  uint32_t ms = millis();
+  uint32_t lastMs = millis();
+
+  for (uint32_t i = 0;i<2;i++) {
+    display->fillSprite(TFT_BLACK);
+    drawProfileSelectionPage(display, startNr, _min(nr, 8), nr>8, errorMessage);
+    display->pushSpriteFast(0, 0);
+  }
+
+  while (true) {
+    buttonPwr.tick();
+    buttonUsr.tick();
+    lastMs = ms;
+    ms = millis();
+    handleSerial();
+    int16_t selection = checkSelectionPageSelection(startNr, _min(nr, 8), nr>8);
+    if (selection != -1 && selection<nr) {
+      return selection;
+    }
+    display->fillRect(0,0,70,20,TFT_BLACK);
+    drawSystemStats(ms, lastMs);
+    display->pushSpriteFast(0,0);
+    if (millis()>GAME_SELECTION_POWEROFF_TIMEOUT) {
+      power_off();
+    }
+  }
+}
 
 String leftPad(String s, uint16_t len, String c) {
   while (s.length()<len) {
@@ -683,5 +739,19 @@ void checkKeyboard(DISPLAY_T* display, String* output, uint32_t maxCharacters, u
         }
       }
     }
+  }
+}
+
+void checkFailWithMessage(String message) {
+  if (!message.isEmpty()) {
+    tft.fillScreen(TFT_BLACK);
+    spr.fillSprite(TFT_BLACK);
+    spr.setCursor(1, 16);
+    spr.println("FEHLER:");
+    spr.println(message);
+    spr.pushSprite(0, 0);
+    while (true) {
+      handleSerial();
+    };
   }
 }

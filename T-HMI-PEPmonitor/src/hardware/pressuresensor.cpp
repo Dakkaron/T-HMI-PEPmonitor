@@ -1,5 +1,7 @@
 #include "hardware/pressuresensor.h"
 
+Adafruit_HX711 hx711 = Adafruit_HX711(HX7711_DATA_PIN, HX7711_CLOCK_PIN);
+
 uint32_t readings[PRESSURE_SENSOR_SMOOTHING_NUM_READINGS];
 uint8_t readIndex = 0;
 uint32_t total = 0;
@@ -12,14 +14,14 @@ void readPressure(Adafruit_HX711* hx711, BlowData* blowData) {
     }
   #ifdef SIMULATE_BLOWING
     uint32_t blowDuration = blowData->ms - blowData->blowStartMs;
-    uint8_t isBlowing = (blowDuration) < (blowData->isLongBlows ? LONG_BLOW_DURATION_MS+100 : SIMULATE_BLOWS_SHORT_BLOW_DURATION+100) ||
-                        (blowDuration) > (blowData->isLongBlows ? LONG_BLOW_DURATION_MS+SIMULATE_BLOWS_PAUSE_DURATION : SIMULATE_BLOWS_SHORT_BLOW_DURATION+SIMULATE_BLOWS_PAUSE_DURATION);
-    blowData->pressure = isBlowing ? SHORT_BLOW_MIN_STRENGTH + 5 : 1; 
+    uint8_t isBlowing = (blowDuration) < (blowData->targetDurationMs+100) ||
+                        (blowDuration) > (blowData->targetDurationMs+100+SIMULATE_BLOWS_PAUSE_DURATION);
+    blowData->pressure = isBlowing ? blowData->targetPressure : 1; 
   #else // !SIMULATE_BLOWING
     if (hx711->isBusy()) {
       return;
     }
-    int32_t sensorValue = (hx711->readChannel(CHAN_A_GAIN_64) / (blowData->isLongBlows ? PRESSURE_SENSOR_LONG_BLOW_DIVISOR : PRESSURE_SENSOR_SHORT_BLOW_DIVISOR)); // Dropping the least significant 15 bits
+    int32_t sensorValue = (hx711->readChannel(CHAN_A_GAIN_64) / (PRESSURE_SENSOR_DIVISOR * blowData->targetPressure));
     #ifdef LOG_BLOW_PRESSURE
       Serial.print(F("Channel A (Gain 64): "));
       Serial.print(sensorValue);
@@ -36,7 +38,7 @@ void readPressure(Adafruit_HX711* hx711, BlowData* blowData) {
         readIndex = 0;
       }
       blowData->pressure = total / PRESSURE_SENSOR_SMOOTHING_NUM_READINGS;
-      if ((blowData->ms - blowData->blowStartMs) < LONG_BLOW_DURATION_MS) {
+      if ((blowData->ms - blowData->blowStartMs) < blowData->targetDurationMs) {
         blowData->cumulativeError = abs(((int32_t)blowData->pressure - 100)) + ((blowData->cumulativeError * (PRESSURE_SENSOR_CUMULATIVE_ERROR_FACTOR-1)) / PRESSURE_SENSOR_CUMULATIVE_ERROR_FACTOR);
       }
     } else {
@@ -51,7 +53,7 @@ void readPressure(Adafruit_HX711* hx711, BlowData* blowData) {
           readIndex = 0;
         }
         blowData->pressure = total / PRESSURE_SENSOR_SMOOTHING_NUM_READINGS;
-        if ((blowData->ms - blowData->blowStartMs) < LONG_BLOW_DURATION_MS) {
+        if ((blowData->ms - blowData->blowStartMs) < blowData->targetDurationMs) {
           blowData->cumulativeError = abs(((int32_t)blowData->pressure - 100)) + ((blowData->cumulativeError * (PRESSURE_SENSOR_CUMULATIVE_ERROR_FACTOR-1)) / PRESSURE_SENSOR_CUMULATIVE_ERROR_FACTOR);
         }
       }

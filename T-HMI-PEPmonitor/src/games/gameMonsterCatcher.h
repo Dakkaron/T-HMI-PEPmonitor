@@ -20,6 +20,7 @@
 
 void initGames_monsterCatcher(String gamePath, GameConfig* gameConfig, String* errorMessage);
 void drawShortBlowGame_monsterCatcher(DISPLAY_T* display, BlowData* blowData, String* errorMessage);
+void drawEqualBlowGame_monsterCatcher(DISPLAY_T* display, BlowData* blowData, String* errorMessage);
 void drawLongBlowGame_monsterCatcher(DISPLAY_T* display, BlowData* blowData, String* errorMessage);
 void drawTrampolineGame_monsterCatcher(DISPLAY_T* display, JumpData* jumpData, String* errorMessage);
 void displayProgressionMenu_monsterCatcher(DISPLAY_T *display, String *errorMessage);

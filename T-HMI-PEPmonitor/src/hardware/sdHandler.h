@@ -16,7 +16,7 @@
 
 uint16_t getNumberOfGames(String* errorMessage);
 String getGamePath(uint16_t gameId, String* errorMessage);
-uint32_t getNumberOfProfiles();
+uint32_t getNumberOfProfiles(String* errorMessage);
 void readProfileData(uint32_t profileId, ProfileData* profileData, String* errorMessage);
 
 void readGameConfig(String gamePath, GameConfig* gameConfig, String* errorMessage);

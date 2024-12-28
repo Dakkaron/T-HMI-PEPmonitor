@@ -5,6 +5,7 @@
 #include "pins.h"
 
 extern OneButton buttonPwr;
+extern OneButton buttonUsr;
 
 uint32_t readBatteryVoltage();
 void power_off();

@@ -249,10 +249,7 @@ static void loadAttackSprites(String attackId, uint8_t slot, String* errorMessag
   loadAttackSprites(&attackData, slot);
 }
 
-static void drawCombat(DISPLAY_T* display, BlowData* blowData, uint8_t numberOfAttacks, AttackFunctionType attackFunctions[], bool isCatch, String* errorMessage) {
-  #ifdef SHOW_REMAINING_SECONDS
-    display->print(timeLeft, 10);
-  #endif
+static void drawCombat(DISPLAY_T* display, BlowData* blowData, uint8_t numberOfAttacks, AttackFunctionType attackFunctions[], bool isCatch, bool drawPlayerHpBar, String* errorMessage) {
   bool isPlayerTurn = !(blowData->blowCount % 2);
   uint8_t currentAttackFunction = blowData->blowCount % numberOfAttacks;
   uint8_t drawCombattantSprites;
@@ -289,7 +286,7 @@ static void drawCombat(DISPLAY_T* display, BlowData* blowData, uint8_t numberOfA
     int16_t xOffset = _min(50, animTime / 10);
     playerSprite[playerAnimSprite].pushToSprite(display, 50 - xOffset, 100);
   }
-  if (blowData->isLongBlows) {
+  if (drawPlayerHpBar) {
     drawProgressBar(display, _max(1, 100 - hpPerFail * blowData->fails), 100, 10, 158, 100, 10);
   }
 
@@ -311,8 +308,8 @@ static void drawCombat(DISPLAY_T* display, BlowData* blowData, uint8_t numberOfA
   display->setCursor(200, 33);
   display->setTextSize(2);
   display->print(enemyMonsterData.name);
-  uint16_t hpPerCycle = 100 / (blowData->isLongBlows ? LONG_BLOW_NUMBER_MAX : SHORT_BLOW_NUMBER_MAX);
-  drawProgressBar(display, hpPerCycle*2*(((blowData->isLongBlows ? LONG_BLOW_NUMBER_MAX : SHORT_BLOW_NUMBER_MAX)-blowData->blowCount + 1)/2), 100, 200, 20, 100, 10);
+  uint16_t hpPerCycle = 100 / blowData->totalBlowCount;
+  drawProgressBar(display, hpPerCycle*2*((blowData->totalBlowCount-blowData->blowCount + 1)/2), 100, 200, 20, 100, 10);
   /*if (drawCombattantSprites & DRAW_ENEMY_DEAD || (altKillBitmap == NULL && drawCombattantSprites & DRAW_ENEMY_ALTERNATE)) {
     drawBitmap(display, SCREEN_WIDTH-1, GAME_DRAW_Y, explosion_bmp, BITMAP_HRIGHT_ALIGN);
   }
@@ -378,7 +375,7 @@ void drawLongBlowGame_monsterCatcher(DISPLAY_T* display, BlowData* blowData, Str
   AttackFunctionType attackFunctions[2];
   attackFunctions[0] = playerMonsterData.attack.attackFunction;
   attackFunctions[1] = enemyMonsterData.attack.attackFunction;
-  drawCombat(display, blowData, 2, attackFunctions, false, errorMessage);
+  drawCombat(display, blowData, 2, attackFunctions, false, true, errorMessage);
   display->setTextSize(2);
   display->setCursor(230, 200);
   if (caughtMonsters<100) {
@@ -393,6 +390,15 @@ void drawLongBlowGame_monsterCatcher(DISPLAY_T* display, BlowData* blowData, Str
   display->setTextSize(1);
   display->setCursor(230, 220);
   display->print("gefangen");
+}
+
+
+void drawEqualBlowGame_monsterCatcher(DISPLAY_T* display, BlowData* blowData, String* errorMessage) {
+  if (blowData->blowCount < blowData->totalBlowCount-1) {
+    drawLongBlowGame_monsterCatcher(display, blowData, errorMessage);
+  } else {
+    drawShortBlowGame_monsterCatcher(display, blowData, errorMessage);
+  }
 }
 
 // Monster Catching/Evolving game
@@ -457,7 +463,7 @@ void drawShortBlowGame_monsterCatcher(DISPLAY_T* display, BlowData* blowData, St
     loadBmpAnim(enemySpriteRefs, monsterCatcherGamePath + enemyMonsterData.imagePath + "/anim_front.bmp", 2);
   }
 
-  if (catchCheckForBlow && blowData->blowCount == SHORT_BLOW_NUMBER_MAX) {
+  if (catchCheckForBlow && blowData->blowCount == blowData->totalBlowCount) {
       catchCheckForBlow = blowData->blowCount;
       if (catchMonsterModeEvolution) {
         loadMonsterData(monsterCatcherGameIniPath, &playerMonsterData, playerEvolutionTarget, errorMessage);
@@ -477,7 +483,7 @@ void drawShortBlowGame_monsterCatcher(DISPLAY_T* display, BlowData* blowData, St
       loadBmpAnim(playerSpriteRefs, monsterCatcherGamePath + playerMonsterData.imagePath + "/anim_front.bmp", 2);
     }
 
-  if (blowData->blowCount == SHORT_BLOW_NUMBER_MAX) { // If is monster evolution, display evolved monster on last round
+  if (blowData->blowCount == blowData->totalBlowCount) { // If is monster evolution, display evolved monster on last round
     playerSprite[(blowData->ms/250)%2].pushToSprite(display, SCREEN_WIDTH/2-16, SCREEN_HEIGHT/2-16, 0x0000);
     return;
   }
@@ -489,7 +495,7 @@ void drawShortBlowGame_monsterCatcher(DISPLAY_T* display, BlowData* blowData, St
   } else {
     attackFunctions[0] = attackFunction_catch;
   }
-  drawCombat(display, blowData, 1, attackFunctions, true, errorMessage);
+  drawCombat(display, blowData, 1, attackFunctions, true, false, errorMessage);
 }
 
 static void loadBushes(uint8_t nr) {

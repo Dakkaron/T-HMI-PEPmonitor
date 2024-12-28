@@ -13,6 +13,7 @@ void luaDemoTest();
 
 void initGames_lua(String gamePath, GameConfig* gameConfig, String* errorMessage);
 void drawShortBlowGame_lua(DISPLAY_T* display, BlowData* blowData, String* errorMessage);
+void drawEqualBlowGame_lua(DISPLAY_T* display, BlowData* blowData, String* errorMessage);
 void drawLongBlowGame_lua(DISPLAY_T* display, BlowData* blowData, String* errorMessage);
 void drawTrampolineGame_lua(DISPLAY_T* display, JumpData* jumpData, String* errorMessage);
 void displayProgressionMenu_lua(DISPLAY_T *display, String *errorMessage);

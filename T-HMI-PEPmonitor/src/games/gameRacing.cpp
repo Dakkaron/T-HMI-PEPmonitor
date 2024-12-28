@@ -369,13 +369,17 @@ void drawLongBlowGame_racing(DISPLAY_T* display, BlowData* blowData, String* err
     nitroSSprite.pushToSprite(display, 300, 5, 0x0000);
   }
 
-  if (blowData->cycleNumber==CYCLES-1 && blowData->blowCount==LONG_BLOW_NUMBER_MAX-1 && !savedBlows) {
+  if (blowData->cycleNumber==blowData->totalCycleNumber-1 && blowData->blowCount==blowData->totalLongBlowRepetitions+blowData->totalEqualBlowRepetitions-1 && !savedBlows) {
     savedBlows = true;
     prefs.putUInt("nitro", nitro);
     Serial.print("Saved ");
     Serial.print(nitro);
     Serial.println(" nitro.");
   }
+}
+
+void drawEqualBlowGame_racing(DISPLAY_T* display, BlowData* blowData, String* errorMessage) {
+  drawLongBlowGame_racing(display, blowData, errorMessage);
 }
 
 bool savedTrampoline=false;

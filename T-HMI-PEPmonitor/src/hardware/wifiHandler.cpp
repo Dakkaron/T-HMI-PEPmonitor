@@ -74,7 +74,7 @@ void getJumpData(JumpData* jumpData) {
     jumpData->ms = millis();
     jumpData->jumpCount = (jumpData->ms - simulateStartMs) / 1000;
     jumpData->currentlyJumping = true;
-    jumpData->msLeft = simulateStartMs + (5L * 60L * 1000L) - jumpData->ms;
+    jumpData->msLeft = simulateStartMs + jumpData->totalTime - jumpData->ms;
     jumpData->misses = 0;
     jumpData->highscore = 250;
     jumpData->newHighscore = jumpData->jumpCount > 250;

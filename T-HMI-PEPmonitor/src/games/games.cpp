@@ -36,6 +36,18 @@ void drawShortBlowGame(DISPLAY_T* display, BlowData* blowData, String* errorMess
   }
 }
 
+void drawEqualBlowGame(DISPLAY_T* display, BlowData* blowData, String* errorMessage) {
+  if (gameConfig.templateName == "monster") {
+    drawEqualBlowGame_monsterCatcher(display, blowData, errorMessage);
+  } else if (gameConfig.templateName == "race") {
+    drawEqualBlowGame_racing(display, blowData, errorMessage);
+  } else if (gameConfig.templateName == "lua") {
+    drawEqualBlowGame_lua(display, blowData, errorMessage);
+  } else {
+    errorMessage->concat("No game loaded!");
+  }
+}
+
 void drawLongBlowGame(DISPLAY_T* display, BlowData* blowData, String* errorMessage) {
   if (gameConfig.templateName == "monster") {
     drawLongBlowGame_monsterCatcher(display, blowData, errorMessage);

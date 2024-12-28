@@ -4,13 +4,18 @@
 uint32_t numberOfWinScreens;
 
 
-uint32_t getNumberOfProfiles() {
+uint32_t getNumberOfProfiles(String* errorMessage) {
   uint32_t count = 0;
-  String errorMessage = "";
+  String ignoreErrors = "";
   char resBuffer[1024];
-  while (errorMessage.isEmpty()) {
-    getIniSection(PROFILE_DATA_INI_PATH, "[profile_" + String(count) + "]", resBuffer, 1024, &errorMessage);
-    count++;
+  while (ignoreErrors.isEmpty()) {
+    getIniSection(PROFILE_DATA_INI_PATH, "[profile_" + String(count) + "]", resBuffer, 1024, &ignoreErrors);
+    if (ignoreErrors.isEmpty()) {
+      count++;
+    }
+  }
+  if (count == 0) {
+    errorMessage->concat("No profiles found!\n");
   }
   return count;
 }
@@ -38,18 +43,21 @@ void readProfileData(uint32_t profileId, ProfileData* profileData, String* error
       errorMessage->concat("Unknown task type "+taskType+". Needs to be either of shortBlows, longBlows, equalBlows or trampoline.\n");
     }
     String ignoreErrors;
-    if (profileData->taskType[taskId] == PROFILE_TASK_TYPE_TRAMPOLINE) {
+    if (profileData->taskType[taskId] != PROFILE_TASK_TYPE_TRAMPOLINE) {
+      profileData->taskMinStrength[taskId] = atoi(getIniValueFromSection(resBuffer, "task_"+String(taskId)+"_minStrength", errorMessage).c_str());
+      profileData->taskTargetStrength[taskId] = atoi(getIniValueFromSection(resBuffer, "task_"+String(taskId)+"_targetStrength", errorMessage).c_str());
       profileData->taskRepetitions[taskId] = atoi(getIniValueFromSection(resBuffer, "task_"+String(taskId)+"_repetitions", errorMessage).c_str());
-      profileData->taskChangeImagePath[taskId] = getIniValueFromSection(resBuffer, "task_"+String(taskId)+"_change_image_path", &ignoreErrors).c_str();
-      profileData->taskTime[taskId] = atoi(getIniValueFromSection(resBuffer, "task_"+String(taskId)+"_time", errorMessage).c_str());
-    } else {
-
     }
-    profileData->taskRepetitions[taskId] = atoi(getIniValueFromSection(resBuffer, "task_"+String(taskId)+"_repetitions", errorMessage).c_str());
-    profileData->taskChangeImagePath[taskId] = getIniValueFromSection(resBuffer, "task_"+String(taskId)+"_change_image_path", &ignoreErrors).c_str();
+    profileData->taskChangeImagePath[taskId] = getIniValueFromSection(resBuffer, "task_"+String(taskId)+"_changeImagePath", &ignoreErrors).c_str();
+    profileData->taskChangeMessage[taskId] = getIniValueFromSection(resBuffer, "task_"+String(taskId)+"_changeText", &ignoreErrors).c_str();
     profileData->taskTime[taskId] = atoi(getIniValueFromSection(resBuffer, "task_"+String(taskId)+"_time", errorMessage).c_str());
-    profileData->taskTargetStrength[taskId] = atoi(getIniValueFromSection(resBuffer, "task_"+String(taskId)+"_targetStrength", errorMessage).c_str());
+    checkFailWithMessage(*errorMessage);
     profileData->tasks++; 
+  }
+  if (profileData->tasks == 0) {
+    errorMessage->concat("No tasks found in profile ");
+    errorMessage->concat(profileId);
+    errorMessage->concat(".\n");
   }
 }
 

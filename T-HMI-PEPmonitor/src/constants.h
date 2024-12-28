@@ -13,10 +13,8 @@
 #define PRESSURE_BAR_X 1
 #define PRESSURE_BAR_Y 190
 
-#define PRESSURE_SENSOR_LONG_BLOW_DIVISOR  11000L //(32768L/3L)
-#define PRESSURE_SENSOR_SHORT_BLOW_DIVISOR 20000L //(32768L/6L)
+#define PRESSURE_SENSOR_DIVISOR 65L
 #define PRESSURE_SENSOR_CUTOFF_LIMIT 500
-#define PRESSURE_SENSOR_BLOWING_THRESHOLD 60
 #define PRESSURE_SENSOR_SMOOTHING_NUM_READINGS 10
 #define PRESSURE_SENSOR_MAX_SKIPS 10;
 
@@ -38,9 +36,6 @@
 
 #define SENSOR_MODE_PEPS 1
 #define SENSOR_MODE_TRAMPOLINE 2
-
-#define PROFILE_TYPE_BLOW 1
-#define PROFILE_TYPE_TRAMPOLINE 2
 
 #define PROFILE_TASK_TYPE_SHORTBLOWS 1
 #define PROFILE_TASK_TYPE_LONGBLOWS 2
@@ -66,12 +61,14 @@ struct GameConfig {
 struct ProfileData {
   String name;
   String imagePath;
-  uint8_t type;
   uint8_t cycles;
   uint8_t tasks;
   uint8_t taskType[10];
   uint8_t taskRepetitions[10];
+  String taskChangeImagePath[10];
+  String taskChangeMessage[10];
   uint32_t taskTime[10];
+  uint32_t taskMinStrength[10];
   uint32_t taskTargetStrength[10];
 };
 
@@ -80,22 +77,36 @@ struct BlowData {
   unsigned long ms = 0;
   unsigned long blowStartMs = 0;
   unsigned long blowEndMs = 0;
+  unsigned long targetDurationMs = 0;
   uint8_t cycleNumber = 0;
+  uint8_t totalCycleNumber = 0;
+  uint8_t taskNumber = 0;
+  uint8_t totalTaskNumber = 0;
   uint8_t blowCount = 0;
+  uint8_t totalBlowCount = 0;
   uint32_t pressure = 0;
-  uint16_t maxPressure = 0;
+  uint16_t peakPressure = 0;
+  uint16_t minPressure = 0;
+  uint16_t targetPressure = 0;
   uint16_t cumulativeError = 0;
   uint8_t fails = 0;
-  bool isLongBlows = true;
+  uint32_t taskType;
   uint8_t lastBlowStatus = 0;
+  uint32_t totalLongBlowRepetitions = 0;
+  uint32_t totalEqualBlowRepetitions = 0;
+  uint32_t totalShortBlowRepetitions = 0;
 };
 
 struct JumpData {
   unsigned long ms;
+  uint8_t cycleNumber = 0;
+  uint8_t totalCycleNumber = 0;
+  uint8_t taskNumber = 0;
+  uint8_t totalTaskNumber = 0;
   uint16_t jumpCount = 0;
   bool currentlyJumping = false;
   int32_t msLeft = 0;
-  int32_t totalTime = 5 * 60 * 1000;
+  int32_t totalTime = 0;
   uint16_t misses = 0;
   uint16_t highscore = 0;
   bool newHighscore = false;

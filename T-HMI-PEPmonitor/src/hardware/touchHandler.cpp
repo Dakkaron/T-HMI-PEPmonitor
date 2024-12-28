@@ -1,19 +1,124 @@
 #include "hardware/touchHandler.h"
 
-#include "pins.h"
 #include <Arduino.h>
+#include <vector>
 
-touch_calibration_t calibration_data[4];
+#include "hardware/prefsHandler.h"
+#include "pins.h"
+#include "config.h"
+#include "constants.h"
+#include "hardware/gfxHandler.hpp"
+#include "hardware/powerHandler.h"
+
+
+static touch_calibration_t calibration_data[4];
+static std::vector<touch_calibration_t> raw_data;
 
 XPT2046 touch = XPT2046(SPI, TOUCHSCREEN_CS_PIN, TOUCHSCREEN_IRQ_PIN);
 
+static void writeTouchCalibration() {
+  prefs.begin("touch");
+  uint8_t* calibBytes = reinterpret_cast<uint8_t*>(&calibration_data);
+  prefs.putBytes("calib", calibBytes, 16);
+}
+
+void runTouchCalibration() {
+  for (int32_t point=0;point<4;point++) {
+    Serial.println(1);
+    spr.fillSprite(TFT_BLACK);
+    switch (point) {
+    case 0:
+      spr.drawCircle(0, 240, 10, TFT_WHITE);
+      break;
+    case 1:
+      spr.drawCircle(0, 0, 10, TFT_WHITE);
+      break;
+    case 2:
+      spr.drawCircle(320, 0, 10, TFT_WHITE);
+      break;
+    case 3:
+      spr.drawCircle(320, 240, 10, TFT_WHITE);
+      break;
+    }
+    Serial.println(2);
+    spr.drawString("Bitte den Kreis antippen", 30, 160, 2);
+    spr.pushSpriteFast(0,0);
+
+    Serial.println(3);
+    while (!touch.pressed()) {}
+    uint8_t count = 0;
+    while (touch.pressed() && count<100) {
+      count++;
+      uint16_t x = touch.RawX();
+      uint16_t y = touch.RawY();
+      Serial.print("X: ");
+      Serial.print(x);
+      Serial.print(", Y: ");
+      Serial.println(y);
+      raw_data.push_back((touch_calibration_t) {
+        .rawX = x,
+        .rawY = y
+      });
+    }
+    while (touch.pressed()) {}
+
+    Serial.println(4);
+    uint32_t tmpX = 0;
+    uint32_t tmpY = 0;
+
+    for (size_t i = 0; i < raw_data.size(); i++) {
+      tmpX += raw_data[i].rawX;
+      tmpY += raw_data[i].rawY;
+    }
+    Serial.println(5);
+    calibration_data[point].rawX = tmpX / raw_data.size();
+    calibration_data[point].rawY = tmpY / raw_data.size();
+    raw_data.clear();
+    Serial.println(6);
+  }
+  Serial.println(7);
+  writeTouchCalibration();
+  tft.fillScreen(TFT_BLACK);
+  tft.drawString("Kalibrierung abgeschlossen", 30, 160, 2);
+  Serial.println("## Calibration result");
+  Serial.println(calibration_data[0].rawX);
+  Serial.println(calibration_data[0].rawY);
+  Serial.println(calibration_data[1].rawX);
+  Serial.println(calibration_data[1].rawY);
+  Serial.println(calibration_data[2].rawX);
+  Serial.println(calibration_data[2].rawY);
+  Serial.println(calibration_data[3].rawX);
+  Serial.println(calibration_data[3].rawY);
+  Serial.println(8);
+  delay(3000);
+  esp_restart();
+}
+
+static void readTouchCalibration() {
+  prefs.begin("touch");
+  if (prefs.isKey("calib")) {
+    uint8_t* calibBytes = reinterpret_cast<uint8_t*>(&calibration_data);
+    prefs.getBytes("calib", calibBytes, 16);
+  } else {
+    runTouchCalibration();
+  }
+  Serial.println("## CALIBRATION");
+  Serial.println(calibration_data[0].rawX);
+  Serial.println(calibration_data[0].rawY);
+  Serial.println(calibration_data[1].rawX);
+  Serial.println(calibration_data[1].rawY);
+  Serial.println(calibration_data[2].rawX);
+  Serial.println(calibration_data[2].rawY);
+  Serial.println(calibration_data[3].rawX);
+  Serial.println(calibration_data[3].rawY);
+}
+
 void initTouch() {
-  //initTouchCalibration();
-  //readTouchCalibration(calibration_data);
+  delay(2000);
+  readTouchCalibration();
   SPI.begin(TOUCHSCREEN_SCLK_PIN, TOUCHSCREEN_MISO_PIN, TOUCHSCREEN_MOSI_PIN);
   touch.begin(240, 320);
-  touch.setCal(1788, 285, 1877, 311, 240, 320);
-  //touch.setCal(calibration_data[0].rawX, calibration_data[2].rawX, calibration_data[0].rawY, calibration_data[2].rawY, 240, 320);
+  touch.setCal(calibration_data[0].rawX, calibration_data[2].rawX, calibration_data[0].rawY, calibration_data[2].rawY, 240, 320);
   touch.setRotation((SCREEN_ROTATION + 2) % 4);
   touch.setZThreshold(TOUCH_SCREEN_Z_THRESHOLD);
 }

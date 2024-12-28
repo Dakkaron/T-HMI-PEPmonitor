@@ -86,13 +86,18 @@ void updateBlowData(BlowData* blowData) {
                           "ms="+String(blowData->ms)+"\n"+\
                           "blowStartMs="+String(blowData->blowStartMs)+"\n"+\
                           "blowEndMs="+String(blowData->blowEndMs)+"\n"+\
+                          "targetDurationMs="+String(blowData->targetDurationMs)+"\n"+\
                           "cycleNumber="+String(blowData->cycleNumber)+"\n"+\
+                          "totalCycleNumber="+String(blowData->totalCycleNumber)+"\n"+\
                           "blowCount="+String(blowData->blowCount)+"\n"+\
+                          "totalBlowCount="+String(blowData->totalBlowCount)+"\n"+\
                           "pressure="+String(blowData->pressure)+"\n"+\
-                          "maxPressure="+String(blowData->maxPressure)+"\n"+\
+                          "peakPressure="+String(blowData->peakPressure)+"\n"+\
+                          "minPressure="+String(blowData->minPressure)+"\n"+\
+                          "targetPressure="+String(blowData->targetPressure)+"\n"+\
                           "cumulativeError="+String(blowData->cumulativeError)+"\n"+\
                           "fails="+String(blowData->fails)+"\n"+\
-                          "isLongBlows="+String(blowData->isLongBlows)+"\n"+\
+                          "taskType="+String(blowData->taskType)+"\n"+\
                           "lastBlowStatus="+String(blowData->lastBlowStatus);
   lua.Lua_dostring(&blowDataString);
 }

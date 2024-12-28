@@ -1,12 +1,4 @@
-//#define SHOW_REMAINING_SECONDS
-
-#define LONG_BLOW_DURATION_MS 5000L
-#define SHORT_BLOW_DURATION_DISPLAY_MS 1000L
-#define SHORT_BLOW_MIN_STRENGTH 90
-#define SHORT_BLOW_PRESSURE_MULTIPLICATOR 2
-#define LONG_BLOW_NUMBER_MAX 10
-#define SHORT_BLOW_NUMBER_MAX 5
-#define CYCLES 3
+#define GAME_SELECTION_POWEROFF_TIMEOUT 5L*60L*1000L // Power off device if it spends >5 minutes on game selection screen
 
 #define TOUCH_SCREEN_Z_THRESHOLD 20 // Increase this value if you get ghost touches
 

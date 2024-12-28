@@ -7,5 +7,6 @@
 #include "constants.h"
 
 void readPressure(Adafruit_HX711* hx711, BlowData* blowData);
+extern Adafruit_HX711 hx711;
 
 #endif /*PRESSURESENSOR*/
