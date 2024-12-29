@@ -1,9 +1,7 @@
 #ifndef __GAME_LUA_H__
 #define __GAME_LUA_H__
 
-#include "config.h"
 #include "constants.h"
-#include "EEPROM.h"
 #include "hardware/gfxHandler.hpp"
 #include "hardware/sdHandler.h"
 #include "hardware/touchHandler.h"

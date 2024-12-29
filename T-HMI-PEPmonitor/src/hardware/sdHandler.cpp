@@ -3,6 +3,34 @@
 
 uint32_t numberOfWinScreens;
 
+bool stringIsTrue(String str, bool defaultValue) {
+  str.trim();
+  str.toLowerCase();
+  if (defaultValue) {
+    return str != "false";
+  }
+  return str == "true";
+}
+
+void readSystemConfig(SystemConfig* systemConfig, String* errorMessage) {
+  char resBuffer[1024];
+  String ignoreErrors = "";
+  getIniSection(SYSTEM_CONFIG_INI_PATH, "[system]", resBuffer, 1024, errorMessage);
+  systemConfig->wifiSsid = getIniValueFromSection(resBuffer, "wifiSSID", &ignoreErrors);
+  systemConfig->wifiPassword = getIniValueFromSection(resBuffer, "wifiPassword", &ignoreErrors);
+  systemConfig->trampolineIp = getIniValueFromSection(resBuffer, "trampolineIp", &ignoreErrors);
+  systemConfig->touchScreenZThreshold = 2.5*(100-atoi(getIniValueFromSection(resBuffer, "touchScreenSensitivity", &ignoreErrors).c_str()));
+  systemConfig->simulateTrampoline = stringIsTrue(getIniValueFromSection(resBuffer, "simulateTrampoline", &ignoreErrors), false);
+  systemConfig->simulateBlows = stringIsTrue(getIniValueFromSection(resBuffer, "simulateBlowing", &ignoreErrors), false);
+  systemConfig->simulateInhalation = stringIsTrue(getIniValueFromSection(resBuffer, "simulateInhalation", &ignoreErrors), false);
+  systemConfig->logBlowPressure = stringIsTrue(getIniValueFromSection(resBuffer, "logBlowPressure", &ignoreErrors), false);
+  systemConfig->logTrampoline = stringIsTrue(getIniValueFromSection(resBuffer, "logTrampoline", &ignoreErrors), false);
+  if (systemConfig->trampolineIp.isEmpty() || systemConfig->wifiSsid.isEmpty() || systemConfig->wifiPassword.isEmpty()) {
+    Serial.println("No Wifi credentials or trampoline IP found in system config!");
+    Serial.println("Using trampoline in simulation mode.");
+    systemConfig->simulateTrampoline = true;
+  }
+}
 
 uint32_t getNumberOfProfiles(String* errorMessage) {
   uint32_t count = 0;
@@ -18,15 +46,6 @@ uint32_t getNumberOfProfiles(String* errorMessage) {
     errorMessage->concat("No profiles found!\n");
   }
   return count;
-}
-
-bool stringIsTrue(String str, bool defaultValue=true) {
-  str.trim();
-  str.toLowerCase();
-  if (defaultValue) {
-    return str != "false";
-  }
-  return str == "true";
 }
 
 void readProfileData(uint32_t profileId, ProfileData* profileData, String* errorMessage) {

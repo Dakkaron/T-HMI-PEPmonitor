@@ -12,21 +12,21 @@ void readPressure(Adafruit_HX711* hx711, BlowData* blowData) {
         readings[i] = 0;
       }
     }
-  #ifdef SIMULATE_BLOWING
+  if (systemConfig.simulateBlows) {
     uint32_t blowDuration = blowData->ms - blowData->blowStartMs;
     uint8_t isBlowing = (blowDuration) < (blowData->targetDurationMs+100) ||
                         (blowDuration) > (blowData->targetDurationMs+100+SIMULATE_BLOWS_PAUSE_DURATION);
     blowData->pressure = isBlowing ? blowData->targetPressure : 1; 
-  #else // !SIMULATE_BLOWING
+  } else {
     if (hx711->isBusy()) {
       return;
     }
     int32_t sensorValue = (hx711->readChannel(CHAN_A_GAIN_64) / (PRESSURE_SENSOR_DIVISOR * blowData->targetPressure));
-    #ifdef LOG_BLOW_PRESSURE
+    if (systemConfig.logBlowPressure) {
       Serial.print(F("Channel A (Gain 64): "));
       Serial.print(sensorValue);
       Serial.print(F(" / "));
-    #endif
+    }
     if (sensorValue >= -PRESSURE_SENSOR_CUTOFF_LIMIT && sensorValue <= PRESSURE_SENSOR_CUTOFF_LIMIT) {
       if (blowData->negativePressure) {
         sensorValue = -sensorValue;
@@ -61,8 +61,8 @@ void readPressure(Adafruit_HX711* hx711, BlowData* blowData) {
         }
       }
     }
-  #endif // SIMULATE_BLOWING
-  #ifdef LOG_BLOW_PRESSURE
+  }
+  if (systemConfig.logBlowPressure) {
     Serial.println(blowData->pressure);
-  #endif
+  }
 }

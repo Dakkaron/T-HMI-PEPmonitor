@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #define CONFIG_SPIRAM_SUPPORT 1
 
-#include "config.h"
+#include "systemconfig.h"
 #include "constants.h"
 
 #include "pins.h"
@@ -141,10 +141,12 @@ void setup() {
     Serial.printf("? Detected SdCard insert: %.2f GB\r\n", SD_MMC.cardSize() / 1024.0 / 1024.0 / 1024.0);
   }
   Serial.println(F("done"));
+  String errorMessage;
+  initSystemConfig(&errorMessage);
+  checkFailWithMessage(errorMessage);
   Serial.print("PEPit Version '");
   Serial.print(VERSION);
   Serial.println("' initialized");
-  String errorMessage;
   runProfileSelection(&errorMessage);
   spr.fillSprite(TFT_BLACK);
   spr.pushSpriteFast(0,0);

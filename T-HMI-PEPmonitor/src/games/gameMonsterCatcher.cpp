@@ -332,17 +332,13 @@ static void loadPlayerMonsterId(String* errorMessage) {
 }
 
 static void savePlayerMonsterId() {
-  #ifndef DEBUG_DISABLE_SAVING
-    Serial.print(F("Saving monster id: "));
-    Serial.println(playerMonsterData.id);
-    if (monsterLevels[playerMonsterData.id] == 0) {
-      monsterLevels[playerMonsterData.id] = 1;
-      prefs.putBytes("levels", monsterLevels, maxMonsterCount);
-    }
-    prefs.putInt("playerMonsterId", playerMonsterData.id);
-  #else
-    Serial.println("SAVING MONSTER ID DISABLED. TO ENABLE, REMOVE DEBUG_DISABLE_SAVING!");
-  #endif
+  Serial.print(F("Saving monster id: "));
+  Serial.println(playerMonsterData.id);
+  if (monsterLevels[playerMonsterData.id] == 0) {
+    monsterLevels[playerMonsterData.id] = 1;
+    prefs.putBytes("levels", monsterLevels, maxMonsterCount);
+  }
+  prefs.putInt("playerMonsterId", playerMonsterData.id);
 }
 
 // Monster Combat game

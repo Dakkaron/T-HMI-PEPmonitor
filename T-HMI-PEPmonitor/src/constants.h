@@ -42,15 +42,8 @@
 #define PROFILE_TASK_TYPE_EQUALBLOWS 3
 #define PROFILE_TASK_TYPE_TRAMPOLINE 4
 
-#define WIN_SCREEN_TIMEOUT 1000 * 60 * 3
-
-struct SystemConfig {
-  uint16_t longBlowGameCount = 1;
-  uint16_t shortBlowGameCount = 1;
-  uint16_t jumpGameCount = 1;
-  bool pepEnalbed = true;
-  bool trampolineEnabled = true;
-};
+#define GAME_SELECTION_POWEROFF_TIMEOUT 3L*60L*1000L // Power off device if it spends >3 minutes on game selection screen
+#define WIN_SCREEN_TIMEOUT 3L*60L*1000L
 
 struct GameConfig {
   String name;

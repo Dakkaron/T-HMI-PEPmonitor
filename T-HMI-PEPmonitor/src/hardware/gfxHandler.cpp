@@ -8,7 +8,6 @@
 #include "hardware/sdHandler.h"
 #include "hardware/serialHandler.h"
 #include "hardware/powerHandler.h"
-#include "config.h"
 
 TFT_eSPI tft = TFT_eSPI();
 TFT_eSprite spr = TFT_eSprite(&tft);

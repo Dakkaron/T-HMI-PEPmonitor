@@ -2,9 +2,7 @@
 #define __GAME_MONSTER_CATCHER_H__
 #include <Arduino.h>
 
-#include "config.h"
 #include "constants.h"
-#include "EEPROM.h"
 #include "hardware/gfxHandler.hpp"
 #include "hardware/sdHandler.h"
 #include "hardware/touchHandler.h"
