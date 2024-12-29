@@ -41,7 +41,8 @@ void runTouchCalibration() {
       break;
     }
     Serial.println(2);
-    spr.drawString("Bitte den Kreis antippen", 30, 160, 2);
+    spr.setTextSize(2);
+    spr.drawString("Bitte den Kreis antippen", 5, 120, 2);
     spr.pushSpriteFast(0,0);
 
     Serial.println(3);
@@ -78,8 +79,10 @@ void runTouchCalibration() {
   }
   Serial.println(7);
   writeTouchCalibration();
-  tft.fillScreen(TFT_BLACK);
-  tft.drawString("Kalibrierung abgeschlossen", 30, 160, 2);
+  spr.fillSprite(TFT_BLACK);
+  spr.drawString("Kalibrierung", 5, 120, 2);
+  spr.drawString("abgeschlossen", 5, 160, 2);
+  spr.pushSprite(0,0);
   Serial.println("## Calibration result");
   Serial.println(calibration_data[0].rawX);
   Serial.println(calibration_data[0].rawY);
@@ -114,7 +117,6 @@ static void readTouchCalibration() {
 }
 
 void initTouch() {
-  delay(2000);
   readTouchCalibration();
   SPI.begin(TOUCHSCREEN_SCLK_PIN, TOUCHSCREEN_MISO_PIN, TOUCHSCREEN_MOSI_PIN);
   touch.begin(240, 320);
