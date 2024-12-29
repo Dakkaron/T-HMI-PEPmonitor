@@ -28,6 +28,9 @@ void readPressure(Adafruit_HX711* hx711, BlowData* blowData) {
       Serial.print(F(" / "));
     #endif
     if (sensorValue >= -PRESSURE_SENSOR_CUTOFF_LIMIT && sensorValue <= PRESSURE_SENSOR_CUTOFF_LIMIT) {
+      if (blowData->negativePressure) {
+        sensorValue = -sensorValue;
+      }
       sensorValue = _max(0, sensorValue);
       skips = 0;
       total = total - readings[readIndex];

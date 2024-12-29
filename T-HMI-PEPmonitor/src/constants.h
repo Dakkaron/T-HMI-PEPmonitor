@@ -69,6 +69,7 @@ struct ProfileData {
   String taskChangeMessage[10];
   uint32_t taskTime[10];
   uint32_t taskMinStrength[10];
+  bool taskNegativeStrength[10];
   uint32_t taskTargetStrength[10];
 };
 
@@ -84,10 +85,11 @@ struct BlowData {
   uint8_t totalTaskNumber = 0;
   uint8_t blowCount = 0;
   uint8_t totalBlowCount = 0;
-  uint32_t pressure = 0;
-  uint16_t peakPressure = 0;
-  uint16_t minPressure = 0;
-  uint16_t targetPressure = 0;
+  int32_t pressure = 0;
+  bool negativePressure = false;
+  int16_t peakPressure = 0;
+  int16_t minPressure = 0;
+  int16_t targetPressure = 0;
   uint16_t cumulativeError = 0;
   uint8_t fails = 0;
   uint32_t taskType;

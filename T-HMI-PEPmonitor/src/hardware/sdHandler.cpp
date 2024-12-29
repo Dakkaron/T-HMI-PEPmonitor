@@ -20,6 +20,15 @@ uint32_t getNumberOfProfiles(String* errorMessage) {
   return count;
 }
 
+bool stringIsTrue(String str, bool defaultValue=true) {
+  str.trim();
+  str.toLowerCase();
+  if (defaultValue) {
+    return str != "false";
+  }
+  return str == "true";
+}
+
 void readProfileData(uint32_t profileId, ProfileData* profileData, String* errorMessage) {
   char resBuffer[2048];
   getIniSection(PROFILE_DATA_INI_PATH, "[profile_" + String(profileId) + "]", resBuffer, 2048, errorMessage);
@@ -45,6 +54,7 @@ void readProfileData(uint32_t profileId, ProfileData* profileData, String* error
     String ignoreErrors;
     if (profileData->taskType[taskId] != PROFILE_TASK_TYPE_TRAMPOLINE) {
       profileData->taskMinStrength[taskId] = atoi(getIniValueFromSection(resBuffer, "task_"+String(taskId)+"_minStrength", errorMessage).c_str());
+      profileData->taskNegativeStrength[taskId] = stringIsTrue(getIniValueFromSection(resBuffer, "task_"+String(taskId)+"_minStrength", errorMessage), false);
       profileData->taskTargetStrength[taskId] = atoi(getIniValueFromSection(resBuffer, "task_"+String(taskId)+"_targetStrength", errorMessage).c_str());
       profileData->taskRepetitions[taskId] = atoi(getIniValueFromSection(resBuffer, "task_"+String(taskId)+"_repetitions", errorMessage).c_str());
     }

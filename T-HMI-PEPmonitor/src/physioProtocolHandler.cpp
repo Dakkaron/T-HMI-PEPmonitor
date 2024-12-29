@@ -26,7 +26,7 @@ void runProfileSelection(String* errorMessage) {
     readProfileData(selectedProfileId, &profileData, errorMessage);
     checkFailWithMessage(*errorMessage);
     profileSuccessfullyLoaded = true;
-    for (uint32_t i=0;i++;i<profileData.tasks) {
+    for (uint32_t i=0;i<profileData.tasks;i++) {
       if (profileData.taskType[i] == PROFILE_TASK_TYPE_TRAMPOLINE) {
         spr.fillSprite(TFT_BLACK);
         spr.setTextSize(2);
@@ -198,6 +198,7 @@ void handlePhysioTask() {
     blowData.taskNumber = currentTask;
     blowData.cycleNumber = currentCycle;
     blowData.minPressure = 100*profileData.taskMinStrength[currentTask]/profileData.taskTargetStrength[currentTask];
+    blowData.negativePressure = profileData.taskNegativeStrength[currentTask];
     blowData.targetDurationMs = profileData.taskTime[currentTask];
     blowData.totalBlowCount = profileData.taskRepetitions[currentTask];
     blowData.taskType = profileData.taskType[currentTask];
