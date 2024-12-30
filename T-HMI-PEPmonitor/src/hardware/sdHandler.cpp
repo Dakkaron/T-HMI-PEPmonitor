@@ -403,15 +403,20 @@ int32_t readIntFromFile(const char *path, uint32_t lineNr) {
   return data.toInt();
 }
 
-void logExecutionToSD(ProfileData* profileData, String ntpTimeString, String* errorMessage) {
+void logExecutionToSD(ProfileData* profileData, String ntpDateString, String ntpTimeString, String* errorMessage) {
+  bool writeHeader = !SD_MMC.exists(EXECUTION_LOG_PATH);
   File file = SD_MMC.open(EXECUTION_LOG_PATH, FILE_APPEND);
   if (!file) {
     errorMessage->concat("Failed to open "+String(EXECUTION_LOG_PATH)+" for writing!\n");
     return;
   }
-  file.print("Execution of profile ");
+  if (writeHeader) {
+    file.println("profileName;executionDay;executionTime");
+  }
   file.print(profileData->name);
-  file.print(" at ");
+  file.print(";");
+  file.print(ntpDateString);
+  file.print(";");
   file.print(ntpTimeString);
   file.print("\n");
   file.close();

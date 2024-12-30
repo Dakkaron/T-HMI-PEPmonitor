@@ -10,7 +10,7 @@
 
 #define SYSTEM_CONFIG_INI_PATH "/systemConfig.ini"
 #define PROFILE_DATA_INI_PATH "/profiles.ini"
-#define EXECUTION_LOG_PATH "/executionsLog.txt"
+#define EXECUTION_LOG_PATH "/executionsLog.csv"
 #define INI_BUFFER_LEN 128
 
 #define WIN_SCREEN_PATH "gfx/win"
@@ -38,6 +38,6 @@ void writeIntToFile(const char *path, int32_t val);
 int32_t readIntFromFile(const char *path);
 int32_t readIntFromFile(const char *path, uint32_t lineNr);
 
-void logExecutionToSD(ProfileData* profileData, String ntpTimeString, String* errorMessage);
+void logExecutionToSD(ProfileData* profileData, String ntpDateString, String ntpTimeString, String* errorMessage);
 
 #endif /* __SDHANDLER_H__*/

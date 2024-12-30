@@ -141,17 +141,22 @@ bool startFetchingNTPTime() {
   return false;
 }
 
-String getNTPTime(String* errorMessage) {
-  /*if (time(nullptr)) {
-    Serial.println("Time is null pointer");
-    return "";
-  }*/
+static String leftPad(String s, uint16_t len, String c) {
+  while (s.length()<len) {
+    s = c + s;
+  }
+  return s;
+}
+
+void getNTPTime(String* ntpDateString, String* ntpTimeString, String* errorMessage) {
   struct tm timeinfo;
   if(!getLocalTime(&timeinfo)){
     Serial.println("Failed to obtain time from NTP");
     errorMessage->concat("Konnte Zeit nicht per NTP abrufen.\n");
     errorMessage->concat("Wahrscheinlich WLAN-Verbindungsproblem.\n");
-    return "";
+    *ntpDateString = "N/A";
+    *ntpTimeString = "N/A";
   }
-  return String(timeinfo.tm_mday) + "." + String(timeinfo.tm_mon) + "." + String(timeinfo.tm_year+1900) + " " + String(timeinfo.tm_hour) + ":" + String(timeinfo.tm_min);
+  *ntpDateString = String(timeinfo.tm_year+1900) + "-" + String(timeinfo.tm_mon) + "-" + String(timeinfo.tm_mday);
+  *ntpTimeString = leftPad(String(timeinfo.tm_hour), 2, "0") + ":" + leftPad(String(timeinfo.tm_min), 2, "0");
 }

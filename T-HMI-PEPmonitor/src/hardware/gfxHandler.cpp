@@ -13,7 +13,7 @@ TFT_eSPI tft = TFT_eSPI();
 TFT_eSprite spr = TFT_eSprite(&tft);
 TFT_eSprite batteryIcon[] = {TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft)};
 
-uint16_t read16(fs::File &f) {
+static uint16_t read16(fs::File &f) {
   uint16_t result;
   ((uint8_t *)&result)[0] = f.read(); // LSB
   ((uint8_t *)&result)[1] = f.read(); // MSB
@@ -21,7 +21,7 @@ uint16_t read16(fs::File &f) {
 }
 
 
-uint32_t read32(fs::File &f) {
+static uint32_t read32(fs::File &f) {
   uint32_t result;
   ((uint8_t *)&result)[0] = f.read(); // LSB
   ((uint8_t *)&result)[1] = f.read();
@@ -412,7 +412,7 @@ void drawBmp(DISPLAY_T* sprite, String filename, int16_t x, int16_t y, bool debu
 }
 
 
-void drawProgressBarCommon(DISPLAY_T* display, uint16_t percent, uint16_t greenOffset, int16_t x, int16_t y, int16_t w, int16_t h) {
+static void drawProgressBarCommon(DISPLAY_T* display, uint16_t percent, uint16_t greenOffset, int16_t x, int16_t y, int16_t w, int16_t h) {
   display->drawRect(x, y, w, h, TFT_WHITE);
 
   uint16_t fillWidth = (w * percent) / 100;
@@ -476,7 +476,7 @@ void printShaded(DISPLAY_T* display, String text, uint8_t shadeStrength, uint16_
   display->print(text);
 }
 
-void drawProfileSelectionPage(DISPLAY_T* display, uint16_t startNr, uint16_t nr, bool drawArrows, String* errorMessage) {
+static void drawProfileSelectionPage(DISPLAY_T* display, uint16_t startNr, uint16_t nr, bool drawArrows, String* errorMessage) {
   int32_t columns = _min(4, nr);
   int32_t rows = nr>4 ? 2 : 1;
   int32_t cWidth = (290 - 10*columns) / columns;
@@ -501,7 +501,7 @@ void drawProfileSelectionPage(DISPLAY_T* display, uint16_t startNr, uint16_t nr,
   }
 }
 
-void drawGameSelectionPage(DISPLAY_T* display, uint16_t startNr, uint16_t nr, bool drawArrows, String* errorMessage) {
+static void drawGameSelectionPage(DISPLAY_T* display, uint16_t startNr, uint16_t nr, bool drawArrows, String* errorMessage) {
   int32_t columns = _min(4, nr);
   int32_t rows = nr>4 ? 2 : 1;
   int32_t cWidth = (290 - 10*columns) / columns;
@@ -519,7 +519,7 @@ void drawGameSelectionPage(DISPLAY_T* display, uint16_t startNr, uint16_t nr, bo
   }
 }
 
-int16_t checkSelectionPageSelection(uint16_t startNr, uint16_t nr, bool drawArrows) {
+static int16_t checkSelectionPageSelection(uint16_t startNr, uint16_t nr, bool drawArrows) {
   int32_t columns = _min(4, nr);
   int32_t rows = nr>4 ? 2 : 1;
   int32_t cWidth = (290 - 10*columns) / columns;
@@ -594,7 +594,7 @@ uint16_t displayProfileSelection(DISPLAY_T* display, uint16_t nr, String* errorM
   }
 }
 
-String leftPad(String s, uint16_t len, String c) {
+static String leftPad(String s, uint16_t len, String c) {
   while (s.length()<len) {
     s = c + s;
   }
@@ -693,7 +693,7 @@ bool drawAndCheckButton(DISPLAY_T* display, String text, int16_t x, int16_t y, i
 #define KEY_BACKSPACE 1
 #define KEY_ENTER 2
 #define KEY_SHIFT 3
-char keyboardMatrix[KEYBOARD_LAYERS][KEYBOARD_ROWS][KEYBOARD_COLS] = {
+static char keyboardMatrix[KEYBOARD_LAYERS][KEYBOARD_ROWS][KEYBOARD_COLS] = {
   { // Normal layer
     {'1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '[', ']', KEY_BACKSPACE},
     {'q', 'w', 'e', 'r', 't', 'z', 'u', 'i', 'o', 'p', '+', '{', '}'},
@@ -759,5 +759,18 @@ void checkFailWithMessage(String message) {
     while (true) {
       handleSerial();
     };
+  }
+}
+
+void checkSoftFailWithMessage(String message) {
+  if (!message.isEmpty()) {
+    tft.fillScreen(TFT_BLACK);
+    spr.fillSprite(TFT_BLACK);
+    spr.setCursor(1, 16);
+    spr.setTextSize(1);
+    spr.println("FEHLER:");
+    spr.println(message);
+    spr.pushSprite(0, 0);
+    delay(5000);
   }
 }

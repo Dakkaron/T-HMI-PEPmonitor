@@ -19,7 +19,7 @@ uint8_t connectToTrampoline();
 void getJumpData(JumpData* jumpData);
 
 bool startFetchingNTPTime();
-String getNTPTime(String* errorMessage);
+void getNTPTime(String* ntpDateString, String* ntpTimeString, String* errorMessage);
 
 
 

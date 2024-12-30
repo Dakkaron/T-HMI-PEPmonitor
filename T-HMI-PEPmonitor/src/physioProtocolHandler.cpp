@@ -146,16 +146,21 @@ static void handleLogExecutions() {
   }
 
   String errorMessage;
-  String ntpTimeString;
+  String ntpDateString, ntpTimeString;
   Serial.println("Wifi exists: " + String(wifiExists));
   if (wifiExists) {
-    ntpTimeString = getNTPTime(&errorMessage);
-    checkFailWithMessage(errorMessage);
+    getNTPTime(&ntpDateString, &ntpTimeString, &errorMessage);
+    checkSoftFailWithMessage(errorMessage);
+    if (!errorMessage.isEmpty()) {
+      ntpDateString = "N/A";
+      ntpTimeString = "N/A";
+    }
   } else {
+    ntpDateString = "N/A";
     ntpTimeString = "N/A";
   }
-  Serial.println("NTP Time: " + ntpTimeString);
-  logExecutionToSD(&profileData, ntpTimeString, &errorMessage);
+  Serial.println("NTP Time: " + ntpDateString + " " + ntpTimeString);
+  logExecutionToSD(&profileData, ntpDateString, ntpTimeString, &errorMessage);
   checkFailWithMessage(errorMessage);
 }
 
@@ -163,9 +168,6 @@ static void drawFinished() {
   static uint32_t winscreenTimeout = 0;
   static String winScreenPath = "";
   if (winscreenTimeout == 0) { // Only runs on first execution
-    if (systemConfig.logExecutions) {
-      handleLogExecutions();
-    }
     winscreenTimeout = millis() + WIN_SCREEN_TIMEOUT;
     String errorMessage;
     winScreenPath = getRandomWinScreenPathForCurrentGame(&errorMessage);
@@ -175,6 +177,10 @@ static void drawFinished() {
     spr.frameBuffer(2);
     spr.fillSprite(TFT_BLUE);
     drawBmp(winScreenPath, 0, 0);
+    if (systemConfig.logExecutions) {
+      handleLogExecutions();
+      drawBmp(winScreenPath, 0, 0);
+    }
     tft.fillRect(32,0,38,20,TFT_BLACK);
   } else if (millis() > winscreenTimeout) {
     power_off();

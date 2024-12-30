@@ -36,5 +36,6 @@ uint16_t displayGameSelection(DISPLAY_T* display, uint16_t nr, String* errorMess
 void drawKeyboard(DISPLAY_T* display, uint16_t keyColor, uint16_t textColor);
 void checkKeyboard(DISPLAY_T* display, String* output, uint32_t maxCharacters, uint16_t keyColor, uint16_t textColor);
 void checkFailWithMessage(String message);
+void checkSoftFailWithMessage(String message);
 
 #endif /*__GFXHANDLER_H__*/
