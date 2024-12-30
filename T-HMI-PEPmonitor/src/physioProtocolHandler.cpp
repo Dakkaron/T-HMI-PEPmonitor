@@ -4,6 +4,7 @@
 #include "hardware/powerHandler.h"
 #include "hardware/touchHandler.h"
 #include "hardware/pressuresensor.h"
+#include "hardware/wifiHandler.h"
 #include "games/games.h"
 #include "constants.h"
 
@@ -127,10 +128,44 @@ static void drawTrampolineDisplay() {
   spr.pushSpriteFast(0, 0);
 }
 
+static void handleLogExecutions() {
+  uint32_t textDatumBak = tft.getTextDatum();
+  tft.fillScreen(TFT_BLACK);
+  tft.setTextDatum(TC_DATUM);
+  tft.setTextSize(2);
+  tft.drawString("Schreibe Log auf SD-Karte", 160, 120);
+  tft.drawString("NICHT AUSSCHALTEN!", 160, 140);
+  tft.setTextDatum(textDatumBak);
+
+  bool wifiExists = false;
+  for (uint32_t i=0;i<3;i++) {
+    wifiExists = startFetchingNTPTime();
+    if (wifiExists) {
+      break;
+    }
+  }
+
+  String errorMessage;
+  String ntpTimeString;
+  Serial.println("Wifi exists: " + String(wifiExists));
+  if (wifiExists) {
+    ntpTimeString = getNTPTime(&errorMessage);
+    checkFailWithMessage(errorMessage);
+  } else {
+    ntpTimeString = "N/A";
+  }
+  Serial.println("NTP Time: " + ntpTimeString);
+  logExecutionToSD(&profileData, ntpTimeString, &errorMessage);
+  checkFailWithMessage(errorMessage);
+}
+
 static void drawFinished() {
   static uint32_t winscreenTimeout = 0;
   static String winScreenPath = "";
-  if (winscreenTimeout == 0) {
+  if (winscreenTimeout == 0) { // Only runs on first execution
+    if (systemConfig.logExecutions) {
+      handleLogExecutions();
+    }
     winscreenTimeout = millis() + WIN_SCREEN_TIMEOUT;
     String errorMessage;
     winScreenPath = getRandomWinScreenPathForCurrentGame(&errorMessage);
@@ -140,15 +175,13 @@ static void drawFinished() {
     spr.frameBuffer(2);
     spr.fillSprite(TFT_BLUE);
     drawBmp(winScreenPath, 0, 0);
+    tft.fillRect(32,0,38,20,TFT_BLACK);
   } else if (millis() > winscreenTimeout) {
     power_off();
   }
-  drawBmpSlice(winScreenPath, 0, 0, 30);
-  spr.frameBuffer(1);
-  spr.fillRect(0,0,80,30,TFT_BLUE);
+  spr.fillRect(32,0,38,20,TFT_BLACK);
   drawSystemStats(blowData.ms, lastMs);
   spr.pushSpriteFast(0,0);
-  sleep(1);
 }
 
 void displayPhysioRotateScreen() {

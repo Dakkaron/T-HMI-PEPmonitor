@@ -5,14 +5,18 @@
 #include <FS.h>
 #include <SPI.h>
 #include <SD.h>
+#include "systemconfig.h"
 #include "constants.h"
 
 #define SYSTEM_CONFIG_INI_PATH "/systemConfig.ini"
 #define PROFILE_DATA_INI_PATH "/profiles.ini"
+#define EXECUTION_LOG_PATH "/executionsLog.txt"
 #define INI_BUFFER_LEN 128
 
 #define WIN_SCREEN_PATH "gfx/win"
 #define GAMES_ROOT_DIR "/games"
+
+void readSystemConfig(SystemConfig* systemConfig, String* errorMessage);
 
 uint16_t getNumberOfGames(String* errorMessage);
 String getGamePath(uint16_t gameId, String* errorMessage);
@@ -33,5 +37,7 @@ void writeStringToFile(const char *path, String val);
 void writeIntToFile(const char *path, int32_t val);
 int32_t readIntFromFile(const char *path);
 int32_t readIntFromFile(const char *path, uint32_t lineNr);
+
+void logExecutionToSD(ProfileData* profileData, String ntpTimeString, String* errorMessage);
 
 #endif /* __SDHANDLER_H__*/

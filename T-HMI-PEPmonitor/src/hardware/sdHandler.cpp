@@ -7,9 +7,9 @@ bool stringIsTrue(String str, bool defaultValue) {
   str.trim();
   str.toLowerCase();
   if (defaultValue) {
-    return str != "false";
+    return str != "false" && str != "0";
   }
-  return str == "true";
+  return str == "true" || str == "1";
 }
 
 void readSystemConfig(SystemConfig* systemConfig, String* errorMessage) {
@@ -23,8 +23,12 @@ void readSystemConfig(SystemConfig* systemConfig, String* errorMessage) {
   systemConfig->simulateTrampoline = stringIsTrue(getIniValueFromSection(resBuffer, "simulateTrampoline", &ignoreErrors), false);
   systemConfig->simulateBlows = stringIsTrue(getIniValueFromSection(resBuffer, "simulateBlowing", &ignoreErrors), false);
   systemConfig->simulateInhalation = stringIsTrue(getIniValueFromSection(resBuffer, "simulateInhalation", &ignoreErrors), false);
-  systemConfig->logBlowPressure = stringIsTrue(getIniValueFromSection(resBuffer, "logBlowPressure", &ignoreErrors), false);
-  systemConfig->logTrampoline = stringIsTrue(getIniValueFromSection(resBuffer, "logTrampoline", &ignoreErrors), false);
+  systemConfig->debugLogBlowPressure = stringIsTrue(getIniValueFromSection(resBuffer, "debugLogBlowPressure", &ignoreErrors), false);
+  systemConfig->debugLogTrampoline = stringIsTrue(getIniValueFromSection(resBuffer, "debugLogTrampoline", &ignoreErrors), false);
+  systemConfig->logExecutions = stringIsTrue(getIniValueFromSection(resBuffer, "logExecutions", errorMessage), false);
+  systemConfig->timezoneOffset = 60*atoi(getIniValueFromSection(resBuffer, "timezoneOffset", &ignoreErrors).c_str());
+  Serial.println("Simulate blowing: "+String(systemConfig->simulateBlows));
+  Serial.println("Simulate trampoline: "+String(systemConfig->simulateTrampoline));
   if (systemConfig->trampolineIp.isEmpty() || systemConfig->wifiSsid.isEmpty() || systemConfig->wifiPassword.isEmpty()) {
     Serial.println("No Wifi credentials or trampoline IP found in system config!");
     Serial.println("Using trampoline in simulation mode.");
@@ -188,7 +192,7 @@ void getIniSection(String iniPath, String section, char* resultBuffer, uint16_t 
     lineBuffer[i+1] = 0;
     if (lineBuffer[i] == '\n' || lineBuffer[i] == '\r') {
       lineBuffer[i] = '\n';
-      if (inCorrectSection) {
+      if (lineBuffer[0] != '#' && inCorrectSection) {
         if (lineBuffer[0] == '[') {
           return; // Correct section finished
         }
@@ -397,4 +401,18 @@ int32_t readIntFromFile(const char *path, uint32_t lineNr) {
     return 0;
   }
   return data.toInt();
+}
+
+void logExecutionToSD(ProfileData* profileData, String ntpTimeString, String* errorMessage) {
+  File file = SD_MMC.open(EXECUTION_LOG_PATH, FILE_APPEND);
+  if (!file) {
+    errorMessage->concat("Failed to open "+String(EXECUTION_LOG_PATH)+" for writing!\n");
+    return;
+  }
+  file.print("Execution of profile ");
+  file.print(profileData->name);
+  file.print(" at ");
+  file.print(ntpTimeString);
+  file.print("\n");
+  file.close();
 }

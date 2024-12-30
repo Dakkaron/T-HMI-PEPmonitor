@@ -11,8 +11,10 @@ struct SystemConfig {
   bool simulateTrampoline;
   bool simulateBlows;
   bool simulateInhalation;
-  bool logBlowPressure;
-  bool logTrampoline;
+  bool debugLogBlowPressure;
+  bool debugLogTrampoline;
+  bool logExecutions;
+  int32_t timezoneOffset;
 };
 
 extern SystemConfig systemConfig;

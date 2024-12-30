@@ -5,7 +5,7 @@
 
 #include "hardware/prefsHandler.h"
 #include "pins.h"
-#include "config.h"
+#include "systemconfig.h"
 #include "constants.h"
 #include "hardware/gfxHandler.hpp"
 #include "hardware/powerHandler.h"
@@ -122,7 +122,7 @@ void initTouch() {
   touch.begin(240, 320);
   touch.setCal(calibration_data[0].rawX, calibration_data[2].rawX, calibration_data[0].rawY, calibration_data[2].rawY, 240, 320);
   touch.setRotation((SCREEN_ROTATION + 2) % 4);
-  touch.setZThreshold(TOUCH_SCREEN_Z_THRESHOLD);
+  touch.setZThreshold(systemConfig.touchScreenZThreshold);
 }
 
 bool isTouchInZone(int16_t x, int16_t y, int16_t w, int16_t h) {

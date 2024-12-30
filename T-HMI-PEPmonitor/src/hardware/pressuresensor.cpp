@@ -22,7 +22,7 @@ void readPressure(Adafruit_HX711* hx711, BlowData* blowData) {
       return;
     }
     int32_t sensorValue = (hx711->readChannel(CHAN_A_GAIN_64) / (PRESSURE_SENSOR_DIVISOR * blowData->targetPressure));
-    if (systemConfig.logBlowPressure) {
+    if (systemConfig.debugLogBlowPressure) {
       Serial.print(F("Channel A (Gain 64): "));
       Serial.print(sensorValue);
       Serial.print(F(" / "));
@@ -62,7 +62,7 @@ void readPressure(Adafruit_HX711* hx711, BlowData* blowData) {
       }
     }
   }
-  if (systemConfig.logBlowPressure) {
+  if (systemConfig.debugLogBlowPressure) {
     Serial.println(blowData->pressure);
   }
 }

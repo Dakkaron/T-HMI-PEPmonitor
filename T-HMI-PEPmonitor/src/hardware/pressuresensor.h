@@ -2,7 +2,7 @@
 #define __PRESSURESENSOR_H__
 
 #include <Arduino.h>
-#include "config.h"
+#include "systemconfig.h"
 #include <Adafruit_HX711.h>
 #include "constants.h"
 

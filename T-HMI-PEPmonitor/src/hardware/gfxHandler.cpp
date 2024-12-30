@@ -752,6 +752,7 @@ void checkFailWithMessage(String message) {
     tft.fillScreen(TFT_BLACK);
     spr.fillSprite(TFT_BLACK);
     spr.setCursor(1, 16);
+    spr.setTextSize(1);
     spr.println("FEHLER:");
     spr.println(message);
     spr.pushSprite(0, 0);
