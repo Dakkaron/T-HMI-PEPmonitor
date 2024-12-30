@@ -411,7 +411,7 @@ void logExecutionToSD(ProfileData* profileData, String ntpDateString, String ntp
     return;
   }
   if (writeHeader) {
-    file.println("profileName;executionDay;executionTime");
+    file.println("profileName;executionDate;executionTime");
   }
   file.print(profileData->name);
   file.print(";");
