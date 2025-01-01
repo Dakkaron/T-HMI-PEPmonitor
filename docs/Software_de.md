@@ -25,4 +25,4 @@
 2. Das T-HMI per USB mit dem PC verbinden.
 3. Das T-HMI sollte beim ersten Start die Touchscreen-Kalibrierung anzeigen, danach wird das Hauptmenü angezeigt.
 
-Nächster Schritt: [Zusammenbau]()
+Nächster Schritt: [Zusammenbau](Assembly_de.md)

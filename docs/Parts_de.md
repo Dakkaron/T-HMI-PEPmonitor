@@ -14,6 +14,7 @@
 
 - LILLYGO T-HMI: https://lilygo.cc/products/t-hmi
 - Luftdrucksensor: https://de.aliexpress.com/item/1005006421627550.html
+
 ![Luftdrucksensor](https://raw.githubusercontent.com/Dakkaron/T-HMI-PEPmonitor/refs/heads/main/docs/images/airpressuresensor.png)
 - 1S Akku mit PH2.0 Anschluss, mindestens 200mA (https://de.aliexpress.com/item/1005007256417369.html)
 - MicroSD-Karte mit mindestens 1GB und maximal 32GB.
@@ -47,4 +48,4 @@ Sollte kein 3D-Drucker zur Verfügung stehen, bietet sich der Druckservice von [
 9. `Global Direct Line`-Versand ist mit Abstand der Billigste, dauert dafür normal 1-2 Wochen.
 
 
-Nächster Schritt: [Software installieren]()
+Nächster Schritt: [Software installieren](Software_de.md)
