@@ -17,9 +17,12 @@ static std::vector<touch_calibration_t> raw_data;
 XPT2046 touch = XPT2046(SPI, TOUCHSCREEN_CS_PIN, TOUCHSCREEN_IRQ_PIN);
 
 static void writeTouchCalibration() {
+  prefs.end();
   prefs.begin("touch");
   uint8_t* calibBytes = reinterpret_cast<uint8_t*>(&calibration_data);
   prefs.putBytes("calib", calibBytes, 16);
+  prefs.end();
+  applyGamePrefsNamespace();
 }
 
 void runTouchCalibration() {
@@ -98,6 +101,7 @@ void runTouchCalibration() {
 }
 
 static void readTouchCalibration() {
+  prefs.end();
   prefs.begin("touch");
   if (prefs.isKey("calib")) {
     uint8_t* calibBytes = reinterpret_cast<uint8_t*>(&calibration_data);
@@ -105,6 +109,7 @@ static void readTouchCalibration() {
   } else {
     runTouchCalibration();
   }
+  prefs.end();
   Serial.println("## CALIBRATION");
   Serial.println(calibration_data[0].rawX);
   Serial.println(calibration_data[0].rawY);
@@ -114,6 +119,7 @@ static void readTouchCalibration() {
   Serial.println(calibration_data[2].rawY);
   Serial.println(calibration_data[3].rawX);
   Serial.println(calibration_data[3].rawY);
+  applyGamePrefsNamespace();
 }
 
 void initTouch() {

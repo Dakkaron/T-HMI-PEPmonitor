@@ -154,6 +154,7 @@ static void handleLogExecutions() {
     if (!errorMessage.isEmpty()) {
       ntpDateString = "N/A";
       ntpTimeString = "N/A";
+      errorMessage = "";
     }
   } else {
     ntpDateString = "N/A";
@@ -215,10 +216,10 @@ void displayPhysioRotateScreen() {
 }
 
 void handlePhysioTask() {
+  static uint32_t taskFinishedTimeout = 0;
   lastMs = blowData.ms;
   blowData.ms = millis();
   jumpData.ms = blowData.ms;
-  bool taskFinished = false;
   if (profileData.taskType[currentTask] == PROFILE_TASK_TYPE_TRAMPOLINE) {
     if (jumpData.msLeft < -5000) {
       currentCycle++;
@@ -264,8 +265,8 @@ void handlePhysioTask() {
         blowData.blowCount++;
         blowData.lastBlowStatus = LAST_BLOW_SUCCEEDED;
         Serial.println(F(" successfully"));
-        if (blowData.blowCount >= blowData.totalBlowCount) {
-          taskFinished = true;
+        if (taskFinishedTimeout==0 && blowData.blowCount >= blowData.totalBlowCount) {
+          taskFinishedTimeout = blowData.ms + 2000;
         }
       } else {
         blowData.fails++;
@@ -273,7 +274,7 @@ void handlePhysioTask() {
       }
     }
     blowData.peakPressure = _max(blowData.peakPressure, blowData.pressure);
-    if (taskFinished) {
+    if (taskFinishedTimeout!=0 && blowData.ms > taskFinishedTimeout) {
       Serial.println();
       Serial.println("##### DISPLAY ROTATE ######");
       Serial.print("    Rotating to: ");
@@ -295,7 +296,7 @@ void handlePhysioTask() {
       }
       blowData.blowCount = 0;
       blowData.lastBlowStatus = 0;
-      taskFinished = false;
+      taskFinishedTimeout = 0;
       if (currentCycle < blowData.totalCycleNumber) {
         displayPhysioRotateScreen();
       }

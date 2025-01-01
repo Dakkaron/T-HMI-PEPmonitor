@@ -414,6 +414,7 @@ void drawShortBlowGame_monsterCatcher(DISPLAY_T* display, BlowData* blowData, St
     };
     loadBmpAnim(playerSpriteRefs, monsterCatcherGamePath + playerMonsterData.imagePath + "/anim_front.bmp", 2);
     if (playerEvolutionTarget != 0 && enemyCanBeCaught) {
+      while (touch.pressed()) {}
       while (true) {
         display->fillSprite(TFT_BLACK);
         display->fillRect(15,55,130,130,TFT_BLUE);
@@ -550,7 +551,7 @@ void initGames_monsterCatcher(String gamePath, GameConfig* gameConfig, String* e
   maxMonsterCount = getMaxMonsterCount(monsterCatcherGameIniPath, errorMessage);
   monsterCount = getMonsterCount(monsterCatcherGameIniPath, errorMessage);
   monsterLevels = (uint8_t*)calloc(maxMonsterCount, sizeof(uint8_t));
-  prefs.begin(gameConfig->prefsNamespace.c_str());
+  setGamePrefsNamespace(gameConfig->prefsNamespace.c_str());
   if (prefs.getBytes("levels", monsterLevels, maxMonsterCount) == 0) {
     for (int16_t i=0; i<maxMonsterCount; i++) {
       monsterLevels[i] = 0;

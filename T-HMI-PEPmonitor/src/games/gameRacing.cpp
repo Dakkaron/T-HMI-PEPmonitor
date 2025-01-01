@@ -33,7 +33,7 @@ void initGames_racing(String gamePath, GameConfig* gameConfig, String* errorMess
   Serial.println(gamePath);
   racerGamePath = gamePath;
   racerGameIniPath = gamePath + "gameconfig.ini";
-  prefs.begin(gameConfig->prefsNamespace.c_str());
+  setGamePrefsNamespace(gameConfig->prefsNamespace.c_str());
   nitro = prefs.getUInt("nitro", 0);
   for (int8_t i=0; i<4; i++) {
     loadBmp(&pitstopCarSprite[i], racerGamePath + "gfx/car"+i+"_top.bmp", FLIPPED_H);

@@ -246,7 +246,7 @@ void initGames_lua(String gamePath, GameConfig* gameConfig, String* errorMessage
   lua.Lua_register("prefsSetNumber", (const lua_CFunction) &lua_wrapper_prefsSetNumber);
   lua.Lua_register("prefsGetNumber", (const lua_CFunction) &lua_wrapper_prefsGetNumber);
 
-  prefs.begin(gameConfig->prefsNamespace.c_str());
+  setGamePrefsNamespace(gameConfig->prefsNamespace.c_str());
 
   String initScript = readFileToString((gamePath + "init.lua").c_str());
   if (!initScript.isEmpty()) {
