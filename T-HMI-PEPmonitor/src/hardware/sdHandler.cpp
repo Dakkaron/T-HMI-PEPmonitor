@@ -1,7 +1,24 @@
 #include "sdHandler.h"
 #include "gfxHandler.hpp"
+#include "pins.h"
 
 uint32_t numberOfWinScreens;
+
+void initSD(String* errorMessage) {
+  Serial.println(F("Initializing SD..."));
+  SD_MMC.setPins(SD_SCLK_PIN, SD_MOSI_PIN, SD_MISO_PIN);
+  bool rlst = SD_MMC.begin("/sdcard", true);
+  if (!rlst) {
+    Serial.println("SD init failed");
+    Serial.println("? No detected SdCard");
+    errorMessage->concat("SD Karte nicht lesbar!\n");
+    return;
+  } else {
+    Serial.println("SD init success");
+    Serial.printf("? Detected SdCard insert: %.2f GB\r\n", SD_MMC.cardSize() / 1024.0 / 1024.0 / 1024.0);
+  }
+  Serial.println(F("done"));
+}
 
 bool stringIsTrue(String str, bool defaultValue) {
   str.trim();

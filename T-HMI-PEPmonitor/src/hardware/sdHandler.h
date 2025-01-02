@@ -16,6 +16,8 @@
 #define WIN_SCREEN_PATH "gfx/win"
 #define GAMES_ROOT_DIR "/games"
 
+void initSD(String* errorMessage);
+
 void readSystemConfig(SystemConfig* systemConfig, String* errorMessage);
 
 uint16_t getNumberOfGames(String* errorMessage);

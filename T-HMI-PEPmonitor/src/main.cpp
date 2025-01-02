@@ -4,8 +4,6 @@
 #include "systemconfig.h"
 #include "constants.h"
 
-#include "pins.h"
-
 #include <SD_MMC.h>
 #include <FS.h>
 #include <SPI.h>
@@ -120,19 +118,9 @@ void setup() {
 
   initPressureSensor();
   
-  Serial.println(F("Initializing SD..."));
-  SD_MMC.setPins(SD_SCLK_PIN, SD_MOSI_PIN, SD_MISO_PIN);
-  bool rlst = SD_MMC.begin("/sdcard", true);
-  if (!rlst) {
-    Serial.println("SD init failed");
-    Serial.println("? No detected SdCard");
-    checkFailWithMessage("SD Karte nicht lesbar!");
-  } else {
-    Serial.println("SD init success");
-    Serial.printf("? Detected SdCard insert: %.2f GB\r\n", SD_MMC.cardSize() / 1024.0 / 1024.0 / 1024.0);
-  }
-  Serial.println(F("done"));
   String errorMessage;
+  initSD(&errorMessage);
+  checkFailWithMessage(errorMessage);
   initSystemConfig(&errorMessage);
   checkFailWithMessage(errorMessage);
   Serial.print("PEPit Version '");
