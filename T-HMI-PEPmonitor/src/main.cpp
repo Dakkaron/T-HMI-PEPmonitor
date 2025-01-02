@@ -82,9 +82,6 @@ void setup() {
   pinMode(PWR_EN_PIN, OUTPUT);
   digitalWrite(PWR_EN_PIN, HIGH);
 
-  // Initialize the HX711
-  hx711.begin();
-
   tft.init();
   tft.setRotation(SCREEN_ROTATION);
   tft.setSwapBytes(true);
@@ -121,14 +118,8 @@ void setup() {
 
   Serial.println(F("done"));
 
-  // Tare 3x
-  Serial.print(F("Tareing air pressure sensor...."));
-  for (uint8_t t=0; t<3; t++) {
-    hx711.tareA(hx711.readChannelRaw(CHAN_A_GAIN_64));
-    hx711.tareA(hx711.readChannelRaw(CHAN_A_GAIN_64));
-  }
-  Serial.print(F("done"));
-
+  initPressureSensor();
+  
   Serial.println(F("Initializing SD..."));
   SD_MMC.setPins(SD_SCLK_PIN, SD_MOSI_PIN, SD_MISO_PIN);
   bool rlst = SD_MMC.begin("/sdcard", true);

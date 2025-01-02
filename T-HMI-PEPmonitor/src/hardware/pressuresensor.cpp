@@ -1,27 +1,40 @@
 #include "hardware/pressuresensor.h"
+#include <Adafruit_HX711.h>
+#include "systemconfig.h"
 
-Adafruit_HX711 hx711 = Adafruit_HX711(HX7711_DATA_PIN, HX7711_CLOCK_PIN);
+static Adafruit_HX711 hx711 = Adafruit_HX711(HX7711_DATA_PIN, HX7711_CLOCK_PIN);
 
-uint32_t readings[PRESSURE_SENSOR_SMOOTHING_NUM_READINGS];
-uint8_t readIndex = 0;
-uint32_t total = 0;
-uint8_t skips = 0;
-void readPressure(Adafruit_HX711* hx711, BlowData* blowData) {
-    if (blowData->ms + 4999 < millis()) {
-      for (int i=0;i<PRESSURE_SENSOR_SMOOTHING_NUM_READINGS;i++) {
-        readings[i] = 0;
-      }
+void initPressureSensor() {
+  hx711.begin();
+  Serial.print(F("Tareing air pressure sensor...."));
+  for (uint8_t t=0; t<3; t++) {
+    hx711.tareA(hx711.readChannelRaw(CHAN_A_GAIN_64));
+    hx711.tareA(hx711.readChannelRaw(CHAN_A_GAIN_64));
+  }
+  Serial.print(F("done"));
+
+}
+
+void readPressure(BlowData* blowData) {
+  static uint32_t readings[PRESSURE_SENSOR_SMOOTHING_NUM_READINGS];
+  static uint8_t readIndex = 0;
+  static uint32_t total = 0;
+  static uint8_t skips = 0;
+  if (blowData->ms + 4999 < millis()) {
+    for (int i=0;i<PRESSURE_SENSOR_SMOOTHING_NUM_READINGS;i++) {
+      readings[i] = 0;
     }
+  }
   if (systemConfig.simulateBlows) {
     uint32_t blowDuration = blowData->ms - blowData->blowStartMs;
     uint8_t isBlowing = (blowDuration) < (blowData->targetDurationMs+100) ||
                         (blowDuration) > (blowData->targetDurationMs+100+SIMULATE_BLOWS_PAUSE_DURATION);
     blowData->pressure = isBlowing ? blowData->targetPressure : 1; 
   } else {
-    if (hx711->isBusy()) {
+    if (hx711.isBusy()) {
       return;
     }
-    int32_t sensorValue = (hx711->readChannel(CHAN_A_GAIN_64) / (PRESSURE_SENSOR_DIVISOR * blowData->targetPressure));
+    int32_t sensorValue = (hx711.readChannel(CHAN_A_GAIN_64) / (PRESSURE_SENSOR_DIVISOR * blowData->targetPressure));
     if (systemConfig.debugLogBlowPressure) {
       Serial.print(F("Channel A (Gain 64): "));
       Serial.print(sensorValue);

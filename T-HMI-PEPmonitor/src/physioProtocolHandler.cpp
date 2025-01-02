@@ -247,7 +247,7 @@ void handlePhysioTask() {
       drawFinished();
       return;
     }
-    readPressure(&hx711, &blowData);
+    readPressure(&blowData);
     if (blowData.pressure>blowData.minPressure && !blowData.currentlyBlowing) {
       Serial.print(F("Blowing... "));
       blowData.currentlyBlowing = true;
