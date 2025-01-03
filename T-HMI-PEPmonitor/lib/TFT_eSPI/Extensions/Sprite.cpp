@@ -830,6 +830,165 @@ bool TFT_eSprite::pushToSprite(TFT_eSprite *dspr, int32_t x, int32_t y, uint16_t
 
 
 /***************************************************************************************
+** Function name:           pushToSprite
+** Description:             Push a cropped sprite to another sprite at tx, ty with transparent colour
+***************************************************************************************/
+// Note: The following sprite to sprite colour depths are currently supported:
+//    Source    Destination
+//    16bpp  -> 16bpp
+//    16bpp  ->  8bpp
+//     8bpp  ->  8bpp
+//     1bpp  ->  1bpp
+
+bool TFT_eSprite::pushToSprite(TFT_eSprite *dspr, int32_t tx, int32_t ty, int32_t sx, int32_t sy, int32_t sw, int32_t sh, uint16_t transp)
+{
+  if ( !_created  || !dspr->_created) return false; // Check Sprites exist
+
+  // Check destination sprite compatibility
+  int8_t ds_bpp = dspr->getColorDepth();
+  if (_bpp == 16 && ds_bpp != 16 && ds_bpp !=  8) return false;
+  if (_bpp ==  8 && ds_bpp !=  8) return false;
+  if (_bpp ==  4 || ds_bpp ==  4) return false;
+  if (_bpp ==  1 && ds_bpp !=  1) return false;
+
+  setWindow(sx, sy, sx + sw - 1, sy + sh - 1);
+  sw = _xe - _xs + 1;
+  sh = _ye - _ys + 1;
+
+  bool oldSwapBytes = dspr->getSwapBytes();
+  uint16_t sline_buffer[sw];
+
+  transp = transp>>8 | transp<<8;
+
+  // Scan destination bounding box and fetch transformed pixels from source Sprite
+  for (int32_t ys = sy; ys < sy+sh; ys++) {
+    int32_t ox = tx;
+    uint32_t pixel_count = 0;
+
+    for (int32_t xs = sx; xs < sx+sw; xs++) {
+      uint16_t rp = 0;
+      if (_bpp == 16) rp = _img[xs + ys * width()];
+      else { rp = readPixel(xs, ys); rp = rp>>8 | rp<<8; }
+      //dspr->drawPixel(xs, ys, rp);
+
+      if (transp == rp) {
+        if (pixel_count) {
+          dspr->pushImage(ox, ty, pixel_count, 1, sline_buffer);
+          ox += pixel_count;
+          pixel_count = 0;
+        }
+        ox++;
+      }
+      else {
+        sline_buffer[pixel_count++] = rp;
+      }
+    }
+    if (pixel_count) dspr->pushImage(ox, ty, pixel_count, 1, sline_buffer);
+    ty++;
+  }
+  dspr->setSwapBytes(oldSwapBytes);
+  return true;
+}
+
+/***************************************************************************************
+** Function name:           pushSprite
+** Description:             Push a cropped sprite to the TFT at tx, ty
+***************************************************************************************/
+bool TFT_eSprite::pushToSprite(TFT_eSprite *dspr, int32_t tx, int32_t ty, int32_t sx, int32_t sy, int32_t sw, int32_t sh)
+{
+  if (!_created) return false;
+
+  // Perform window boundary checks and crop if needed
+  setWindow(sx, sy, sx + sw - 1, sy + sh - 1);
+
+  /* These global variables are now populated for the sprite
+  _xs = x start coordinate
+  _ys = y start coordinate
+  _xe = x end coordinate (inclusive)
+  _ye = y end coordinate (inclusive)
+  */
+
+  // Calculate new sprite window bounding box width and height
+  sw = _xe - _xs + 1;
+  sh = _ye - _ys + 1;
+
+  if (_ys >= _iheight) return false;
+
+  if (_bpp == 16)
+  {
+    bool oldSwapBytes = dspr->getSwapBytes();
+    dspr->setSwapBytes(false);
+
+    // Check if a faster block copy to screen is possible
+    if ( sx == 0 && sw == _dwidth)
+      dspr->pushImage(tx, ty, sw, sh, _img + _iwidth * _ys );
+    else // Render line by line
+      while (sh--)
+        dspr->pushImage(tx, ty++, sw, 1, _img + _xs + _iwidth * _ys++ );
+
+    dspr->setSwapBytes(oldSwapBytes);
+  }
+  else if (_bpp == 8)
+  {
+    // Check if a faster block copy to screen is possible
+    if ( sx == 0 && sw == _dwidth)
+      dspr->pushImage(tx, ty, sw, sh, (uint16_t*)(_img8 + _iwidth * _ys), 8);
+    else // Render line by line
+    while (sh--)
+      dspr->pushImage(tx, ty++, sw, 1, (uint16_t*)(_img8 + _xs + _iwidth * _ys++), 8);
+  }
+  else if (_bpp == 4)
+  {
+    // Check if a faster block copy to screen is possible
+    if ( sx == 0 && sw == _dwidth) {
+      // TODO: Implement colormap for pushImage
+      //dspr->pushImage(tx, ty, sw, sh, _img4 + (_iwidth>>1) * _ys, 4, _colorMap);
+    } else // Render line by line
+    {
+      int32_t ds = _xs&1; // Odd x start pixel
+
+      int32_t de = 0;     // Odd x end pixel
+      if ((sw > ds) && (_xe&1)) de = 1;
+
+      uint32_t dm = 0;     // Midsection pixel count
+      if (sw > (ds+de)) dm = sw - ds - de;
+      sw--;
+
+      uint32_t yp = (_xs + ds + _iwidth * _ys)>>1;
+      dspr->startWrite();
+      while (sh--)
+      {
+        if (ds) _tft->drawPixel(tx, ty, readPixel(_xs, _ys) );
+        if (dm) _tft->pushImage(tx + ds, ty, dm, 1, _img4 + yp, false, _colorMap );
+        if (de) _tft->drawPixel(tx + sw, ty, readPixel(_xe, _ys) );
+        _ys++;
+        ty++;
+        yp += (_iwidth>>1);
+      }
+      dspr->endWrite();
+    }
+  }
+  else // 1bpp
+  {
+    // Check if a faster block copy to screen is possible
+    if ( sx == 0 && sw == _dwidth)
+      dspr->pushImage(tx, ty, sw, sh, (uint16_t*)(_img8 + (_bitwidth>>3) * _ys), 1);
+    else // Render line by line
+    {
+      dspr->startWrite();
+      while (sh--)
+      {
+        dspr->pushImage(tx, ty++, sw, 1, (uint16_t*)(_img8 + (_bitwidth>>3) * _ys++), 1);
+      }
+      dspr->endWrite();
+    }
+  }
+
+  return true;
+}
+
+
+/***************************************************************************************
 ** Function name:           pushSprite
 ** Description:             Push a cropped sprite to the TFT at tx, ty
 ***************************************************************************************/
