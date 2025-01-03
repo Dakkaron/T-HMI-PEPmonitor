@@ -70,6 +70,36 @@ void runProfileSelection(String* errorMessage) {
   jumpData.totalTaskNumber = profileData.tasks;
 }
 
+inline static unsigned long getTaskDurationUntilLastAction() {
+  return _max(1, (blowData.blowEndMs!=0 ? blowData.blowEndMs : blowData.taskStartMs) - blowData.taskStartMs);
+}
+
+static void drawInhalationDisplay() {
+  spr.fillSprite(TFT_BLACK);
+  String errorMessage;
+  drawInhalationGame(&spr, &blowData, &errorMessage);
+  int32_t taskBreathingScore = 200 * blowData.totalTimeSpentBreathing / getTaskDurationUntilLastAction();
+  drawProgressBar(&spr, taskBreathingScore, 0, PRESSURE_BAR_X, PRESSURE_BAR_Y+25, PRESSURE_BAR_WIDTH, PRESSURE_BAR_HEIGHT);
+  checkFailWithMessage(errorMessage);
+  
+  drawProgressBar(&spr, blowData.pressure, 10, PRESSURE_BAR_X, PRESSURE_BAR_Y, PRESSURE_BAR_WIDTH, PRESSURE_BAR_HEIGHT);
+  spr.setTextSize(2);
+  spr.setCursor(PRESSURE_BAR_X + 40, PRESSURE_BAR_Y - 14);
+  printShaded(&spr, String(blowData.blowCount));
+  
+  spr.setCursor(PRESSURE_BAR_X + 80, PRESSURE_BAR_Y - 14);
+  if (blowData.totalTaskNumber>1 && blowData.totalCycleNumber>1) {
+    printShaded(&spr, String(blowData.taskNumber) + "/" + String(blowData.cycleNumber));
+  } else if (blowData.totalTaskNumber>1) {
+    printShaded(&spr, String(blowData.taskNumber));
+  } else if (blowData.totalCycleNumber>1) {
+    printShaded(&spr, String(blowData.cycleNumber));
+  }
+  
+  drawSystemStats(blowData.ms, lastMs);
+  spr.pushSpriteFast(0, 0);
+}
+
 static void drawPEPDisplay() {
   spr.fillSprite(TFT_BLACK);
   String errorMessage;
@@ -215,11 +245,33 @@ void displayPhysioRotateScreen() {
   delay(200);
 }
 
+inline static bool isPepTask() {
+  switch (profileData.taskType[currentTask]) {
+    case PROFILE_TASK_TYPE_LONGBLOWS:
+    case PROFILE_TASK_TYPE_EQUALBLOWS:
+    case PROFILE_TASK_TYPE_SHORTBLOWS:
+      return true;
+    default:
+      return false;
+    }
+}
+
+inline static bool isInhalationTask() {
+  return profileData.taskType[currentTask] == PROFILE_TASK_TYPE_INHALATION;
+}
+
+inline static unsigned long getLastBlowEvent() {
+  return blowData.currentlyBlowing ? blowData.blowStartMs : blowData.blowEndMs;
+}
+
 void handlePhysioTask() {
   static uint32_t taskFinishedTimeout = 0;
   lastMs = blowData.ms;
   blowData.ms = millis();
   jumpData.ms = blowData.ms;
+  if (blowData.taskStartMs == 0) {
+    blowData.taskStartMs = blowData.ms;
+  }
   if (profileData.taskType[currentTask] == PROFILE_TASK_TYPE_TRAMPOLINE) {
     if (jumpData.msLeft < -5000) {
       currentCycle++;
@@ -257,20 +309,39 @@ void handlePhysioTask() {
       blowData.lastBlowStatus |= NEW_BLOW;
     } else if (blowData.pressure<=blowData.minPressure && blowData.currentlyBlowing) {
       blowData.blowEndMs = blowData.ms;
+      blowData.totalTimeSpentBreathing += blowData.blowEndMs-blowData.blowStartMs;
       Serial.print(blowData.blowEndMs-blowData.blowStartMs);
       Serial.println(F("ms"));
       blowData.currentlyBlowing = false;
-      Serial.print(F("Ending long blow"));
+      Serial.print(F("Ending blow"));
       if (blowData.ms-blowData.blowStartMs > blowData.targetDurationMs) {
         blowData.blowCount++;
         blowData.lastBlowStatus = LAST_BLOW_SUCCEEDED;
         Serial.println(F(" successfully"));
-        if (taskFinishedTimeout==0 && blowData.blowCount >= blowData.totalBlowCount) {
+        Serial.print(F(" Blowstart:       "));
+        Serial.println(blowData.blowStartMs);
+        Serial.print(F(" Blowend:         "));  
+        Serial.println(blowData.blowEndMs);
+        Serial.print(F(" Target Duration: "));
+        Serial.println(blowData.targetDurationMs);
+        // Check for task end on PEP tasks
+        if (isPepTask() && taskFinishedTimeout==0 && blowData.blowCount >= blowData.totalBlowCount) {
           taskFinishedTimeout = blowData.ms + 2000;
         }
       } else {
         blowData.fails++;
         blowData.lastBlowStatus = LAST_BLOW_FAILED;
+      }
+    }
+    // Check for task end on inhalation tasks
+    if (blowData.blowCount >= blowData.totalBlowCount) {
+      if (isInhalationTask() && !blowData.currentlyBlowing && blowData.ms-getLastBlowEvent() > INHALATION_TASK_END_TIMEOUT && taskFinishedTimeout==0) {
+        taskFinishedTimeout = blowData.ms + 2000;
+        tft.invertDisplay(0);
+      } else if (isInhalationTask() && !blowData.currentlyBlowing && blowData.ms-getLastBlowEvent() > INHALATION_TASK_WARN_TIMEOUT) {
+        tft.invertDisplay((blowData.ms/500) % 2);
+      } else {
+        tft.invertDisplay(0);
       }
     }
     blowData.peakPressure = _max(blowData.peakPressure, blowData.pressure);
@@ -287,6 +358,8 @@ void handlePhysioTask() {
           Serial.print("Short blows");break;
         case PROFILE_TASK_TYPE_TRAMPOLINE:
           Serial.print("Trampoline");break;
+        case PROFILE_TASK_TYPE_INHALATION:
+          Serial.print("Inhalation");break;
       }
       Serial.println();
       currentTask++;
@@ -296,11 +369,16 @@ void handlePhysioTask() {
       }
       blowData.blowCount = 0;
       blowData.lastBlowStatus = 0;
+      blowData.taskStartMs = blowData.ms;
       taskFinishedTimeout = 0;
       if (currentCycle < blowData.totalCycleNumber) {
         displayPhysioRotateScreen();
       }
     }
-    drawPEPDisplay();
+    if (isPepTask()) {
+      drawPEPDisplay();
+    } else if (isInhalationTask()) {
+      drawInhalationDisplay();
+    }
   }
 }

@@ -65,12 +65,12 @@ void initGames_racing(String gamePath, GameConfig* gameConfig, String* errorMess
   loadBmp(&playerCarSprite[9], racerGamePath + "gfx/car0_2_1.bmp", FLIPPED_H);
 }
 
-uint8_t currentTurnType;
-int32_t roadXOffset = 0;
-float roadBaseOffset = 0;
-uint32_t roadLastMs = 0;
-uint8_t enemySpriteId = 0;
-void calculateRoad(float y, float speed, unsigned long ms, float* x, float* w, int32_t* roadYOffset) {
+static uint8_t currentTurnType;
+static int32_t roadXOffset = 0;
+static uint8_t enemySpriteId = 0;
+static void calculateRoad(float y, float speed, unsigned long ms, float* x, float* w, int32_t* roadYOffset) {
+  static float roadBaseOffset = 0;
+  static uint32_t roadLastMs = 0;
   if (roadLastMs==0) {
     roadLastMs = ms;
   }
@@ -84,7 +84,7 @@ void calculateRoad(float y, float speed, unsigned long ms, float* x, float* w, i
   *roadYOffset = (wP*wP*wP * 25.0 + roadBaseOffset);
 }
 
-void drawEnemyCar(DISPLAY_T* display, int32_t x, int32_t y, int32_t w, int32_t enemyY) {
+static void drawEnemyCar(DISPLAY_T* display, int32_t x, int32_t y, int32_t w, int32_t enemyY) {
   // Draw enemy car
   if (y == enemyY) {
     uint8_t enemySpriteLevel;
@@ -106,7 +106,7 @@ void drawEnemyCar(DISPLAY_T* display, int32_t x, int32_t y, int32_t w, int32_t e
   }
 }
 
-void drawRace_desert(DISPLAY_T* display, float x, int32_t y, float w, int32_t roadYOffset, float lastX, float lastW) {
+static void drawRace_desert(DISPLAY_T* display, float x, int32_t y, float w, int32_t roadYOffset, float lastX, float lastW) {
   float railTopHeight = 0.15*w;
   float railThickness = 0.08*w;
   float lampHeight = 0.8*w;
@@ -199,7 +199,7 @@ void drawRace_tunnel(DISPLAY_T* display, float x, int32_t y, float w, int32_t ro
   }
 }
 
-void drawRace(DISPLAY_T* display, BlowData* blowData, int32_t animTime) {
+static void drawRace(DISPLAY_T* display, BlowData* blowData, int32_t animTime) {
   int32_t enemyY = -1;
   int32_t enemy2Y = -1;
   float x,w;
@@ -382,8 +382,8 @@ void drawEqualBlowGame_racing(DISPLAY_T* display, BlowData* blowData, String* er
   drawLongBlowGame_racing(display, blowData, errorMessage);
 }
 
-bool savedTrampoline=false;
 void drawTrampolineGame_racing(DISPLAY_T* display, JumpData* jumpData, String* errorMessage) {
+  static bool saved=false;
   uint8_t earnedNitro = (jumpData->jumpCount / 100);
   uint8_t currentBottle = 0;
   int32_t bottleSpacingX = (nitroLSprite.width()+5);
@@ -392,14 +392,18 @@ void drawTrampolineGame_racing(DISPLAY_T* display, JumpData* jumpData, String* e
   }
   nitroLSprite.pushToSprite(display, 50 + bottleSpacingX*(earnedNitro), 70, 0x0000);
   display->fillRect(50+bottleSpacingX*(earnedNitro), 70, nitroLSprite.width(), nitroLSprite.height()*(100-(jumpData->jumpCount%100))/100, 0x0000);
-  if (!savedTrampoline && jumpData->msLeft<0) {
-    savedTrampoline = true;
+  if (!saved && jumpData->msLeft<0) {
+    saved = true;
     nitro += earnedNitro;
     prefs.putUInt("nitro", nitro);
     Serial.print("Saved ");
     Serial.print(nitro);
     Serial.println(" nitro.");
   } 
+}
+
+void drawInhalationGame_racing(DISPLAY_T* display, BlowData* blowData, String* errorMessage) {
+
 }
 
 void displayProgressionMenu_racing(DISPLAY_T* display, String* errorMessage) {

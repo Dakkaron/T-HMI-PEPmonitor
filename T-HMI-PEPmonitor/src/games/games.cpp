@@ -72,6 +72,18 @@ void drawTrampolineGame(DISPLAY_T* display, JumpData* jumpData, String* errorMes
   }
 }
 
+void drawInhalationGame(DISPLAY_T* display, BlowData* blowData, String* errorMessage) {
+  if (gameConfig.templateName == "monster") {
+    drawInhalationGame_monsterCatcher(display, blowData, errorMessage);
+  } else if (gameConfig.templateName == "race") {
+    drawInhalationGame_racing(display, blowData, errorMessage);
+  } else if (gameConfig.templateName == "lua") {
+    drawInhalationGame_lua(display, blowData, errorMessage);
+  } else {
+    errorMessage->concat("No game loaded!");
+  }
+}
+
 void displayProgressionMenu(DISPLAY_T *display, String *errorMessage) {
   if (gameConfig.templateName == "monster") {
     displayProgressionMenu_monsterCatcher(display, errorMessage);

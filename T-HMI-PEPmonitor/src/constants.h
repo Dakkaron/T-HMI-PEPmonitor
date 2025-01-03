@@ -41,6 +41,10 @@
 #define PROFILE_TASK_TYPE_LONGBLOWS 2
 #define PROFILE_TASK_TYPE_EQUALBLOWS 3
 #define PROFILE_TASK_TYPE_TRAMPOLINE 4
+#define PROFILE_TASK_TYPE_INHALATION 5
+
+#define INHALATION_TASK_WARN_TIMEOUT 10000L
+#define INHALATION_TASK_END_TIMEOUT 15000L
 
 #define GAME_SELECTION_POWEROFF_TIMEOUT 3L*60L*1000L // Power off device if it spends >3 minutes on game selection screen
 #define WIN_SCREEN_TIMEOUT 3L*60L*1000L
@@ -66,12 +70,15 @@ struct ProfileData {
   uint32_t taskTargetStrength[10];
 };
 
+
 struct BlowData {
   bool currentlyBlowing = false;
   unsigned long ms = 0;
   unsigned long blowStartMs = 0;
   unsigned long blowEndMs = 0;
   unsigned long targetDurationMs = 0;
+  unsigned long totalTimeSpentBreathing = 0;
+  unsigned long taskStartMs;
   uint8_t cycleNumber = 0;
   uint8_t totalCycleNumber = 0;
   uint8_t taskNumber = 0;
@@ -80,10 +87,10 @@ struct BlowData {
   uint8_t totalBlowCount = 0;
   int32_t pressure = 0;
   bool negativePressure = false;
-  int16_t peakPressure = 0;
-  int16_t minPressure = 0;
-  int16_t targetPressure = 0;
-  uint16_t cumulativeError = 0;
+  int32_t peakPressure = 0;
+  int32_t minPressure = 0;
+  int32_t targetPressure = 0;
+  uint32_t cumulativeError = 0;
   uint8_t fails = 0;
   uint32_t taskType;
   uint8_t lastBlowStatus = 0;
@@ -91,6 +98,7 @@ struct BlowData {
   uint32_t totalEqualBlowRepetitions = 0;
   uint32_t totalShortBlowRepetitions = 0;
 };
+
 
 struct JumpData {
   unsigned long ms;

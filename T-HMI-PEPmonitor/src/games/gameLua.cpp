@@ -356,6 +356,13 @@ void drawTrampolineGame_lua(DISPLAY_T* display, JumpData* jumpData, String* erro
   lua.Lua_dostring(&trampolineScript);
 }
 
+void drawInhalationGame_lua(DISPLAY_T* display, BlowData* blowData, String* errorMessage) {
+  String inhalationScript = readFileToString((luaGamePath + "inhalationBlow.lua").c_str());
+  currentDisplay = display;
+  updateBlowData(blowData);
+  lua.Lua_dostring(&inhalationScript);
+}
+
 void displayProgressionMenu_lua(DISPLAY_T *display, String *errorMessage) {
   String progressionMenuScript = readFileToString((luaGamePath + "progressionMenu.lua").c_str());
   currentDisplay = display;

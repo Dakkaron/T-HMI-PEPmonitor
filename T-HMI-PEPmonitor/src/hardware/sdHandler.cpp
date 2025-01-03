@@ -88,19 +88,29 @@ void readProfileData(uint32_t profileId, ProfileData* profileData, String* error
       profileData->taskType[taskId] = PROFILE_TASK_TYPE_EQUALBLOWS;
     } else if (taskType == "trampoline") {
       profileData->taskType[taskId] = PROFILE_TASK_TYPE_TRAMPOLINE;
+    } else if (taskType == "inhalation") {
+      profileData->taskType[taskId] = PROFILE_TASK_TYPE_INHALATION;
     } else {
       errorMessage->concat("Unknown task type "+taskType+". Needs to be either of shortBlows, longBlows, equalBlows or trampoline.\n");
     }
     String ignoreErrors;
-    if (profileData->taskType[taskId] != PROFILE_TASK_TYPE_TRAMPOLINE) {
+    if (profileData->taskType[taskId] == PROFILE_TASK_TYPE_LONGBLOWS ||
+        profileData->taskType[taskId] == PROFILE_TASK_TYPE_EQUALBLOWS || 
+        profileData->taskType[taskId] == PROFILE_TASK_TYPE_SHORTBLOWS) {
       profileData->taskMinStrength[taskId] = atoi(getIniValueFromSection(resBuffer, "task_"+String(taskId)+"_minStrength", errorMessage).c_str());
-      profileData->taskNegativeStrength[taskId] = stringIsTrue(getIniValueFromSection(resBuffer, "task_"+String(taskId)+"_minStrength", errorMessage), false);
+      profileData->taskNegativeStrength[taskId] = false;
       profileData->taskTargetStrength[taskId] = atoi(getIniValueFromSection(resBuffer, "task_"+String(taskId)+"_targetStrength", errorMessage).c_str());
       profileData->taskRepetitions[taskId] = atoi(getIniValueFromSection(resBuffer, "task_"+String(taskId)+"_repetitions", errorMessage).c_str());
+    } else if (profileData->taskType[taskId] == PROFILE_TASK_TYPE_INHALATION) {
+      profileData->taskMinStrength[taskId] = atoi(getIniValueFromSection(resBuffer, "task_"+String(taskId)+"_minStrength", errorMessage).c_str());
+      profileData->taskTargetStrength[taskId] = atoi(getIniValueFromSection(resBuffer, "task_"+String(taskId)+"_targetStrength", errorMessage).c_str());
+      profileData->taskRepetitions[taskId] = atoi(getIniValueFromSection(resBuffer, "task_"+String(taskId)+"_minRepetitions", errorMessage).c_str());
+      profileData->taskNegativeStrength[taskId] = true;
+    } else if (profileData->taskType[taskId] == PROFILE_TASK_TYPE_TRAMPOLINE) {
     }
+    profileData->taskTime[taskId] = atoi(getIniValueFromSection(resBuffer, "task_"+String(taskId)+"_time", errorMessage).c_str());
     profileData->taskChangeImagePath[taskId] = getIniValueFromSection(resBuffer, "task_"+String(taskId)+"_changeImagePath", &ignoreErrors).c_str();
     profileData->taskChangeMessage[taskId] = getIniValueFromSection(resBuffer, "task_"+String(taskId)+"_changeText", &ignoreErrors).c_str();
-    profileData->taskTime[taskId] = atoi(getIniValueFromSection(resBuffer, "task_"+String(taskId)+"_time", errorMessage).c_str());
     checkFailWithMessage(*errorMessage);
     profileData->tasks++; 
   }
@@ -278,7 +288,6 @@ String getIniValueFromSection(char* sectionData, String key, String* errorMessag
   errorMessage->concat("Key ");
   errorMessage->concat(key);
   errorMessage->concat(" not found in INI section.\n");
-  Serial.println(*errorMessage);
   return String("");
 }
 
