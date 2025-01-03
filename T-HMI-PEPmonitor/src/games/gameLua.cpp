@@ -44,10 +44,53 @@ static int lua_wrapper_loadBmp(lua_State* luaState) {
 static int lua_wrapper_drawSprite(lua_State* luaState) {
   Serial.println("Draw sprite");
   int16_t handle = luaL_checkinteger(luaState, 1);
-  int16_t x = luaL_checkinteger(luaState, 2);
-  int16_t y = luaL_checkinteger(luaState, 3);
-  sprites[handle].pushToSprite(currentDisplay, x, y);
+  int16_t x = luaL_checknumber(luaState, 2);
+  int16_t y = luaL_checknumber(luaState, 3);
+  int16_t transp = luaL_optinteger(luaState, 4, 0x0000);
+  sprites[handle].pushToSprite(currentDisplay, x, y, transp);
   Serial.println("Draw sprite done");
+  return 0;
+}
+
+static int lua_wrapper_drawSpriteRegion(lua_State* luaState) {
+  Serial.println("Draw sprite region");
+  int16_t handle = luaL_checkinteger(luaState, 1);
+  int16_t tx = luaL_checknumber(luaState, 2);
+  int16_t ty = luaL_checknumber(luaState, 3);
+  int16_t sx = luaL_checknumber(luaState, 4);
+  int16_t sy = luaL_checknumber(luaState, 5);
+  int16_t sw = luaL_checknumber(luaState, 6);
+  int16_t sh = luaL_checknumber(luaState, 7);
+  int16_t transp = luaL_optinteger(luaState, 8, 0x0000);
+  sprites[handle].pushToSprite(currentDisplay, tx, ty, sx, sy, sw, sh, transp);
+  Serial.println("Draw sprite region done");
+  return 0;
+}
+
+static int lua_wrapper_drawAnimSprite(lua_State* luaState) {
+  Serial.println("Draw anim sprite X");
+  int16_t handle = luaL_checkinteger(luaState, 1);
+  int16_t tx = luaL_checknumber(luaState, 2);
+  int16_t ty = luaL_checknumber(luaState, 3);
+  int16_t sw = luaL_checknumber(luaState, 4);
+  int16_t sh = luaL_checknumber(luaState, 5);
+  int16_t frame = luaL_checknumber(luaState, 6);
+  int16_t transp = luaL_optnumber(luaState, 7, 0x0000);
+  
+  int16_t cols = sprites[handle].width() / sw;
+  int16_t rows = sprites[handle].height() / sh;
+
+  int16_t col = frame % cols;
+  int16_t row = frame / cols;
+
+  sprites[handle].pushToSprite(currentDisplay, tx, ty, sw*col, sh*row, sw, sh, transp);
+  Serial.println("Draw anim sprite done");
+  return 0;
+}
+
+static int lua_wrapper_log(lua_State* luaState) {
+  String s = luaL_checkstring(luaState, 1);
+  Serial.println(s);
   return 0;
 }
 
@@ -223,6 +266,9 @@ void initGames_lua(String gamePath, GameConfig* gameConfig, String* errorMessage
   luaGamePath = gamePath;
   lua.Lua_register("loadBmp", (const lua_CFunction) &lua_wrapper_loadBmp);
   lua.Lua_register("drawSprite", (const lua_CFunction) &lua_wrapper_drawSprite);
+  lua.Lua_register("drawSpriteRegion", (const lua_CFunction) &lua_wrapper_drawSpriteRegion);
+  lua.Lua_register("drawAnimSprite", (const lua_CFunction) &lua_wrapper_drawAnimSprite);
+  lua.Lua_register("log", (const lua_CFunction) &lua_wrapper_log);
   lua.Lua_register("drawString", (const lua_CFunction) &lua_wrapper_drawString);
   lua.Lua_register("drawRect", (const lua_CFunction) &lua_wrapper_drawRect);
   lua.Lua_register("fillRect", (const lua_CFunction) &lua_wrapper_fillRect);
@@ -271,7 +317,9 @@ void updateBlowData(BlowData* blowData) {
                           "cumulativeError="+String(blowData->cumulativeError)+"\n"+\
                           "fails="+String(blowData->fails)+"\n"+\
                           "taskType="+String(blowData->taskType)+"\n"+\
-                          "lastBlowStatus="+String(blowData->lastBlowStatus);
+                          "lastBlowStatus="+String(blowData->lastBlowStatus)+"\n"+\
+                          "totalTimeSpentBreathing="+String(blowData->totalTimeSpentBreathing)+"\n"+\
+                          "taskStartMs="+String(blowData->taskStartMs);
   lua.Lua_dostring(&blowDataString);
 }
 
