@@ -234,7 +234,7 @@ void handlePhysioTask() {
     getJumpData(&jumpData);
     drawTrampolineDisplay();
   } else {
-    blowData.targetPressure = 100;
+    blowData.targetPressure = profileData.taskTargetStrength[currentTask];
     blowData.taskNumber = currentTask;
     blowData.cycleNumber = currentCycle;
     blowData.minPressure = 100*profileData.taskMinStrength[currentTask]/profileData.taskTargetStrength[currentTask];

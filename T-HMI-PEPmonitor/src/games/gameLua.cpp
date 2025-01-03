@@ -268,7 +268,6 @@ void updateBlowData(BlowData* blowData) {
                           "pressure="+String(blowData->pressure)+"\n"+\
                           "peakPressure="+String(blowData->peakPressure)+"\n"+\
                           "minPressure="+String(blowData->minPressure)+"\n"+\
-                          "targetPressure="+String(blowData->targetPressure)+"\n"+\
                           "cumulativeError="+String(blowData->cumulativeError)+"\n"+\
                           "fails="+String(blowData->fails)+"\n"+\
                           "taskType="+String(blowData->taskType)+"\n"+\
