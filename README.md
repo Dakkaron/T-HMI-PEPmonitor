@@ -34,6 +34,8 @@ PepIt is currently in early access, more games and features will follow.
 - **Configurable therapy routines**: Easily adjust PepIt to follow exactly the therapy routine your physiotherapist or doctor prescribed.
 - **LUA-based, extendable game system**: Download additional games to the SD card later on. Or even create your own!
 
+# PepIt Physiotherapie-Companion (Deutsch)
+
 ## Überblick
 
 Seien wir mal ehrlich, Physiotherapie ist anstrengend, insbesondere für Kinder mit chronischen Krankheiten wie Zystische Fibrose/Mukoviszidose. Die Therapie frisst Zeit, ist monoton und es ist ein dauerhafter Kampf, das Kind dazu zu bringen, sie richtig auszuführen.
