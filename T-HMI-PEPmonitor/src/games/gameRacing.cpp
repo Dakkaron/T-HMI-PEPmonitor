@@ -1,4 +1,5 @@
 #include "gameRacing.h"
+#include "gameLua.h"
 
 #define TURN_STRAIGHT 0
 #define TURN_LEFT 1
@@ -407,5 +408,13 @@ void drawInhalationGame_racing(DISPLAY_T* display, BlowData* blowData, String* e
 }
 
 bool displayProgressionMenu_racing(DISPLAY_T* display, String* errorMessage) {
-  return false;
+  initLuaBindings();
+  String progressionMenuScript = readFileToString((racerGamePath + "progressionMenu.lua").c_str());
+  if (progressionMenuScript.isEmpty()) {
+    errorMessage->concat("Failed to load progression menu script");
+    return false;
+  }
+  luaDisplay = display;
+  lua.Lua_dostring(&progressionMenuScript);
+  return luaProgressionMenuRunning;
 }

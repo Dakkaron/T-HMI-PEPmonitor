@@ -1,13 +1,13 @@
 #include "gameLua.h"
-#include <LuaWrapper.h>
 #include "hardware/sdHandler.h"
 #include "hardware/gfxHandler.hpp"
 #include "hardware/prefsHandler.h"
 
-static LuaWrapper lua;
+LuaWrapper lua;
 static String luaGamePath;
 
-static DISPLAY_T* currentDisplay;
+DISPLAY_T* luaDisplay;
+bool luaProgressionMenuRunning;
 
 #define SPRITE_COUNT_LIMIT 50
 
@@ -47,7 +47,7 @@ static int lua_wrapper_drawSprite(lua_State* luaState) {
   int16_t x = luaL_checknumber(luaState, 2);
   int16_t y = luaL_checknumber(luaState, 3);
   int16_t transp = luaL_optinteger(luaState, 4, 0x0000);
-  sprites[handle].pushToSprite(currentDisplay, x, y, transp);
+  sprites[handle].pushToSprite(luaDisplay, x, y, transp);
   Serial.println("Draw sprite done");
   return 0;
 }
@@ -62,7 +62,7 @@ static int lua_wrapper_drawSpriteRegion(lua_State* luaState) {
   int16_t sw = luaL_checknumber(luaState, 6);
   int16_t sh = luaL_checknumber(luaState, 7);
   int16_t transp = luaL_optinteger(luaState, 8, 0x0000);
-  sprites[handle].pushToSprite(currentDisplay, tx, ty, sx, sy, sw, sh, transp);
+  sprites[handle].pushToSprite(luaDisplay, tx, ty, sx, sy, sw, sh, transp);
   Serial.println("Draw sprite region done");
   return 0;
 }
@@ -83,7 +83,7 @@ static int lua_wrapper_drawAnimSprite(lua_State* luaState) {
   int16_t col = frame % cols;
   int16_t row = frame / cols;
 
-  sprites[handle].pushToSprite(currentDisplay, tx, ty, sw*col, sh*row, sw, sh, transp);
+  sprites[handle].pushToSprite(luaDisplay, tx, ty, sw*col, sh*row, sw, sh, transp);
   Serial.println("Draw anim sprite done");
   return 0;
 }
@@ -98,7 +98,7 @@ static int lua_wrapper_drawString(lua_State* luaState) {
   String s = luaL_checkstring(luaState, 1);
   int16_t x = luaL_checknumber(luaState, 2);
   int16_t y = luaL_checknumber(luaState, 3);
-  currentDisplay->drawString(s, x, y);
+  luaDisplay->drawString(s, x, y);
   return 0;
 }
 
@@ -108,7 +108,7 @@ static int lua_wrapper_drawRect(lua_State* luaState) {
   int16_t w = luaL_checknumber(luaState, 3);
   int16_t h = luaL_checknumber(luaState, 4);
   uint16_t color = luaL_checknumber(luaState, 5);
-  currentDisplay->drawRect(x, y, w, h, color);
+  luaDisplay->drawRect(x, y, w, h, color);
   return 0;
 }
 
@@ -118,7 +118,7 @@ static int lua_wrapper_fillRect(lua_State* luaState) {
   int16_t w = luaL_checknumber(luaState, 3);
   int16_t h = luaL_checknumber(luaState, 4);
   uint16_t color = luaL_checknumber(luaState, 5);
-  currentDisplay->fillRect(x, y, w, h, color);
+  luaDisplay->fillRect(x, y, w, h, color);
   return 0;
 }
 
@@ -127,7 +127,7 @@ static int lua_wrapper_drawCircle(lua_State* luaState) {
   int16_t y = luaL_checknumber(luaState, 2);
   int16_t r = luaL_checknumber(luaState, 3);
   uint16_t color = luaL_checknumber(luaState, 4);
-  currentDisplay->drawCircle(x, y, r, color);
+  luaDisplay->drawCircle(x, y, r, color);
   return 0;
 }
 
@@ -136,7 +136,7 @@ static int lua_wrapper_fillCircle(lua_State* luaState) {
   int16_t y = luaL_checknumber(luaState, 2);
   int16_t r = luaL_checknumber(luaState, 3);
   uint16_t color = luaL_checknumber(luaState, 4);
-  currentDisplay->fillCircle(x, y, r, color);
+  luaDisplay->fillCircle(x, y, r, color);
   return 0;
 }
 
@@ -146,7 +146,7 @@ static int lua_wrapper_drawLine(lua_State* luaState) {
   int16_t x1 = luaL_checknumber(luaState, 3);
   int16_t y1 = luaL_checknumber(luaState, 4);
   uint16_t color = luaL_checknumber(luaState, 5);
-  currentDisplay->drawLine(x0, y0, x1, y1, color);
+  luaDisplay->drawLine(x0, y0, x1, y1, color);
   return 0;
 }
 
@@ -155,7 +155,7 @@ static int lua_wrapper_drawFastHLine(lua_State* luaState) {
   int16_t y = luaL_checknumber(luaState, 2);
   int16_t w = luaL_checknumber(luaState, 3);
   uint16_t color = luaL_checknumber(luaState, 4);
-  currentDisplay->drawFastHLine(x, y, w, color);
+  luaDisplay->drawFastHLine(x, y, w, color);
   return 0;
 }
 
@@ -164,55 +164,55 @@ static int lua_wrapper_drawFastWLine(lua_State* luaState) {
   int16_t y = luaL_checknumber(luaState, 2);
   int16_t h = luaL_checknumber(luaState, 3);
   uint16_t color = luaL_checknumber(luaState, 4);
-  currentDisplay->drawFastVLine(x, y, h, color);
+  luaDisplay->drawFastVLine(x, y, h, color);
   return 0;
 }
 
 static int lua_wrapper_fillScreen(lua_State* luaState) {
   uint16_t color = luaL_checknumber(luaState, 1);
-  currentDisplay->fillScreen(color);
+  luaDisplay->fillScreen(color);
   return 0;
 }
 
 static int lua_wrapper_setTextColor(lua_State* luaState) {
   uint16_t color = luaL_checknumber(luaState, 1);
-  currentDisplay->setTextColor(color);
+  luaDisplay->setTextColor(color);
   return 0;
 }
 
 static int lua_wrapper_setTextSize(lua_State* luaState) {
   uint8_t size = luaL_checknumber(luaState, 1);
-  currentDisplay->setTextSize(size);
+  luaDisplay->setTextSize(size);
   return 0;
 }
 
 static int lua_wrapper_setTextDatum(lua_State* luaState) {
   uint8_t datum = luaL_checknumber(luaState, 1);
-  currentDisplay->setTextDatum(datum);
+  luaDisplay->setTextDatum(datum);
   return 0;
 }
 
 static int lua_wrapper_setCursor(lua_State* luaState) {
   int16_t x = luaL_checknumber(luaState, 1);
   int16_t y = luaL_checknumber(luaState, 2);
-  currentDisplay->setCursor(x, y);
+  luaDisplay->setCursor(x, y);
   return 0;
 }
 
 static int lua_wrapper_print(lua_State* luaState) {
   String s = luaL_checkstring(luaState, 1);
-  currentDisplay->print(s);
+  luaDisplay->print(s);
   return 0;
 }
 
 static int lua_wrapper_println(lua_State* luaState) {
   String s = luaL_checkstring(luaState, 1);
-  currentDisplay->println(s);
+  luaDisplay->println(s);
   return 0;
 }
 
 static int lua_wrapper_cls(lua_State* luaState) {
-  currentDisplay->fillSprite(TFT_BLACK);
+  luaDisplay->fillSprite(TFT_BLACK);
   return 0;
 }
 
@@ -261,14 +261,16 @@ static int lua_wrapper_prefsGetNumber(lua_State* luaState) {
   return 1;
 }
 
-static bool progressionMenuStillRunning = false;
 static int lua_wrapper_closeProgressionMenu(lua_State* luaState) {
-  progressionMenuStillRunning = false;
+  luaProgressionMenuRunning = false;
   return 0;
 }
 
-void initGames_lua(String gamePath, GameConfig* gameConfig, String* errorMessage) {
-  luaGamePath = gamePath;
+void initLuaBindings() {
+  static bool bindingsInitiated = false;
+  if (bindingsInitiated) {
+    return;
+  }
   lua.Lua_register("loadBmp", (const lua_CFunction) &lua_wrapper_loadBmp);
   lua.Lua_register("drawSprite", (const lua_CFunction) &lua_wrapper_drawSprite);
   lua.Lua_register("drawSpriteRegion", (const lua_CFunction) &lua_wrapper_drawSpriteRegion);
@@ -297,6 +299,12 @@ void initGames_lua(String gamePath, GameConfig* gameConfig, String* errorMessage
   lua.Lua_register("prefsSetNumber", (const lua_CFunction) &lua_wrapper_prefsSetNumber);
   lua.Lua_register("prefsGetNumber", (const lua_CFunction) &lua_wrapper_prefsGetNumber);
   lua.Lua_register("closeProgressionMenu", (const lua_CFunction) &lua_wrapper_closeProgressionMenu);
+  bindingsInitiated = true;
+}
+
+void initGames_lua(String gamePath, GameConfig* gameConfig, String* errorMessage) {
+  initLuaBindings();
+  luaGamePath = gamePath;
 
   setGamePrefsNamespace(gameConfig->prefsNamespace.c_str());
 
@@ -336,47 +344,47 @@ void updateJumpData(JumpData* jumpData) {
 
 void drawShortBlowGame_lua(DISPLAY_T* display, BlowData* blowData, String* errorMessage) {
   String shortBlowScript = readFileToString((luaGamePath + "shortBlow.lua").c_str());
-  currentDisplay = display;
+  luaDisplay = display;
   updateBlowData(blowData);
   lua.Lua_dostring(&shortBlowScript);
 }
 
 void drawLongBlowGame_lua(DISPLAY_T* display, BlowData* blowData, String* errorMessage) {
   String longBlowScript = readFileToString((luaGamePath + "longBlow.lua").c_str());
-  currentDisplay = display;
+  luaDisplay = display;
   updateBlowData(blowData);
   lua.Lua_dostring(&longBlowScript);
 }
 
 void drawEqualBlowGame_lua(DISPLAY_T* display, BlowData* blowData, String* errorMessage) {
   String equalBlowScript = readFileToString((luaGamePath + "equalBlow.lua").c_str());
-  currentDisplay = display;
+  luaDisplay = display;
   updateBlowData(blowData);
   lua.Lua_dostring(&equalBlowScript);
 }
 
 void drawTrampolineGame_lua(DISPLAY_T* display, JumpData* jumpData, String* errorMessage) {
   String trampolineScript = readFileToString((luaGamePath + "trampoline.lua").c_str());
-  currentDisplay = display;
+  luaDisplay = display;
   updateJumpData(jumpData);
   lua.Lua_dostring(&trampolineScript);
 }
 
 void drawInhalationGame_lua(DISPLAY_T* display, BlowData* blowData, String* errorMessage) {
   String inhalationScript = readFileToString((luaGamePath + "inhalationBlow.lua").c_str());
-  currentDisplay = display;
+  luaDisplay = display;
   updateBlowData(blowData);
   lua.Lua_dostring(&inhalationScript);
 }
 
 bool displayProgressionMenu_lua(DISPLAY_T *display, String *errorMessage) {
-  progressionMenuStillRunning = true;
+  luaProgressionMenuRunning = true;
   String progressionMenuScript = readFileToString((luaGamePath + "progressionMenu.lua").c_str());
   if (progressionMenuScript.isEmpty()) {
     errorMessage->concat("Failed to load progression menu script");
     return false;
   }
-  currentDisplay = display;
+  luaDisplay = display;
   lua.Lua_dostring(&progressionMenuScript);
-  return progressionMenuStillRunning;
+  return luaProgressionMenuRunning;
 }
