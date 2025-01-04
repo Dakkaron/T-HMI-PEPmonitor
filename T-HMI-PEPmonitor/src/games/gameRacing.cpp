@@ -406,6 +406,6 @@ void drawInhalationGame_racing(DISPLAY_T* display, BlowData* blowData, String* e
 
 }
 
-void displayProgressionMenu_racing(DISPLAY_T* display, String* errorMessage) {
-
+bool displayProgressionMenu_racing(DISPLAY_T* display, String* errorMessage) {
+  return false;
 }

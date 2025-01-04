@@ -15,6 +15,6 @@ void drawEqualBlowGame_lua(DISPLAY_T* display, BlowData* blowData, String* error
 void drawLongBlowGame_lua(DISPLAY_T* display, BlowData* blowData, String* errorMessage);
 void drawTrampolineGame_lua(DISPLAY_T* display, JumpData* jumpData, String* errorMessage);
 void drawInhalationGame_lua(DISPLAY_T* display, BlowData* blowData, String* errorMessage);
-void displayProgressionMenu_lua(DISPLAY_T *display, String *errorMessage);
+bool displayProgressionMenu_lua(DISPLAY_T *display, String *errorMessage);
 
 #endif /* __GAME_LUA_H__ */

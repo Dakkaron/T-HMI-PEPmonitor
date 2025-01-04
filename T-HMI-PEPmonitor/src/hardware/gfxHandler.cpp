@@ -480,50 +480,54 @@ static void drawProfileSelectionPage(DISPLAY_T* display, uint16_t startNr, uint1
   int32_t columns = _min(4, nr);
   int32_t rows = nr>4 ? 2 : 1;
   int32_t cWidth = (290 - 10*columns) / columns;
-  int32_t cHeight = rows==1 ? 220 : 105;
+  int32_t cHeight = rows==1 ? 200 : 95;
   for (int32_t c = 0; c<columns; c++) {
     for (int32_t r = 0; r<rows; r++) {
       int32_t profileId = c + r*columns;
       if (profileId < nr) {
         ProfileData profileData;
         readProfileData(profileId, &profileData, errorMessage);
-        display->fillRect(20 + c*(cWidth + 10), 10+(r*(cHeight+10)), cWidth, cHeight, TFT_BLUE);
+        display->fillRect(20 + c*(cWidth + 10), 30+r*(cHeight+10), cWidth, cHeight, TFT_BLUE);
         int16_t imgW, imgH;
         getBmpDimensions(profileData.imagePath, &imgW, &imgH);
-        drawBmp(profileData.imagePath, 20 + c*(cWidth + 10) + cWidth/2 - imgW/2, 10+(r*cHeight+10) + cHeight/2 - imgH/2, false);
+        drawBmp(profileData.imagePath, 20 + c*(cWidth + 10) + cWidth/2 - imgW/2, 30+r*(cHeight+10) + cHeight/2 - imgH/2, false);
         uint8_t textDatumBackup = display->getTextDatum();
         display->setTextDatum(BC_DATUM);
         display->setTextSize(1);
-        display->drawString(profileData.name, 20 + c*(cWidth + 10) + cWidth/2, 10+(r*cHeight+10) + cHeight - 12);
+        display->drawString(profileData.name, 20 + c*(cWidth + 10) + cWidth/2, 30+r*(cHeight+10) + cHeight - 3);
         display->setTextDatum(textDatumBackup);
       }
     }
   }
+  drawBmp("/gfx/progressionmenu.bmp", SCREEN_WIDTH - 32, 0, false);
 }
 
 static void drawGameSelectionPage(DISPLAY_T* display, uint16_t startNr, uint16_t nr, bool drawArrows, String* errorMessage) {
   int32_t columns = _min(4, nr);
   int32_t rows = nr>4 ? 2 : 1;
   int32_t cWidth = (290 - 10*columns) / columns;
-  int32_t cHeight = rows==1 ? 220 : 105; 
+  int32_t cHeight = rows==1 ? 200 : 95; 
   for (int32_t c = 0; c<columns; c++) {
     for (int32_t r = 0; r<rows; r++) {
       if (c + r*columns < nr) {
         String gamePath = getGamePath(c + r*columns, errorMessage);
-        display->fillRect(20 + c*(cWidth + 10), 10+(r*(cHeight+10)), cWidth, cHeight, TFT_BLUE);
+        display->fillRect(20 + c*(cWidth + 10), 30+r*(cHeight+10), cWidth, cHeight, TFT_BLUE);
         int16_t imgW, imgH;
         getBmpDimensions(gamePath + "logo.bmp", &imgW, &imgH);
-        drawBmp(gamePath + "logo.bmp", 20 + c*(cWidth + 10) + cWidth/2 - imgW/2, 10+(r*cHeight+10) + cHeight/2 - imgH/2, false);
+        drawBmp(gamePath + "logo.bmp", 20 + c*(cWidth + 10) + cWidth/2 - imgW/2, 30+r*(cHeight+10) + cHeight/2 - imgH/2, false);
       }
     }
   }
 }
 
-static int16_t checkSelectionPageSelection(uint16_t startNr, uint16_t nr, bool drawArrows) {
+static int16_t checkSelectionPageSelection(uint16_t startNr, uint16_t nr, bool drawArrows, bool progressMenuIcon) {
   int32_t columns = _min(4, nr);
   int32_t rows = nr>4 ? 2 : 1;
   int32_t cWidth = (290 - 10*columns) / columns;
   int32_t cHeight = rows==1 ? 220 : 105; 
+  if (progressMenuIcon && isTouchInZone(SCREEN_WIDTH - 32, 0, 32, 32)) {
+    return PROGRESS_MENU_SELECTION_ID;
+  }
   for (uint32_t c = 0; c<columns; c++) {
     for (uint32_t r = 0; r<rows; r++) {
       if (isTouchInZone(20 + c*(cWidth + 10), 10+(r*(cHeight+10)), cWidth, cHeight)) {
@@ -534,7 +538,7 @@ static int16_t checkSelectionPageSelection(uint16_t startNr, uint16_t nr, bool d
   return -1;
 }
 
-uint16_t displayGameSelection(DISPLAY_T* display, uint16_t nr, String* errorMessage) {
+int16_t displayGameSelection(DISPLAY_T* display, uint16_t nr, String* errorMessage) {
   uint16_t startNr = 0;
   uint32_t ms = millis();
   uint32_t lastMs = millis();
@@ -551,7 +555,7 @@ uint16_t displayGameSelection(DISPLAY_T* display, uint16_t nr, String* errorMess
     lastMs = ms;
     ms = millis();
     handleSerial();
-    int16_t selection = checkSelectionPageSelection(startNr, _min(nr, 8), nr>8);
+    int16_t selection = checkSelectionPageSelection(startNr, _min(nr, 8), nr>8, false);
     if (selection != -1 && selection<nr) {
       return selection;
     }
@@ -564,7 +568,7 @@ uint16_t displayGameSelection(DISPLAY_T* display, uint16_t nr, String* errorMess
   }
 }
 
-uint16_t displayProfileSelection(DISPLAY_T* display, uint16_t nr, String* errorMessage) {
+int16_t displayProfileSelection(DISPLAY_T* display, uint16_t nr, String* errorMessage) {
   uint16_t startNr = 0;
   uint32_t ms = millis();
   uint32_t lastMs = millis();
@@ -581,8 +585,8 @@ uint16_t displayProfileSelection(DISPLAY_T* display, uint16_t nr, String* errorM
     lastMs = ms;
     ms = millis();
     handleSerial();
-    int16_t selection = checkSelectionPageSelection(startNr, _min(nr, 8), nr>8);
-    if (selection != -1 && selection<nr) {
+    int16_t selection = checkSelectionPageSelection(startNr, _min(nr, 8), nr>8, true);
+    if (selection != -1 && (selection<nr || selection == PROGRESS_MENU_SELECTION_ID)) {
       return selection;
     }
     display->fillRect(0,0,70,20,TFT_BLACK);

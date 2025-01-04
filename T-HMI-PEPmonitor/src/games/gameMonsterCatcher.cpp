@@ -587,6 +587,7 @@ void initGames_monsterCatcher(String gamePath, GameConfig* gameConfig, String* e
   loadBmp(&ballCaughtIndicator, monsterCatcherGamePath + "gfx/interface/ball_caught_indicator.bmp");
 }
 
-void displayProgressionMenu_monsterCatcher(DISPLAY_T* display, String* errorMessage) {
+bool displayProgressionMenu_monsterCatcher(DISPLAY_T* display, String* errorMessage) {
   // TODO: display a paginized view of pokemon
+  return false;
 }

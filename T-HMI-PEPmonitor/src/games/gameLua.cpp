@@ -261,6 +261,11 @@ static int lua_wrapper_prefsGetNumber(lua_State* luaState) {
   return 1;
 }
 
+static bool progressionMenuStillRunning = false;
+static int lua_wrapper_closeProgressionMenu(lua_State* luaState) {
+  progressionMenuStillRunning = false;
+  return 0;
+}
 
 void initGames_lua(String gamePath, GameConfig* gameConfig, String* errorMessage) {
   luaGamePath = gamePath;
@@ -291,6 +296,7 @@ void initGames_lua(String gamePath, GameConfig* gameConfig, String* errorMessage
   lua.Lua_register("prefsGetInt", (const lua_CFunction) &lua_wrapper_prefsGetInt);
   lua.Lua_register("prefsSetNumber", (const lua_CFunction) &lua_wrapper_prefsSetNumber);
   lua.Lua_register("prefsGetNumber", (const lua_CFunction) &lua_wrapper_prefsGetNumber);
+  lua.Lua_register("closeProgressionMenu", (const lua_CFunction) &lua_wrapper_closeProgressionMenu);
 
   setGamePrefsNamespace(gameConfig->prefsNamespace.c_str());
 
@@ -363,8 +369,14 @@ void drawInhalationGame_lua(DISPLAY_T* display, BlowData* blowData, String* erro
   lua.Lua_dostring(&inhalationScript);
 }
 
-void displayProgressionMenu_lua(DISPLAY_T *display, String *errorMessage) {
+bool displayProgressionMenu_lua(DISPLAY_T *display, String *errorMessage) {
+  progressionMenuStillRunning = true;
   String progressionMenuScript = readFileToString((luaGamePath + "progressionMenu.lua").c_str());
+  if (progressionMenuScript.isEmpty()) {
+    errorMessage->concat("Failed to load progression menu script");
+    return false;
+  }
   currentDisplay = display;
   lua.Lua_dostring(&progressionMenuScript);
+  return progressionMenuStillRunning;
 }

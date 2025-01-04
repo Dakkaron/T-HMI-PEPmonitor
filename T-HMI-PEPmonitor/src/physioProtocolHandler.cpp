@@ -17,16 +17,53 @@ JumpData jumpData;
 
 uint32_t lastMs = 0;
 
-void runProfileSelection(String* errorMessage) {
+void runGameSelection() {
+  spr.fillSprite(TFT_BLACK);
+  spr.pushSpriteFast(0,0);
+  spr.fillSprite(TFT_BLACK);
+  tft.fillScreen(TFT_BLACK);
+  String errorMessage;
+  uint16_t numberOfGames = getNumberOfGames(&errorMessage);
+  checkFailWithMessage(errorMessage);
+  Serial.print("Number of games: ");
+  Serial.println(numberOfGames);
+  String gamePath;
+  if (numberOfGames == 1) {
+    gamePath = getGamePath(0, &errorMessage);
+  } else {
+    gamePath = getGamePath(displayGameSelection(&spr, numberOfGames, &errorMessage), &errorMessage);
+  }
+  checkFailWithMessage(errorMessage);
+  Serial.print("Game path: ");
+  Serial.println(gamePath);
+  initGames(gamePath, &errorMessage);
+  checkFailWithMessage(errorMessage);
+}
+
+void runProfileSelection() {
+  String errorMessage;
   bool profileSuccessfullyLoaded = false;
   while (!profileSuccessfullyLoaded) {
-    uint32_t totalNumberOfProfiles = getNumberOfProfiles(errorMessage);
-    checkFailWithMessage(*errorMessage);
-    uint32_t selectedProfileId = displayProfileSelection(&spr, totalNumberOfProfiles, errorMessage);
-    checkFailWithMessage(*errorMessage);
-    readProfileData(selectedProfileId, &profileData, errorMessage);
-    checkFailWithMessage(*errorMessage);
+    spr.fillSprite(TFT_BLACK);
+    spr.pushSpriteFast(0,0);
+    spr.fillSprite(TFT_BLACK);
+    tft.fillScreen(TFT_BLACK);
+    uint32_t totalNumberOfProfiles = getNumberOfProfiles(&errorMessage);
+    checkFailWithMessage(errorMessage);
+    int32_t selectedProfileId = displayProfileSelection(&spr, totalNumberOfProfiles, &errorMessage);
     profileSuccessfullyLoaded = true;
+    if (selectedProfileId == PROGRESS_MENU_SELECTION_ID) {
+      runGameSelection();
+      while (displayProgressionMenu(&spr, &errorMessage)) {
+        checkFailWithMessage(errorMessage);
+      }
+      
+      profileSuccessfullyLoaded = false;
+      continue;
+    }
+    checkFailWithMessage(errorMessage);
+    readProfileData(selectedProfileId, &profileData, &errorMessage);
+    checkFailWithMessage(errorMessage);
     for (uint32_t i=0;i<profileData.tasks;i++) {
       if (profileData.taskType[i] == PROFILE_TASK_TYPE_TRAMPOLINE) {
         spr.fillSprite(TFT_BLACK);

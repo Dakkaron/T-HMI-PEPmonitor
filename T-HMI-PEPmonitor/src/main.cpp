@@ -48,25 +48,6 @@ void setBrightness(uint8_t value) {
   _brightness = value;
 }
 
-void runGameSelection() {
-  String errorMessage;
-  uint16_t numberOfGames = getNumberOfGames(&errorMessage);
-  checkFailWithMessage(errorMessage);
-  Serial.print("Number of games: ");
-  Serial.println(numberOfGames);
-  String gamePath;
-  if (numberOfGames == 1) {
-    gamePath = getGamePath(0, &errorMessage);
-  } else {
-    gamePath = getGamePath(displayGameSelection(&spr, numberOfGames, &errorMessage), &errorMessage);
-  }
-  checkFailWithMessage(errorMessage);
-  Serial.print("Game path: ");
-  Serial.println(gamePath);
-  initGames(gamePath, &errorMessage);
-  checkFailWithMessage(errorMessage);
-}
-
 void setup() {
   pinMode(PWR_ON_PIN, OUTPUT);
   digitalWrite(PWR_ON_PIN, HIGH);
@@ -123,14 +104,12 @@ void setup() {
   checkFailWithMessage(errorMessage);
   initSystemConfig(&errorMessage);
   checkFailWithMessage(errorMessage);
+  
   Serial.print("PEPit Version '");
   Serial.print(VERSION);
   Serial.println("' initialized");
-  runProfileSelection(&errorMessage);
-  spr.fillSprite(TFT_BLACK);
-  spr.pushSpriteFast(0,0);
-  spr.fillSprite(TFT_BLACK);
-  checkFailWithMessage(errorMessage);
+
+  runProfileSelection();
   runGameSelection();
   displayPhysioRotateScreen();
 }
