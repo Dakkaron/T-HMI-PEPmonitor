@@ -21,6 +21,9 @@ void getJumpData(JumpData* jumpData);
 bool startFetchingNTPTime();
 void getNTPTime(String* ntpDateString, String* ntpTimeString, String* errorMessage);
 
+void downloadFile(String url, String filename, String* errorMessage);
+
+uint8_t startWifi();
 
 
 #endif /* __WIFI_HANDLER_H__ */

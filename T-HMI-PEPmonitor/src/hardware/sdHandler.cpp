@@ -35,6 +35,10 @@ void readSystemConfig(SystemConfig* systemConfig, String* errorMessage) {
   getIniSection(SYSTEM_CONFIG_INI_PATH, "[system]", resBuffer, 1024, errorMessage);
   systemConfig->wifiSsid = getIniValueFromSection(resBuffer, "wifiSSID", &ignoreErrors);
   systemConfig->wifiPassword = getIniValueFromSection(resBuffer, "wifiPassword", &ignoreErrors);
+  systemConfig->wifiSsid2 = getIniValueFromSection(resBuffer, "wifiSSID2", &ignoreErrors);
+  systemConfig->wifiPassword2 = getIniValueFromSection(resBuffer, "wifiPassword2", &ignoreErrors);
+  systemConfig->wifiSsid3 = getIniValueFromSection(resBuffer, "wifiSSID3", &ignoreErrors);
+  systemConfig->wifiPassword3 = getIniValueFromSection(resBuffer, "wifiPassword3", &ignoreErrors);
   systemConfig->trampolineIp = getIniValueFromSection(resBuffer, "trampolineIp", &ignoreErrors);
   systemConfig->touchScreenZThreshold = 2.5*(100-atoi(getIniValueFromSection(resBuffer, "touchScreenSensitivity", &ignoreErrors).c_str()));
   systemConfig->simulateTrampoline = stringIsTrue(getIniValueFromSection(resBuffer, "simulateTrampoline", &ignoreErrors), false);

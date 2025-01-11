@@ -48,6 +48,8 @@
 #define INHALATION_TASK_WARN_TIMEOUT 10000L
 #define INHALATION_TASK_END_TIMEOUT 15000L
 
+#define MAX_WIFI_NETWORKS 3
+
 #define GAME_SELECTION_POWEROFF_TIMEOUT 3L*60L*1000L // Power off device if it spends >3 minutes on game selection screen
 #define WIN_SCREEN_TIMEOUT 3L*60L*1000L
 

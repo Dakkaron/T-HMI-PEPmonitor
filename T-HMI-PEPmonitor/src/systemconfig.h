@@ -7,6 +7,10 @@ struct SystemConfig {
   String trampolineIp;
   String wifiSsid;
   String wifiPassword;
+  String wifiSsid2;
+  String wifiPassword2;
+  String wifiSsid3;
+  String wifiPassword3;
   uint8_t touchScreenZThreshold;
   bool simulateTrampoline;
   bool simulateBlows;

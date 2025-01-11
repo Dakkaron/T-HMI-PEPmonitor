@@ -10,32 +10,47 @@ uint8_t startWifi() {
   if (wifiConnected) {
     return CONNECTION_OK;
   }
-  Serial.println("Starting WIFI");
-  WiFi.mode(WIFI_STA);
-  ssid = systemConfig.wifiSsid;
-  password = systemConfig.wifiPassword;
-  trampolineIp = systemConfig.trampolineIp;
-  Serial.println(ssid);
-  Serial.println(password);
-  Serial.println(trampolineIp);
-  WiFi.begin(ssid, password);
-  Serial.print("Connecting to WIFI");
-  for (uint8_t i=0;i<WIFI_RETRY_COUNT;i++) {
-    if (WiFi.status() != WL_CONNECTED) {
-      Serial.print('.');
-      delay(1000);
+  for (uint32_t wifiNumber=0; wifiNumber<MAX_WIFI_NETWORKS; wifiNumber++) {
+    Serial.println("Starting WIFI");
+    WiFi.mode(WIFI_STA);
+    switch (wifiNumber) {
+      case 0:
+        ssid = systemConfig.wifiSsid;
+        password = systemConfig.wifiPassword;
+        break;
+      case 1:
+        ssid = systemConfig.wifiSsid2;
+        password = systemConfig.wifiPassword2;
+        break;
+      case 2:
+        ssid = systemConfig.wifiSsid3;
+        password = systemConfig.wifiPassword3;
+        break;
+    }
+    trampolineIp = systemConfig.trampolineIp;
+    Serial.println(ssid);
+    Serial.println(password);
+    Serial.println(trampolineIp);
+    WiFi.begin(ssid, password);
+    Serial.print("Connecting to WIFI");
+    for (uint8_t i=0;i<WIFI_RETRY_COUNT;i++) {
+      if (WiFi.status() != WL_CONNECTED) {
+        Serial.print('.');
+        delay(1000);
+      } else {
+        wifiConnected = true;
+        break;
+      }
+    }
+    if (wifiConnected) {
+      Serial.println("done");
+      return CONNECTION_OK;
     } else {
-      wifiConnected = true;
-      break;
+      Serial.println("Failed to connect to WIFI");
+      return CONNECTION_NOWIFI;
     }
   }
-  if (wifiConnected) {
-    Serial.println("done");
-    return CONNECTION_OK;
-  } else {
-    Serial.println("Failed to connect to WIFI");
-    return CONNECTION_NOWIFI;
-  }
+  return CONNECTION_NOWIFI;
 }
 
 uint8_t connectToTrampoline() {
@@ -159,4 +174,33 @@ void getNTPTime(String* ntpDateString, String* ntpTimeString, String* errorMessa
   }
   *ntpDateString = String(timeinfo.tm_year+1900) + "-" + String(timeinfo.tm_mon) + "-" + String(timeinfo.tm_mday);
   *ntpTimeString = leftPad(String(timeinfo.tm_hour), 2, "0") + ":" + leftPad(String(timeinfo.tm_min), 2, "0");
+}
+
+void downloadFile(String url, String filename, String* errorMessage) {
+  // Get file stream from internet
+  HTTPClient httpClient;
+  Serial.println("downloadFile()");
+  httpClient.begin(url);
+  int httpCode = httpClient.GET();
+  WiFiClient* stream = httpClient.getStreamPtr();
+
+  // Download data and write into SD card
+  size_t downloadedDataSize = 0;
+  const size_t FILE_SIZE = httpClient.getSize();
+  uint8_t* fileBuffer = new uint8_t[FILE_SIZE+1];
+  uint8_t* bufferPointer = fileBuffer;
+  Serial.println("Starting download");
+  while (downloadedDataSize < FILE_SIZE) {
+    size_t availableDataSize = stream->available();
+    stream->readBytes(fileBuffer, FILE_SIZE);
+    if (availableDataSize > 0) {
+      stream->readBytes(bufferPointer, availableDataSize);
+      downloadedDataSize += availableDataSize;
+      bufferPointer += availableDataSize;
+    }
+  }
+  Serial.println("Downloaded file");
+  File file = SD_MMC.open(filename, FILE_WRITE, true);
+  file.write(fileBuffer, FILE_SIZE);
+  delete[] (fileBuffer);
 }
