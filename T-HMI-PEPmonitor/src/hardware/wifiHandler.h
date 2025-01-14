@@ -2,11 +2,7 @@
 #define __WIFI_HANDLER_H__
 
 #include "Arduino.h"
-#include <WiFi.h>
 #include "constants.h"
-#include <HTTPClient.h>
-#include <ArduinoJson.h>
-#include "sdHandler.h"
 
 #define CONNECTION_NOWIFI 0
 #define CONNECTION_OK 1

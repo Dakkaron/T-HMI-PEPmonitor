@@ -1,4 +1,8 @@
 #include "wifiHandler.h"
+#include <WiFi.h>
+#include <ArduinoJson.h>
+#include <HTTPClient.h>
+#include "sdHandler.h"
 
 static HTTPClient http;
 static String trampolineIp = "";
