@@ -2,7 +2,7 @@
 #define __CONSTANTS_H__
 #include <Arduino.h>
 
-#define VERSION "0.2"
+#define VERSION "0.3"
 
 #define LAST_BLOW_SUCCEEDED 0B00000001
 #define LAST_BLOW_FAILED    0B00000010
@@ -38,6 +38,7 @@
 #define SENSOR_MODE_TRAMPOLINE 2
 
 #define PROGRESS_MENU_SELECTION_ID 32767
+#define SYSTEM_UPDATE_SELECTION_ID 32766
 
 #define PROFILE_TASK_TYPE_SHORTBLOWS 1
 #define PROFILE_TASK_TYPE_LONGBLOWS 2
@@ -49,6 +50,9 @@
 #define INHALATION_TASK_END_TIMEOUT 15000L
 
 #define MAX_WIFI_NETWORKS 3
+#define FILE_DOWNLOAD_CHUNK_SIZE 1024
+#define FILE_DOWNLOAD_TO_STRING_MAX_SIZE 1024
+#define FIRMWARE_RELEASE_PATH_URL "https://raw.githubusercontent.com/Dakkaron/T-HMI-PEPmonitor/refs/heads/main/path_to_latest_firmware"
 
 #define GAME_SELECTION_POWEROFF_TIMEOUT 3L*60L*1000L // Power off device if it spends >3 minutes on game selection screen
 #define WIN_SCREEN_TIMEOUT 3L*60L*1000L

@@ -11,6 +11,7 @@ extern TFT_eSprite spr;
 #define FLIPPED_H 0x01
 #define FLIPPED_V 0x02
 
+void initGfxHandler();
 void getBmpDimensions(String filename, int16_t* w, int16_t* h);
 void drawBmp(String filename, int16_t x, int16_t y, bool debugLog = true);
 void drawBmpSlice(String filename, int16_t x, int16_t y, int16_t maxH, bool debugLog = true);
@@ -37,5 +38,6 @@ void drawKeyboard(DISPLAY_T* display, uint16_t keyColor, uint16_t textColor);
 void checkKeyboard(DISPLAY_T* display, String* output, uint32_t maxCharacters, uint16_t keyColor, uint16_t textColor);
 void checkFailWithMessage(String message);
 void checkSoftFailWithMessage(String message);
+void displayFullscreenMessage(String message, uint8_t textSize = 2);
 
 #endif /*__GFXHANDLER_H__*/

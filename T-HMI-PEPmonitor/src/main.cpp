@@ -19,6 +19,7 @@
 #include "hardware/serialHandler.h"
 #include "hardware/powerHandler.h"
 #include "physioProtocolHandler.h"
+#include "updateHandler.h"
 
 void setBrightness(uint8_t value) {
   static uint8_t _brightness = 0;
@@ -68,18 +69,12 @@ void setup() {
 
   setBrightness(16);
 
-  spr.setColorDepth(8);
-  spr.createSprite(SCREEN_WIDTH, SCREEN_HEIGHT, 2);
-  for (uint32_t i=0;i<2;i++) {
-    spr.fillSprite(TFT_BLACK);
-    spr.setTextSize(2);
-    spr.setTextColor(TFT_WHITE);
-    spr.setCursor(1, 16);
-    spr.println("Nicht");
-    spr.println("blasen!");
-    spr.pushSpriteFast(0, 0);
-  }
-  spr.pushSprite(0, 0);
+  initGfxHandler();
+  tft.setTextSize(2);
+  tft.drawString("Nicht", 10, 10);
+  tft.drawString("blasen!", 10, 20);
+  initPressureSensor();
+
   initTouch();
 
   buttonPwr.attachClick(power_off);
@@ -88,6 +83,18 @@ void setup() {
 
   randomSeed(analogRead(0));
   
+  String errorMessage;
+  initSD(&errorMessage);
+  checkFailWithMessage(errorMessage);
+  initSystemConfig(&errorMessage);
+  checkFailWithMessage(errorMessage);
+
+  drawBmp("/gfx/splash.bmp", 0, 0);
+  uint8_t defaultTextDatum = tft.getTextDatum();
+  tft.setTextColor(TFT_BLACK);
+  tft.setTextDatum(TR_DATUM);
+  tft.drawString("Version "+String(VERSION), 320, 2);
+  tft.setTextDatum(defaultTextDatum);
   delay(1000);
   Serial.print("PEPit Version '");
   Serial.print(VERSION);
@@ -96,18 +103,15 @@ void setup() {
   delay(1000);
 
   Serial.println(F("done"));
-
-  initPressureSensor();
-  
-  String errorMessage;
-  initSD(&errorMessage);
-  checkFailWithMessage(errorMessage);
-  initSystemConfig(&errorMessage);
-  checkFailWithMessage(errorMessage);
   
   Serial.print("PEPit Version '");
   Serial.print(VERSION);
   Serial.println("' initialized");
+
+  String ignoreMessage;
+
+  tft.setTextSize(1);
+  tft.drawString("Warte auf WLAN-Verbindung...", 0, 230);
 
   runProfileSelection();
   runGameSelection();

@@ -154,8 +154,10 @@ uint16_t getNumberOfGames(String* errorMessage) {
         Serial.println("NOT A GAME!");
       }
     }
+    file.close();
     file = root.openNextFile();
   }
+  root.close();
   return gameCount;
 }
 
@@ -187,8 +189,10 @@ String getGamePath(uint16_t gameId, String* errorMessage) {
         gameCount++;
       }
     }
+    file.close();
     file = root.openNextFile();
   }
+  root.close();
   return "";
 }
 
@@ -240,6 +244,7 @@ void getIniSection(String iniPath, String section, char* resultBuffer, uint16_t 
     }
     i++;
   }
+  file.close();
   if (!inCorrectSection) {
     errorMessage->concat("Section ");
     errorMessage->concat(section);
@@ -323,6 +328,7 @@ void scanForWinScreens(String gamePath, String* errorMessage) {
     }
     file = root.openNextFile();
   }
+  file.close();
 }
 
 String getRandomWinScreenPath(String gamePath, String* errorMessage) {
@@ -347,6 +353,7 @@ String getRandomWinScreenPath(String gamePath, String* errorMessage) {
     Serial.println(*errorMessage);
     return "";
   }
+  root.close();
 
   uint32_t i = 0;
   File file = root.openNextFile();
@@ -359,6 +366,7 @@ String getRandomWinScreenPath(String gamePath, String* errorMessage) {
     }
     file = root.openNextFile();
   }
+  root.close();
   return "";
 }
 
@@ -377,6 +385,7 @@ String readFileToString(const char *path) {
     char charRead = file.read();
     s += charRead;
   }
+  file.close();
   return s;
 }
 
@@ -401,19 +410,20 @@ String readFileLineToString(const char *path, uint32_t lineNr) {
       break;
     }
   }
+  file.close();
   return s;
 }
 
 void writeStringToFile(const char *path, String val) {
-  File file = SD_MMC.open(path);
+  File file = SD_MMC.open(path, FILE_WRITE, true);
+  Serial.println("Writing to file "+String(path) + ": " + val);
   if (!file) {
     Serial.print("Failed to open file");
     Serial.print(path);
     Serial.println(" for writing!");
   }
-  for (uint32_t i; i<val.length(); i++) {
-    file.write(val[i]);
-  }
+  file.write((uint8_t*)val.c_str(), val.length());
+  file.close();
 }
 
 void writeIntToFile(const char *path, int32_t val) {

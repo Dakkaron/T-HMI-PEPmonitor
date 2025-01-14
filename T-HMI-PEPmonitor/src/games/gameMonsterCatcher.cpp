@@ -384,8 +384,7 @@ void drawLongBlowGame_monsterCatcher(DISPLAY_T* display, BlowData* blowData, Str
   display->print("/");
   display->print(monsterCount);
   display->setTextSize(1);
-  display->setCursor(230, 220);
-  display->print("gefangen");
+  display->drawString("gefangen", 240, 220);
 }
 
 

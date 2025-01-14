@@ -8,10 +8,30 @@
 #include "hardware/sdHandler.h"
 #include "hardware/serialHandler.h"
 #include "hardware/powerHandler.h"
+#include "hardware/MyFont.h"
+#include "updateHandler.h"
+
+#define GFXFF 1
+#define MYFONT5x7 &Font5x7Fixed
 
 TFT_eSPI tft = TFT_eSPI();
 TFT_eSprite spr = TFT_eSprite(&tft);
 TFT_eSprite batteryIcon[] = {TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft)};
+
+void initGfxHandler() {
+  tft.setTextColor(TFT_WHITE);
+  tft.fillScreen(TFT_BLACK);
+  spr.setColorDepth(8);
+  spr.createSprite(SCREEN_WIDTH, SCREEN_HEIGHT, 2);
+  spr.frameBuffer(0);
+  spr.fillSprite(TFT_BLACK);
+  spr.frameBuffer(1);
+  spr.fillSprite(TFT_BLACK);
+  spr.setTextColor(TFT_WHITE);
+
+  tft.setFreeFont(MYFONT5x7);
+  spr.setFreeFont(MYFONT5x7);
+}
 
 static uint16_t read16(fs::File &f) {
   uint16_t result;
@@ -476,7 +496,7 @@ void printShaded(DISPLAY_T* display, String text, uint8_t shadeStrength, uint16_
   display->print(text);
 }
 
-static void drawProfileSelectionPage(DISPLAY_T* display, uint16_t startNr, uint16_t nr, bool drawArrows, String* errorMessage) {
+static void drawProfileSelectionPage(DISPLAY_T* display, uint16_t startNr, uint16_t nr, bool drawArrows, uint8_t systemUpdateAvailableStatus, String* errorMessage) {
   int32_t columns = _min(4, nr);
   int32_t rows = nr>4 ? 2 : 1;
   int32_t cWidth = (290 - 10*columns) / columns;
@@ -500,6 +520,16 @@ static void drawProfileSelectionPage(DISPLAY_T* display, uint16_t startNr, uint1
     }
   }
   drawBmp("/gfx/progressionmenu.bmp", SCREEN_WIDTH - 32, 0, false);
+  if (systemUpdateAvailableStatus == FIRMWARE_UPDATE_AVAILABLE) {
+    display->setTextDatum(BR_DATUM);
+    display->setTextSize(1);
+    display->drawString("System-Update verfügbar", SCREEN_WIDTH - 35, SCREEN_HEIGHT - 1, GFXFF);
+    drawBmp("/gfx/systemupdate.bmp", SCREEN_WIDTH - 32, SCREEN_HEIGHT - 32, false);
+  } else if (systemUpdateAvailableStatus == FIRMWARE_UPDATE_CHECK_RUNNING) {
+    display->setTextDatum(BR_DATUM);
+    display->setTextSize(1);
+    display->drawString("Suche System-Update...", SCREEN_WIDTH - 35, SCREEN_HEIGHT - 1, GFXFF);
+  }
 }
 
 static void drawGameSelectionPage(DISPLAY_T* display, uint16_t startNr, uint16_t nr, bool drawArrows, String* errorMessage) {
@@ -520,13 +550,17 @@ static void drawGameSelectionPage(DISPLAY_T* display, uint16_t startNr, uint16_t
   }
 }
 
-static int16_t checkSelectionPageSelection(uint16_t startNr, uint16_t nr, bool drawArrows, bool progressMenuIcon) {
+static int16_t checkSelectionPageSelection(uint16_t startNr, uint16_t nr, bool drawArrows, bool progressMenuIcon, bool systemupdateAvailable) {
   int32_t columns = _min(4, nr);
   int32_t rows = nr>4 ? 2 : 1;
   int32_t cWidth = (290 - 10*columns) / columns;
   int32_t cHeight = rows==1 ? 220 : 105; 
   if (progressMenuIcon && isTouchInZone(SCREEN_WIDTH - 32, 0, 32, 32)) {
     return PROGRESS_MENU_SELECTION_ID;
+  }
+  if (systemupdateAvailable==FIRMWARE_UPDATE_AVAILABLE && isTouchInZone(SCREEN_WIDTH - 32, SCREEN_HEIGHT - 32, 32, 32)) {
+    Serial.println("System update selected");
+    return SYSTEM_UPDATE_SELECTION_ID;
   }
   for (uint32_t c = 0; c<columns; c++) {
     for (uint32_t r = 0; r<rows; r++) {
@@ -555,7 +589,7 @@ int16_t displayGameSelection(DISPLAY_T* display, uint16_t nr, String* errorMessa
     lastMs = ms;
     ms = millis();
     handleSerial();
-    int16_t selection = checkSelectionPageSelection(startNr, _min(nr, 8), nr>8, false);
+    int16_t selection = checkSelectionPageSelection(startNr, _min(nr, 8), nr>8, false, false);
     if (selection != -1 && selection<nr) {
       return selection;
     }
@@ -573,9 +607,10 @@ int16_t displayProfileSelection(DISPLAY_T* display, uint16_t nr, String* errorMe
   uint32_t ms = millis();
   uint32_t lastMs = millis();
 
+  uint8_t systemupdateAvailableStatus = getSystemUpdateAvailableStatus();
   for (uint32_t i = 0;i<2;i++) {
     display->fillSprite(TFT_BLACK);
-    drawProfileSelectionPage(display, startNr, _min(nr, 8), nr>8, errorMessage);
+    drawProfileSelectionPage(display, startNr, _min(nr, 8), nr>8, systemupdateAvailableStatus, errorMessage);
     display->pushSpriteFast(0, 0);
   }
 
@@ -585,8 +620,38 @@ int16_t displayProfileSelection(DISPLAY_T* display, uint16_t nr, String* errorMe
     lastMs = ms;
     ms = millis();
     handleSerial();
-    int16_t selection = checkSelectionPageSelection(startNr, _min(nr, 8), nr>8, true);
-    if (selection != -1 && (selection<nr || selection == PROGRESS_MENU_SELECTION_ID)) {
+    if (systemupdateAvailableStatus == FIRMWARE_UPDATE_CHECK_RUNNING) {
+      String throbber = "";
+      uint32_t throbNr = (millis()/300L)%4;
+      switch (throbNr) {
+        case 0:
+          throbber = "|";break;
+        case 1:
+          throbber = "/";break;
+        case 2:
+          throbber = "-";break;
+        case 3:
+          throbber = "\\";break;
+      }
+      display->fillRect(SCREEN_WIDTH - 15, SCREEN_HEIGHT - 19, 15, 19, TFT_BLACK);
+      display->setTextSize(2);
+      display->setTextDatum(BR_DATUM);
+      display->drawString(throbber, SCREEN_WIDTH - 2, SCREEN_HEIGHT - 2);
+
+      uint8_t newSystemupdateAvailableStatus = getSystemUpdateAvailableStatus();
+      if (newSystemupdateAvailableStatus != systemupdateAvailableStatus) {
+        systemupdateAvailableStatus = newSystemupdateAvailableStatus;
+        for (uint32_t i = 0;i<2;i++) {
+          display->fillSprite(TFT_BLACK);
+          drawProfileSelectionPage(display, startNr, _min(nr, 8), nr>8, systemupdateAvailableStatus, errorMessage);
+          display->fillRect(SCREEN_WIDTH - 15, SCREEN_HEIGHT - 19, 15, 19, TFT_BLACK);
+          display->pushSpriteFast(0, 0);
+        }
+      }
+    }
+
+    int16_t selection = checkSelectionPageSelection(startNr, _min(nr, 8), nr>8, true, systemupdateAvailableStatus);
+    if (selection != -1 && (selection<nr || selection == PROGRESS_MENU_SELECTION_ID || selection == SYSTEM_UPDATE_SELECTION_ID)) {
       return selection;
     }
     display->fillRect(0,0,70,20,TFT_BLACK);
@@ -645,11 +710,10 @@ void drawSystemStats(uint32_t ms, uint32_t lastMs) {
   if (lowBatteryCount>100) {
     power_off();
   }
+  spr.setTextDatum(TL_DATUM);
   spr.setTextSize(1);
-  spr.setCursor(34,1);
-  spr.print(String(1000L/_max(1,ms-lastMs))); //FPS counter
-  spr.setCursor(34,11);
-  spr.print(String(batteryVoltage/1000) + "." + leftPad(String(batteryVoltage%1000), 3, "0") + "V"); // Battery voltage
+  spr.drawString(String(1000L/_max(1,ms-lastMs)), 34, 1); //FPS counter
+  spr.drawString(String(batteryVoltage/1000) + "." + leftPad(String(batteryVoltage%1000), 3, "0") + "V", 34, 11); // Battery voltage
 }
 
 void drawImageButton(DISPLAY_T* display, String path, int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color, uint16_t textColor) {
@@ -777,4 +841,12 @@ void checkSoftFailWithMessage(String message) {
     spr.pushSprite(0, 0);
     delay(5000);
   }
+}
+
+void displayFullscreenMessage(String message, uint8_t textSize) {
+  spr.fillSprite(TFT_BLACK);
+  spr.setCursor(1, 16);
+  spr.setTextSize(textSize);
+  spr.println(message);
+  spr.pushSpriteFast(0, 0);
 }

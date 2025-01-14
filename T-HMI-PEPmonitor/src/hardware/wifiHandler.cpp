@@ -1,14 +1,18 @@
 #include "wifiHandler.h"
 
-HTTPClient http;
-String ssid = "";
-String password = "";
-String trampolineIp = "";
+static HTTPClient http;
+static String trampolineIp = "";
+static uint8_t wifiStatus = CONNECTION_NOWIFI;
+
+uint8_t getWifiStatus() {
+  return wifiStatus;
+}
 
 uint8_t startWifi() {
-  static bool wifiConnected = false;
-  if (wifiConnected) {
-    return CONNECTION_OK;
+  String ssid = "";
+  String password = "";
+  if (wifiStatus == CONNECTION_OK) {
+    return wifiStatus;
   }
   for (uint32_t wifiNumber=0; wifiNumber<MAX_WIFI_NETWORKS; wifiNumber++) {
     Serial.println("Starting WIFI");
@@ -38,19 +42,18 @@ uint8_t startWifi() {
         Serial.print('.');
         delay(1000);
       } else {
-        wifiConnected = true;
+        wifiStatus = CONNECTION_OK;
         break;
       }
     }
-    if (wifiConnected) {
+    if (wifiStatus == CONNECTION_OK) {
       Serial.println("done");
-      return CONNECTION_OK;
+      return wifiStatus;
     } else {
-      Serial.println("Failed to connect to WIFI");
-      return CONNECTION_NOWIFI;
+      Serial.println("Failed to connect to WIFI "+ssid);
     }
   }
-  return CONNECTION_NOWIFI;
+  return wifiStatus;
 }
 
 uint8_t connectToTrampoline() {
@@ -147,13 +150,13 @@ void getJumpData(JumpData* jumpData) {
 
 bool startFetchingNTPTime() {
   uint32_t connectionStatus = startWifi();
-  if (connectionStatus == CONNECTION_OK) {
-    Serial.println("Starting NTP");
-    configTime(systemConfig.timezoneOffset, 0, "pool.ntp.org", "time.nist.gov");
-    return true;
+  if (connectionStatus == CONNECTION_NOWIFI) {
+    Serial.println("Failed to start NTP because of missing WIFI connection");
+    return false;
   }
-  Serial.println("Failed to start NTP because of missing WIFI connection");
-  return false;
+  Serial.println("Starting NTP");
+  configTime(systemConfig.timezoneOffset, 0, "pool.ntp.org", "time.nist.gov");
+  return true;
 }
 
 static String leftPad(String s, uint16_t len, String c) {
@@ -176,31 +179,87 @@ void getNTPTime(String* ntpDateString, String* ntpTimeString, String* errorMessa
   *ntpTimeString = leftPad(String(timeinfo.tm_hour), 2, "0") + ":" + leftPad(String(timeinfo.tm_min), 2, "0");
 }
 
-void downloadFile(String url, String filename, String* errorMessage) {
+void downloadFile(String url, String filename, String* errorMessage, THandlerFunction_Progress progressCallback) {
   // Get file stream from internet
+  uint32_t connectionStatus = startWifi();
+  if (connectionStatus == CONNECTION_NOWIFI) {
+    errorMessage->concat("Failed to start NTP because of missing WIFI connection");
+    return;
+  }
+
   HTTPClient httpClient;
-  Serial.println("downloadFile()");
+  httpClient.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
+  Serial.println("downloadFile("+url+", "+filename+")");
   httpClient.begin(url);
   int httpCode = httpClient.GET();
+  if (httpCode != 200) {
+    errorMessage->concat("HTTP error: "+String(httpCode));
+    return;
+  }
   WiFiClient* stream = httpClient.getStreamPtr();
 
   // Download data and write into SD card
   size_t downloadedDataSize = 0;
   const size_t FILE_SIZE = httpClient.getSize();
-  uint8_t* fileBuffer = new uint8_t[FILE_SIZE+1];
-  uint8_t* bufferPointer = fileBuffer;
+  uint8_t* fileBuffer = new uint8_t[FILE_DOWNLOAD_CHUNK_SIZE+1];
+  File file = SD_MMC.open(filename, FILE_WRITE, true);
   Serial.println("Starting download");
   while (downloadedDataSize < FILE_SIZE) {
     size_t availableDataSize = stream->available();
-    stream->readBytes(fileBuffer, FILE_SIZE);
     if (availableDataSize > 0) {
-      stream->readBytes(bufferPointer, availableDataSize);
-      downloadedDataSize += availableDataSize;
-      bufferPointer += availableDataSize;
+      uint32_t bytesToRead = _min(availableDataSize, FILE_DOWNLOAD_CHUNK_SIZE);
+      Serial.println("Reading "+String(bytesToRead)+" bytes");
+      stream->readBytes(fileBuffer, bytesToRead);
+      file.write(fileBuffer, bytesToRead);
+      downloadedDataSize += bytesToRead;
+      Serial.println(String(downloadedDataSize)+" / "+String(FILE_SIZE));
+      if (progressCallback) {
+        progressCallback(downloadedDataSize, FILE_SIZE);
+      }
     }
   }
   Serial.println("Downloaded file");
-  File file = SD_MMC.open(filename, FILE_WRITE, true);
-  file.write(fileBuffer, FILE_SIZE);
   delete[] (fileBuffer);
+}
+
+String downloadFileToString(String url, String* errorMessage) {
+  uint32_t connectionStatus = startWifi();
+  if (connectionStatus == CONNECTION_NOWIFI) {
+    errorMessage->concat("Failed to start NTP because of missing WIFI connection");
+    return "";
+  }
+
+  // Get file stream from internet
+  HTTPClient httpClient;
+  Serial.println("downloadFileToString()");
+  httpClient.begin(url);
+  int httpCode = httpClient.GET();
+  if (httpCode != 200) {
+    errorMessage->concat("HTTP error: "+String(httpCode));
+    return "";
+  }
+  WiFiClient* stream = httpClient.getStreamPtr();
+
+  // Download data and write into SD card
+  size_t downloadedDataSize = 0;
+  const size_t FILE_SIZE = httpClient.getSize();
+  uint8_t* fileBuffer = new uint8_t[FILE_DOWNLOAD_TO_STRING_MAX_SIZE+1];
+  String output = "";
+  Serial.println("Starting download to string");
+  while (downloadedDataSize < _min(FILE_SIZE, FILE_DOWNLOAD_TO_STRING_MAX_SIZE)) {
+    size_t availableDataSize = stream->available();
+    if (availableDataSize > 0) {
+      uint32_t bytesToRead = _min(availableDataSize, FILE_DOWNLOAD_CHUNK_SIZE);
+      bytesToRead = _min(bytesToRead, FILE_DOWNLOAD_TO_STRING_MAX_SIZE-downloadedDataSize);
+      Serial.println("Reading "+String(bytesToRead)+" bytes");
+      stream->readBytes(fileBuffer, bytesToRead);
+      fileBuffer[bytesToRead] = 0;
+      output.concat((char*)fileBuffer);
+      downloadedDataSize += bytesToRead;
+      Serial.println(String(downloadedDataSize)+" / "+String(FILE_SIZE));
+    }
+  }
+  Serial.println("Downloaded file to string");
+  delete[] (fileBuffer);
+  return output;
 }

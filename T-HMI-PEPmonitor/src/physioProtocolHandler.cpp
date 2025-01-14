@@ -7,6 +7,7 @@
 #include "hardware/wifiHandler.h"
 #include "games/games.h"
 #include "constants.h"
+#include "updateHandler.h"
 
 ProfileData profileData;
 uint32_t currentTask;
@@ -60,6 +61,12 @@ void runProfileSelection() {
       
       profileSuccessfullyLoaded = false;
       continue;
+    } else if (selectedProfileId == SYSTEM_UPDATE_SELECTION_ID) {
+      String systemUpdatePath = getSystemUpdatePath();
+      downloadAndRunSystemUpdate(systemUpdatePath, &errorMessage);
+      checkFailWithMessage(errorMessage);
+      profileSuccessfullyLoaded = false; // Should never happen
+      continue;
     }
     checkFailWithMessage(errorMessage);
     readProfileData(selectedProfileId, &profileData, &errorMessage);
@@ -81,8 +88,7 @@ void runProfileSelection() {
           spr.fillSprite(TFT_BLACK);
           spr.setTextSize(2);
           spr.setTextColor(TFT_WHITE);
-          spr.setCursor(1, 16);
-          spr.print("Keine Verbindung zum Trampolin!");
+          spr.drawString("Keine Verbindung zum Trampolin!", 1, 16);
           spr.pushSpriteFast(0,0);
           delay(5000);
           profileSuccessfullyLoaded = false;
@@ -176,11 +182,8 @@ static void drawTrampolineDisplay() {
   checkFailWithMessage(errorMessage);
   if (jumpData.msLeft > 0) {
     drawProgressBar(&spr, (100L*(jumpData.totalTime-jumpData.msLeft))/jumpData.totalTime, 0, PRESSURE_BAR_X, PRESSURE_BAR_Y, PRESSURE_BAR_WIDTH, PRESSURE_BAR_HEIGHT);
-    spr.setCursor(PRESSURE_BAR_X + 20, PRESSURE_BAR_Y - 14);
     spr.setTextSize(2);
-    spr.print(jumpData.jumpCount);
-    spr.print("/");
-    spr.print(jumpData.highscore);
+    spr.drawString(String(jumpData.jumpCount) + "/" + String(jumpData.highscore), PRESSURE_BAR_X + 20, PRESSURE_BAR_Y - 14);
     spr.setCursor(100, 5);
     spr.setTextSize(3);
     int32_t secondsLeft = _max(0, jumpData.msLeft/1000);
@@ -266,12 +269,10 @@ void displayPhysioRotateScreen() {
   spr.pushSpriteFast(0, 0);
   spr.fillSprite(TFT_BLACK);
   spr.setTextSize(4);
-  spr.setCursor(5,5);
   drawBmp(profileData.taskChangeImagePath[currentTask], 0, 0);
-  spr.print(profileData.taskChangeMessage[currentTask]);
+  spr.drawString(profileData.taskChangeMessage[currentTask], 5, 5);
   spr.fillRect(230, 170, 80, 60, 0x18db);
-  spr.setCursor(245, 185);
-  spr.print("OK");
+  spr.drawString("OK", 245, 185);
   spr.pushSpriteFast(0, 0);
 
   while (!isTouchInZone(230, 170, 80, 60)) {}
