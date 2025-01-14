@@ -24,13 +24,18 @@ except FileNotFoundError:
 
 atexit.register(readline.write_history_file, histfile)
 
-for i in range(10):
-    try:
-        ser = serial.Serial(f"{PORT_NAME}{i}", 115200, timeout=10)
-        print(f"Port {PORT_NAME}{i} connected")
-        break
-    except serial.serialutil.SerialException:
-        print(f"Port {PORT_NAME}{i} not found")
+def connectSerial():
+    ser = None
+    for i in range(10):
+        try:
+            ser = serial.Serial(f"{PORT_NAME}{i}", 115200, timeout=10)
+            print(f"Port {PORT_NAME}{i} connected")
+            break
+        except serial.serialutil.SerialException:
+            print(f"Port {PORT_NAME}{i} not found")
+    return ser
+
+ser = connectSerial()
 
 def reset():
     global ser
@@ -39,7 +44,7 @@ def reset():
     esp32 = esptool.get_default_connected_device(["/dev/ttyACM0", "/dev/ttyACM1", "/dev/ttyACM2"], None, 1, BAUD_RATE)
     esp32.hard_reset()
     time.sleep(3)
-    ser = serial.Serial(PORT_NAME, 115200, timeout=20)
+    ser = connectSerial()
 
 def writeFile(path, data):
     if isinstance(path,str):
@@ -230,7 +235,8 @@ def dlr(src, target):
         dlr(os.path.join(src, dirPath), os.path.join(target, dirPath))
     print(f"Took {time.time()-start}s")
 
-if __name__ == "__main__":
+
+def main():
     while True:
         inp = input("$ ").strip()
         cmd = inp.split(" ")[0]
@@ -268,6 +274,9 @@ if __name__ == "__main__":
             exit()
         elif inp == "reset":
             reset()
-            exit()
         else:
             print(f"Unknown command: {inp}")
+
+
+if __name__ == "__main__":
+    main()
