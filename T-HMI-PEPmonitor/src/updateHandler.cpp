@@ -119,11 +119,18 @@ static void unpackTARGZAppUpdate(String* errorMessage) {
     }
   }); // targzNullProgressCallback or defaultProgressCallback
   TARGZUnpacker->setLoggerCallback( BaseUnpacker::targzPrintLoggerCallback  );    // gz log verbosity
-  TARGZUnpacker->setTarProgressCallback([](const char* name, size_t size, size_t total_unpacked) {
+  TARGZUnpacker->setTarProgressCallback([](unsigned char percent) {
+    uint32_t ms = millis();
+    if (ms>nextUpdate) {
+      displayFullscreenMessage("App-Update entpacken\n\n    "+currentFileName+"\n    "+String(percent)+"%");
+      Serial.printf("Progress: %d%%\r", percent / 100);
+      nextUpdate = ms + 200;
+    }
+  });; // prints the untarring progress for each individual file
+  TARGZUnpacker->setTarStatusProgressCallback([](const char* name, size_t size, size_t total_unpacked) {
     Serial.printf("[TAR] %-64s %8d bytes - %8d Total bytes\n", name, size, total_unpacked );
     currentFileName = name;
-  });; // prints the untarring progress for each individual file
-  TARGZUnpacker->setTarStatusProgressCallback( BaseUnpacker::defaultTarStatusProgressCallback ); // print the filenames as they're expanded
+  }); // print the filenames as they're expanded
   TARGZUnpacker->setTarMessageCallback( BaseUnpacker::targzPrintLoggerCallback ); // tar log verbosity
   TARGZUnpacker->setTarExcludeFilter(sdUpdateTarExcludeFilter);
 
