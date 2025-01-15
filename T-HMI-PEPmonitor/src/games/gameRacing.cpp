@@ -111,13 +111,13 @@ static void drawRace_desert(DISPLAY_T* display, float x, int32_t y, float w, int
   float railTopHeight = 0.15*w;
   float railThickness = 0.08*w;
   float lampHeight = 0.8*w;
-  int32_t dxTotal = constrain((lastX-lastW/5) - (x-w/5), -5, 5);
+  int32_t dxTotal = constrain((lastX-lastW/5) - (x-w/5), 0, 5);
   display->drawFastHLine(0, y, x-w*0.1, (roadYOffset/6) % 2 ? 0x94a0 : 0xce80);
   display->drawFastHLine(_max(0,x+w*1.1), y, 320, (roadYOffset/6) % 2 ? 0x94a0 : 0xce80);
   for (int8_t dx = 0; dx <= dxTotal; dx++) {
     display->drawFastVLine(x-w*0.2 + dx, y-railTopHeight, (roadYOffset % 12) == 6 ? railTopHeight : railThickness, (roadYOffset/6) % 2 ? 0xbdf7 : 0xce59);
   }
-  int32_t dxTotalR = constrain((lastX+lastW+lastW/5) - (x+w+w/5), -5, 5);
+  int32_t dxTotalR = constrain((lastX+lastW+lastW/5) - (x+w+w/5), -5, 0);
   for (int8_t dx = dxTotalR; dx <= 0; dx++) {
     display->drawFastVLine(x+w*1.2 + dx, y-railTopHeight, (roadYOffset % 12) == 6 ? railTopHeight : railThickness, (roadYOffset/6) % 2 ? 0xbdf7 : 0xce59);
   }
