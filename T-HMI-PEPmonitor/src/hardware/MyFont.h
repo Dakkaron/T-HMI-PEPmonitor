@@ -268,4 +268,4 @@ const GFXglyph Font5x7FixedGlyphs[] PROGMEM = {
 
 const GFXfont Font5x7Fixed PROGMEM = {
   (uint8_t  *)Font5x7FixedBitmaps, 
-  (GFXglyph *)Font5x7FixedGlyphs, 0x20, 0xFC,  7};
+  (GFXglyph *)Font5x7FixedGlyphs, 0x20, 0xFC,  8};
