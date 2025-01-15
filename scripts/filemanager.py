@@ -201,6 +201,8 @@ def rm(path):
 
 def rmdirr(path):
     lsres = ls(path)
+    if isinstance(path, str):
+        path = path.encode("utf-8")
     for file in lsres["files"]:
         rm(os.path.join(path, file[0]))
     for dir in lsres["dirs"]:
@@ -249,6 +251,8 @@ def main():
             mkdir(param)
         elif cmd == "rmdir":
             rmdir(param)
+        elif cmd == "rmdirr":
+            rmdirr(param)
         elif cmd == "rm":
             rm(param)
         elif cmd == "cat":
