@@ -62,8 +62,7 @@ void runProfileSelection() {
       profileSuccessfullyLoaded = false;
       continue;
     } else if (selectedProfileId == SYSTEM_UPDATE_SELECTION_ID) {
-      String systemUpdatePath = getSystemUpdatePath();
-      downloadAndRunSystemUpdate(systemUpdatePath, &errorMessage);
+      downloadAndRunSystemUpdate(&errorMessage);
       checkFailWithMessage(errorMessage);
       profileSuccessfullyLoaded = false; // Should never happen
       continue;
@@ -270,6 +269,7 @@ void displayPhysioRotateScreen() {
   spr.fillSprite(TFT_BLACK);
   spr.setTextSize(4);
   drawBmp(profileData.taskChangeImagePath[currentTask], 0, 0);
+  spr.setTextDatum(TL_DATUM);
   spr.drawString(profileData.taskChangeMessage[currentTask], 5, 5);
   spr.fillRect(230, 170, 80, 60, 0x18db);
   spr.drawString("OK", 245, 185);

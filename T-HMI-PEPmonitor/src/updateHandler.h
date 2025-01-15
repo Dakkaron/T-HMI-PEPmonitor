@@ -7,8 +7,7 @@
 #define FIRMWARE_UPDATE_AVAILABLE 1
 #define FIRMWARE_UPDATE_NOT_AVAILABLE 2
 
-String getSystemUpdatePath();
-void downloadAndRunSystemUpdate(String url, String* errorMessage);
+void downloadAndRunSystemUpdate(String* errorMessage);
 uint8_t getSystemUpdateAvailableStatus();
 
 #endif /* __UPDATE_HANDLER_H__ */

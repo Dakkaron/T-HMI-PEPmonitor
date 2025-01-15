@@ -50,9 +50,12 @@
 #define INHALATION_TASK_END_TIMEOUT 15000L
 
 #define MAX_WIFI_NETWORKS 3
-#define FILE_DOWNLOAD_CHUNK_SIZE 1024
+#define FILE_DOWNLOAD_CHUNK_SIZE 1024*10
 #define FILE_DOWNLOAD_TO_STRING_MAX_SIZE 1024
-#define FIRMWARE_RELEASE_PATH_URL "https://raw.githubusercontent.com/Dakkaron/T-HMI-PEPmonitor/refs/heads/main/path_to_latest_firmware"
+#define FIRMWARE_RELEASE_PATH_URL "https://raw.githubusercontent.com/Dakkaron/T-HMI-PEPmonitor/refs/heads/main/path_to_latest_release"
+#define LAST_RELEASE_URL_FILE_PATH "/lastReleaseUrl.txt"
+#define FIRMWARE_FILE_NAME "firmware.bin"
+#define SDCARD_CONTENT_FILE_NAME "SDCardContent.tar"
 
 #define GAME_SELECTION_POWEROFF_TIMEOUT 3L*60L*1000L // Power off device if it spends >3 minutes on game selection screen
 #define WIN_SCREEN_TIMEOUT 3L*60L*1000L
