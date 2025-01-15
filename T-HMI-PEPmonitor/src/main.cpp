@@ -72,7 +72,7 @@ void setup() {
   initGfxHandler();
   tft.setTextSize(2);
   tft.drawString("Nicht", 10, 10);
-  tft.drawString("blasen!", 10, 20);
+  tft.drawString("blasen!", 10, 25);
   initPressureSensor();
 
   initTouch();

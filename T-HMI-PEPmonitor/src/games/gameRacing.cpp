@@ -111,15 +111,14 @@ static void drawRace_desert(DISPLAY_T* display, float x, int32_t y, float w, int
   float railTopHeight = 0.15*w;
   float railThickness = 0.08*w;
   float lampHeight = 0.8*w;
-  int32_t dxTotal = _max(-5, _min(5, (lastX-lastW/5) - (x-w/5)));
-
+  int32_t dxTotal = constrain((lastX-lastW/5) - (x-w/5), -5, 5);
   display->drawFastHLine(0, y, x-w*0.1, (roadYOffset/6) % 2 ? 0x94a0 : 0xce80);
   display->drawFastHLine(_max(0,x+w*1.1), y, 320, (roadYOffset/6) % 2 ? 0x94a0 : 0xce80);
-  for (int32_t dx = _min(dxTotal, 0); dx < _max(dxTotal + 1, 1); dx++) {
+  for (int8_t dx = 0; dx <= dxTotal; dx++) {
     display->drawFastVLine(x-w*0.2 + dx, y-railTopHeight, (roadYOffset % 12) == 6 ? railTopHeight : railThickness, (roadYOffset/6) % 2 ? 0xbdf7 : 0xce59);
   }
-  int32_t dxTotalR = _max(-5, _min(5, (lastX+lastW+lastW/5) - (x+w+w/5)));
-  for (int32_t dx = _min(dxTotalR, 0); dx < _max(dxTotalR + 1, 1); dx++) {
+  int32_t dxTotalR = constrain((lastX+lastW+lastW/5) - (x+w+w/5), -5, 5);
+  for (int8_t dx = dxTotalR; dx <= 0; dx++) {
     display->drawFastVLine(x+w*1.2 + dx, y-railTopHeight, (roadYOffset % 12) == 6 ? railTopHeight : railThickness, (roadYOffset/6) % 2 ? 0xbdf7 : 0xce59);
   }
 
@@ -158,15 +157,15 @@ void drawRace_tunnel(DISPLAY_T* display, float x, int32_t y, float w, int32_t ro
   }
 
   // Draw wall
-  int32_t dxTotal = _max(-5, _min(5, (lastX-lastW/5) - (x-w/5)));
+  int32_t dxTotal = constrain((lastX-lastW/5) - (x-w/5), -5, 5);
   if (dxTotal>=0) { // Only draw left wall if visible
-    for (int32_t dx = _min(dxTotal, 0); dx < _max(dxTotal + 1, 1); dx++) {
+    for (int32_t dx = 0; dx <= dxTotal; dx++) {
       display->drawFastVLine(x-w*0.2 + dx, y-wallHeight, wallHeight, (roadYOffset/6) % 2 ? 0xbdf7 : 0xce59);
     }
   }
-  dxTotal = _max(-5, _min(5, (lastX+lastW+lastW/5) - (x+w+w/5)));
+  dxTotal = constrain((lastX+lastW+lastW/5) - (x+w+w/5), -5, 5);
   if (dxTotal<=0) { // Only draw right wall if visible
-    for (int32_t dx = _min(dxTotal, 0); dx < _max(dxTotal + 1, 1); dx++) {
+    for (int32_t dx = dxTotal; dx <= 0; dx++) {
       display->drawFastVLine(x+w*1.2 + dx, y-wallHeight, wallHeight, (roadYOffset/6) % 2 ? 0xbdf7 : 0xce59);
     }
 
@@ -336,6 +335,9 @@ bool savedBlows=false;
 unsigned long lastCheckedBlowEndMs = 0;
 void drawLongBlowGame_racing(DISPLAY_T* display, BlowData* blowData, String* errorMessage) {
   int32_t animTime = ((int32_t)blowData->ms) - ((int32_t)blowData->blowEndMs);
+  if (blowData->ms%10000L<35) { // TODO remove debug code
+    currentTurnType = random(1,5);
+  }
   if (lastCheckedBlowCount==-1 || (blowData->blowCount>lastCheckedBlowCount && animTime>2000)) {
     currentTurnType = random(1,5);
     enemySpriteId = random(0,4);
