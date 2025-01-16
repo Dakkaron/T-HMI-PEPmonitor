@@ -29,7 +29,7 @@ void readPressure(BlowData* blowData) {
     uint32_t blowDuration = blowData->ms - blowData->blowStartMs;
     uint8_t isBlowing = (blowDuration) < (blowData->targetDurationMs+100) ||
                         (blowDuration) > (blowData->targetDurationMs+100+SIMULATE_BLOWS_PAUSE_DURATION);
-    blowData->pressure = isBlowing ? blowData->targetPressure : 1; 
+    blowData->pressure = isBlowing ? 98 : 1; 
   } else {
     if (hx711.isBusy()) {
       return;
