@@ -50,19 +50,19 @@ static uint32_t read32(fs::File &f) {
   return result;
 }
 
-void loadBmp(DISPLAY_T* display, String filename) {
-  loadBmp(display, filename, 0);
+bool loadBmp(DISPLAY_T* display, String filename) {
+  return loadBmp(display, filename, 0);
 }
 
-void loadBmp(DISPLAY_T* display, String filename, uint8_t flipped) {
-  loadBmpAnim(&display, filename, 1, flipped);
+bool loadBmp(DISPLAY_T* display, String filename, uint8_t flipped) {
+  return loadBmpAnim(&display, filename, 1, flipped);
 }
 
-void loadBmpAnim(DISPLAY_T** display, String filename, uint8_t animFrames) {
-  loadBmpAnim(display, filename, animFrames, 0);
+bool loadBmpAnim(DISPLAY_T** display, String filename, uint8_t animFrames) {
+  return loadBmpAnim(display, filename, animFrames, 0);
 }
 
-void getBmpDimensions(String filename, int16_t* w, int16_t* h) {
+bool getBmpDimensions(String filename, int16_t* w, int16_t* h) {
   File bmpFS;
   bmpFS = SD_MMC.open(filename);
 
@@ -71,7 +71,7 @@ void getBmpDimensions(String filename, int16_t* w, int16_t* h) {
     Serial.print("File not found: ");
     Serial.println(filename);
     Serial.println("#");
-    return;
+    return false;
   }
   uint16_t headerBytes = read16(bmpFS);
   if (headerBytes == 0x4D42) {
@@ -84,14 +84,17 @@ void getBmpDimensions(String filename, int16_t* w, int16_t* h) {
   } else {
     Serial.print("Wrong file format: ");
     Serial.println(headerBytes);
+    bmpFS.close();
+    return false;
   }
   bmpFS.close();
+  return true;
 }
 
 /*
  * animFrames -> number of frames to export, 1 == no animation, still image
  */
-void loadBmpAnim(DISPLAY_T** displays, String filename, uint8_t animFrames, uint8_t flipped) {
+bool loadBmpAnim(DISPLAY_T** displays, String filename, uint8_t animFrames, uint8_t flipped) {
   Serial.print("File: ");
   Serial.println(filename);
   Serial.println("#");
@@ -106,7 +109,7 @@ void loadBmpAnim(DISPLAY_T** displays, String filename, uint8_t animFrames, uint
     Serial.print("File not found: ");
     Serial.println(filename);
     Serial.println("#");
-    return;
+    return false;
   }
 
   uint32_t seekOffset;
@@ -212,19 +215,24 @@ void loadBmpAnim(DISPLAY_T** displays, String filename, uint8_t animFrames, uint
       Serial.print(bitDepth);
       Serial.print(" ");
       Serial.println(compression);
+      bmpFS.close();
+      return false;
     }
   } else {
     Serial.print("Wrong file format: ");
     Serial.println(headerBytes);
+    bmpFS.close();
+    return false;
   }
   bmpFS.close();
+  return true;
 }
 
-void drawBmp(String filename, int16_t x, int16_t y, bool debugLog) {
-  drawBmpSlice(filename, x, y, -1, debugLog);
+bool drawBmp(String filename, int16_t x, int16_t y, bool debugLog) {
+  return drawBmpSlice(filename, x, y, -1, debugLog);
 }
 
-void drawBmpSlice(String filename, int16_t x, int16_t y, int16_t maxH, bool debugLog) {
+bool drawBmpSlice(String filename, int16_t x, int16_t y, int16_t maxH, bool debugLog) {
   if (debugLog) {
     Serial.print("File: ");
     Serial.println(filename);
@@ -241,7 +249,7 @@ void drawBmpSlice(String filename, int16_t x, int16_t y, int16_t maxH, bool debu
     Serial.print("File not found: ");
     Serial.println(filename);
     Serial.println("#");
-    return;
+    return false;
   }
 
   uint32_t seekOffset;
@@ -320,15 +328,20 @@ void drawBmpSlice(String filename, int16_t x, int16_t y, int16_t maxH, bool debu
       Serial.print(bitDepth);
       Serial.print(" ");
       Serial.println(compression);
+      bmpFS.close();
+      return false;
     }
   } else {
     Serial.print("Wrong file format: ");
     Serial.println(headerBytes);
+    bmpFS.close();
+    return false;
   }
   bmpFS.close();
+  return true;
 }
 
-void drawBmp(DISPLAY_T* sprite, String filename, int16_t x, int16_t y, bool debugLog) {
+bool drawBmp(DISPLAY_T* sprite, String filename, int16_t x, int16_t y, bool debugLog) {
   if (debugLog) {
     Serial.print("File: ");
     Serial.println(filename);
@@ -345,7 +358,7 @@ void drawBmp(DISPLAY_T* sprite, String filename, int16_t x, int16_t y, bool debu
     Serial.print("File not found: ");
     Serial.println(filename);
     Serial.println("#");
-    return;
+    return false;
   }
 
   uint32_t seekOffset;
@@ -423,12 +436,17 @@ void drawBmp(DISPLAY_T* sprite, String filename, int16_t x, int16_t y, bool debu
       Serial.print(bitDepth);
       Serial.print(" ");
       Serial.println(compression);
+      bmpFS.close();
+      return false;
     }
   } else {
     Serial.print("Wrong file format: ");
     Serial.println(headerBytes);
+    bmpFS.close();
+    return false;
   }
   bmpFS.close();
+  return true;
 }
 
 
@@ -830,22 +848,22 @@ void checkFailWithMessage(String message) {
   }
 }
 
-void checkSoftFailWithMessage(String message) {
+void checkSoftFailWithMessage(String message, uint8_t textSize) {
   if (!message.isEmpty()) {
     tft.fillScreen(TFT_BLACK);
     spr.fillSprite(TFT_BLACK);
-    spr.setCursor(1, 16);
-    spr.setTextSize(1);
+    spr.setCursor(1, 30);
+    spr.setTextSize(textSize);
     spr.println("FEHLER:");
     spr.println(message);
-    spr.pushSprite(0, 0);
+    spr.pushSpriteFast(0, 0);
     delay(5000);
   }
 }
 
 void displayFullscreenMessage(String message, uint8_t textSize) {
   spr.fillSprite(TFT_BLACK);
-  spr.setCursor(1, 16);
+  spr.setCursor(1, 30);
   spr.setTextSize(textSize);
   spr.println(message);
   spr.pushSpriteFast(0, 0);

@@ -241,17 +241,17 @@ static void drawFinished() {
     winscreenTimeout = millis() + WIN_SCREEN_TIMEOUT;
     String errorMessage;
     winScreenPath = getRandomWinScreenPathForCurrentGame(&errorMessage);
+    Serial.println("Win screen path: "+winScreenPath);
     checkFailWithMessage(errorMessage);
     spr.frameBuffer(1);
-    spr.fillSprite(TFT_BLUE);
+    spr.fillSprite(TFT_BLACK);
     spr.frameBuffer(2);
-    spr.fillSprite(TFT_BLUE);
-    drawBmp(winScreenPath, 0, 0);
+    spr.fillSprite(TFT_BLACK);
     if (systemConfig.logExecutions) {
       handleLogExecutions();
-      drawBmp(winScreenPath, 0, 0);
     }
     tft.fillRect(32,0,38,20,TFT_BLACK);
+    drawBmp(winScreenPath, 0, 0);
   } else if (millis() > winscreenTimeout) {
     power_off();
   }
