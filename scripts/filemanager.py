@@ -237,6 +237,15 @@ def dlr(src, target):
         dlr(os.path.join(src, dirPath), os.path.join(target, dirPath))
     print(f"Took {time.time()-start}s")
 
+def checkDoublePath(param):
+    path = param.split(" ")
+    if len(path) == 1:
+        return [
+            re.sub(r"^/", "", path[0]),
+            re.sub(r"^([^/])", r"/\1", path[0])
+        ]
+    else:
+        return path
 
 def main():
     while True:
@@ -261,17 +270,17 @@ def main():
             print("File content:")
             print(res)
         elif cmd == "ul":
-            path = param.split(" ")
+            path = checkDoublePath(param)
             ul(path[0], path[1])
         elif cmd == "ulr":
-            path = param.split(" ")
+            path = checkDoublePath(param)
             print(path)
             ulr(path[0], path[1])
         elif cmd == "dl":
-            path = param.split(" ")
+            path = checkDoublePath(param)
             dl(path[0], path[1])
         elif cmd == "dlr":
-            path = param.split(" ")
+            path = checkDoublePath(param)
             print(path)
             dlr(path[0], path[1])
         elif inp == "exit":
