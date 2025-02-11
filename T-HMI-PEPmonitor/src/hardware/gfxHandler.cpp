@@ -703,7 +703,7 @@ void drawSystemStats(uint32_t ms, uint32_t lastMs) {
     batteryIcon[0].pushToSprite(&spr, 1, 1, 0x0000);
   } else if (batteryVoltage < 3800) {
     batteryIcon[1].pushToSprite(&spr, 1, 1, 0x0000);
-  } else if (batteryVoltage < 4100) {
+  } else if (batteryVoltage < 4200) {
     batteryIcon[2].pushToSprite(&spr, 1, 1, 0x0000);
   } else if (batteryVoltage < 4400) {
     batteryIcon[0].pushToSprite(&spr, 1, 1, 0x0000);
