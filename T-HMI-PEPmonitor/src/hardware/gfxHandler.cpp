@@ -699,6 +699,7 @@ void drawSystemStats(uint32_t ms, uint32_t lastMs) {
     loadBmp(&batteryIcon[1], "/gfx/battery_half.bmp");
     loadBmp(&batteryIcon[2], "/gfx/battery_full.bmp");
   }
+  spr.drawRect(0, 0, 70, 20, 0x0000);
   if (batteryVoltage < 3600) {
     batteryIcon[0].pushToSprite(&spr, 1, 1, 0x0000);
   } else if (batteryVoltage < 3800) {
