@@ -4,8 +4,8 @@
 - Die vier Adern in der folgenden Reihenfolge an den Luftdrucksensor anlöten:
    - Schwarz -> GND
    - Rot -> VCC
-   - ??? -> OUT
-   - ??? -> SCK
+   - Gelb -> OUT
+   - Weiß -> SCK
 
 # Verkablen
 
