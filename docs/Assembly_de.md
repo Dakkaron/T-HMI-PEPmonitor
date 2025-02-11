@@ -14,7 +14,7 @@
 
 # Verschrauben
 
-- Das T-HMI in den oberen Teil des Gehäuses einsetzen und mit den vier M2-Schrauben verschrauben.
+- Das T-HMI in den oberen Teil des Gehäuses einsetzen und mit den vier M2x10-Schrauben verschrauben.
 - Die vier Muttern in die Aussparungen des unteren Gehäuses eindrücken.
 - Die Batterie mittels Patafix oder doppelseitigem Klebeband in die untere Gehäusehälfte kleben.
 - Den Luftdrucksensor in die passende Aussparung in der oberen Gehäusehälfte einsetzen.
