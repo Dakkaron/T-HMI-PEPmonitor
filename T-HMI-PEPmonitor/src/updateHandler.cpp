@@ -24,15 +24,17 @@ static void fetchReleaseUrl() {
   Serial.println("Checking for firmware update");
   String ignoreMessage;
   String url = downloadFileToString(FIRMWARE_RELEASE_PATH_URL, &ignoreMessage);
+  Serial.println("Update URL: "+url);
   if (ignoreMessage.length() > 0) {
     Serial.println("Error checking for firmware update: "+ignoreMessage);
     systemUpdateWasChecked = true;
     return;
   }
-  String lastUrl = "";
+  String lastUrl = "none";
   if (SD_MMC.exists(LAST_RELEASE_URL_FILE_PATH)) {
     lastUrl = readFileToString(LAST_RELEASE_URL_FILE_PATH);
   }
+  Serial.println("Last URL: "+lastUrl);
   systemUpdateReleaseUrl = url.equals(lastUrl) ? "" : url;
   systemUpdateWasChecked = true;
   Serial.println("Result: "+systemUpdateReleaseUrl);

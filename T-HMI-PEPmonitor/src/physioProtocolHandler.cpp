@@ -250,6 +250,10 @@ static void drawFinished() {
     if (systemConfig.logExecutions) {
       handleLogExecutions();
     }
+    spr.frameBuffer(1);
+    spr.fillSprite(TFT_BLACK);
+    spr.frameBuffer(2);
+    spr.fillSprite(TFT_BLACK);
     tft.fillRect(32,0,38,20,TFT_BLACK);
     drawBmp(winScreenPath, 0, 0);
   } else if (millis() > winscreenTimeout) {
@@ -271,11 +275,24 @@ void displayPhysioRotateScreen() {
   drawBmp(profileData.taskChangeImagePath[currentTask], 0, 0);
   spr.setTextDatum(TL_DATUM);
   spr.drawString(profileData.taskChangeMessage[currentTask], 5, 5);
-  spr.fillRect(230, 170, 80, 60, 0x18db);
-  spr.drawString("OK", 245, 185);
   spr.pushSpriteFast(0, 0);
+  uint32_t displayOkButtonMs = millis() + 5000;
 
-  while (!isTouchInZone(230, 170, 80, 60)) {}
+  while (!isTouchInZone(230, 170, 80, 60)) {
+    if (displayOkButtonMs!=0 && millis() > displayOkButtonMs) {
+      spr.fillSprite(TFT_BLACK);
+      spr.pushSpriteFast(0, 0);
+      spr.fillSprite(TFT_BLACK);
+      spr.setTextSize(4);
+      drawBmp(profileData.taskChangeImagePath[currentTask], 0, 0);
+      spr.setTextDatum(TL_DATUM);
+      spr.drawString(profileData.taskChangeMessage[currentTask], 5, 5);
+      spr.fillRect(230, 170, 80, 60, 0x18db);
+      spr.drawString("OK", 245, 185);
+      spr.pushSpriteFast(0, 0);
+      displayOkButtonMs = 0;
+    }
+  }
   
   tft.fillScreen(TFT_BLACK);
   spr.fillScreen(TFT_BLACK);
