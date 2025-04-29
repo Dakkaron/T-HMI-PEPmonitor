@@ -96,3 +96,9 @@ bool displayProgressionMenu(DISPLAY_T *display, String *errorMessage) {
     return false;
   }
 }
+
+void endGame(String* errorMessage) {
+  if (gameConfig.templateName == "lua") {
+    endGame_lua(errorMessage);
+  }
+}

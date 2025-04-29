@@ -238,8 +238,10 @@ static void drawFinished() {
   static uint32_t winscreenTimeout = 0;
   static String winScreenPath = "";
   if (winscreenTimeout == 0) { // Only runs on first execution
-    winscreenTimeout = millis() + WIN_SCREEN_TIMEOUT;
     String errorMessage;
+    endGame(&errorMessage);
+    checkFailWithMessage(errorMessage);
+    winscreenTimeout = millis() + WIN_SCREEN_TIMEOUT;
     winScreenPath = getRandomWinScreenPathForCurrentGame(&errorMessage);
     Serial.println("Win screen path: "+winScreenPath);
     checkFailWithMessage(errorMessage);

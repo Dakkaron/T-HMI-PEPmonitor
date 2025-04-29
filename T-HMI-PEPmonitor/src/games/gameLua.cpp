@@ -491,3 +491,14 @@ bool displayProgressionMenu_lua(DISPLAY_T *display, String *errorMessage) {
   }
   return luaProgressionMenuRunning;
 }
+
+void endGame_lua(String *errorMessage) {
+  String script = readFileToString((luaGamePath + "end.lua").c_str());
+  String error = lua.Lua_dostring(&script);
+  if (!error.isEmpty()) {
+    Serial.println("Error in end.lua: " + error);
+    if (luaStrictMode) {
+      checkFailWithMessage("Error in end.lua: " + error);
+    }
+  }
+}
