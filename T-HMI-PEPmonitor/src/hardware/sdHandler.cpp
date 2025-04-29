@@ -261,6 +261,14 @@ bool isKeyInSection(char* sectionData, String key) {
   return errorMessage.isEmpty();
 }
 
+String getIniValue(String iniPath, String section, String key, String* errorMessage) {
+  char resBuffer[INI_BUFFER_LEN];
+  getIniSection(iniPath, section, resBuffer, INI_BUFFER_LEN, errorMessage);
+  if (!errorMessage->isEmpty()) {
+    return String("");
+  }
+  return getIniValueFromSection(resBuffer, key, errorMessage);
+}
 
 String getIniValueFromSection(char* sectionData, String key, String* errorMessage) {
   int16_t lineStartMarker;

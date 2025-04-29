@@ -30,6 +30,7 @@ void readGameConfig(String gamePath, GameConfig* gameConfig, String* errorMessag
 void getIniSection(String iniPath, String section, char* resultBuffer, uint16_t len, String* errorMessage);
 bool isKeyInSection(char* sectionData, String key);
 String getIniValueFromSection(char* sectionData, String key, String* errorMessage);
+String getIniValue(String iniPath, String section, String key, String* errorMessage);
 
 String getRandomWinScreenPath(String gamePath, String* errorMessage);
 
