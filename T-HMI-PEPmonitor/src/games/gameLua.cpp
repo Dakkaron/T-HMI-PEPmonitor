@@ -65,7 +65,10 @@ static int lua_wrapper_loadSprite(lua_State* luaState) {
   for (int32_t i=0;i<SPRITE_COUNT_LIMIT;i++) {
     if (!sprites[i].created()) {
       if (!loadBmp(&sprites[i], path, flipped)) {
-        Serial.println("Failed to load sprite.");
+        Serial.println("Failed to load sprite "+path);
+        if (luaStrictMode) {
+          checkFailWithMessage("Failed to load sprite "+path);
+        }
         lua_pushinteger(luaState, -1);
         return 1;
       }
@@ -77,7 +80,10 @@ static int lua_wrapper_loadSprite(lua_State* luaState) {
       return 1;
     }
   }
-  Serial.println("Failed to find sprite slot");
+  Serial.println("Failed to find sprite slot for sprite "+path);
+  if (luaStrictMode) {
+    checkFailWithMessage("Failed to find sprite slot for sprite "+path);
+  }
   lua_pushinteger(luaState, -1);
   return 1;
 }
@@ -120,8 +126,11 @@ static int lua_wrapper_drawSprite(lua_State* luaState) {
   int16_t x = luaL_checknumber(luaState, 2);
   int16_t y = luaL_checknumber(luaState, 3);
   int16_t transp = luaL_optinteger(luaState, 4, 0x0000);
-  if (handle<0 || handle>=SPRITE_COUNT_LIMIT) {
-    Serial.println("Could not draw sprite: invalid sprite handle");
+  if (handle<0 || handle>=SPRITE_COUNT_LIMIT | !sprites[handle].created()) {
+    Serial.println("ERROR: Could not draw sprite: invalid sprite handle!");
+    if (luaStrictMode) {
+      checkFailWithMessage("ERROR: Could not draw sprite: invalid sprite handle!");
+    }
     return 0;
   }
   sprites[handle].pushToSprite(luaDisplay, x, y, transp);

@@ -127,7 +127,7 @@ sTileTunnelTLeft = loadSprite("gfx/tile_tunnel_T_left.bmp")
 sTileTunnelTRight = loadSprite("gfx/tile_tunnel_T_left.bmp", 1)
 sTileTunnelX = loadSprite("gfx/tile_tunnel_X.bmp")
 
-sExplosionAnim = loadAnimSprite("gfx/explosion-1.bmp", 80, 48)
+sExplosionAnim = loadAnimSprite("gfx/explosion-0.bmp", 80, 48)
 
 math.randomseed(ms)
 
