@@ -1,4 +1,8 @@
-function drawTile(x, y, yOffset)
+function isNextToTunnel(x, y)
+  return (x>0 and worldMapArray[x-1][y]==0) or (x<7 and worldMapArray[x+1][y]==0) or (y>0 and worldMapArray[x][y-1]==0) or (y<5 and worldMapArray[x][y+1]==0) or (x>0 and y>0 and worldMapArray[x-1][y-1]==0) or (x<7 and y>0 and worldMapArray[x+1][y-1]==0) or (x>0 and y<5 and worldMapArray[x-1][y+1]==0) or (x<7 and y<5 and worldMapArray[x+1][y+1]==0)
+end
+
+function drawTile(x, y, yOffset, showHidden)
   if (worldMapArray[x][y] == 0) then
     if (worldMapArray[x][y-1] == 0 or y == 0) then -- up
       if (x > 0 and worldMapArray[x-1][y] == 0) then -- left
@@ -55,18 +59,20 @@ function drawTile(x, y, yOffset)
         end
       end
     end
-  elseif (worldMapArray[x][y] == 1) then
-    drawSprite(sTileDirt, x*40, y*40 - yOffset)
-  elseif (worldMapArray[x][y] == 2) then
-    drawSprite(sTileOreIron, x*40, y*40 - yOffset)
-  elseif (worldMapArray[x][y] == 3) then
-    drawSprite(sTileOreCopper, x*40, y*40 - yOffset)
-  elseif (worldMapArray[x][y] == 4) then
-    drawSprite(sTileOreEmerald, x*40, y*40 - yOffset)
-  elseif (worldMapArray[x][y] == 5) then
-    drawSprite(sTileOreGold, x*40, y*40 - yOffset)
-  elseif (worldMapArray[x][y] == 6) then
-    drawSprite(sTileOreDiamond, x*40, y*40 - yOffset)
+  elseif (showHidden or isNextToTunnel(x, y)) then
+    if (worldMapArray[x][y] == 1) then
+      drawSprite(sTileDirt, x*40, y*40 - yOffset)
+    elseif (worldMapArray[x][y] == 2) then
+      drawSprite(sTileOreIron, x*40, y*40 - yOffset)
+    elseif (worldMapArray[x][y] == 3) then
+      drawSprite(sTileOreCopper, x*40, y*40 - yOffset)
+    elseif (worldMapArray[x][y] == 4) then
+      drawSprite(sTileOreEmerald, x*40, y*40 - yOffset)
+    elseif (worldMapArray[x][y] == 5) then
+      drawSprite(sTileOreGold, x*40, y*40 - yOffset)
+    elseif (worldMapArray[x][y] == 6) then
+      drawSprite(sTileOreDiamond, x*40, y*40 - yOffset)
+    end
   end
 end
 
