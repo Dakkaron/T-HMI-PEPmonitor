@@ -3,8 +3,8 @@
 #include "hardware/gfxHandler.hpp"
 #include "hardware/prefsHandler.h"
 
-LuaWrapper lua;
 static String luaGamePath;
+lua_State* luaState;
 
 DISPLAY_T* luaDisplay;
 bool luaProgressionMenuRunning;
@@ -32,6 +32,83 @@ static TFT_eSprite sprites[] = {TFT_eSprite(&tft),TFT_eSprite(&tft),TFT_eSprite(
                                 TFT_eSprite(&tft),TFT_eSprite(&tft),TFT_eSprite(&tft),TFT_eSprite(&tft),TFT_eSprite(&tft),
                                 TFT_eSprite(&tft),TFT_eSprite(&tft),TFT_eSprite(&tft),TFT_eSprite(&tft),TFT_eSprite(&tft),};
 
+String lua_dofile(const String path) {
+  static String script[10];
+  static String cachedPath[10];
+  String result;
+  int cacheSlot = -1;
+  if (luaCacheGameCode) {
+    //Serial.println("Caching enalbed");
+    for (int i=0;i<10;i++) {
+      if (cachedPath[i] == path) {
+        cacheSlot = i;
+        //Serial.println("Found cached script "+path+" in slot "+String(cacheSlot));
+        break;
+      }
+    }
+    if (cacheSlot == -1) {
+      for (int i=0;i<10;i++) {
+        if (cachedPath[i].isEmpty()) {
+          cacheSlot = i;
+          //Serial.println("Caching script "+path+" in slot "+String(cacheSlot));
+          script[cacheSlot] = readFileToString(path.c_str());
+          cachedPath[cacheSlot] = path;
+          if (script[cacheSlot].isEmpty()) {
+            result = "Failed to load lua script "+path;
+            return result;
+          }
+          break;
+        }
+      }
+    }
+    if (cacheSlot == -1) {
+      //Serial.println("Cache full, removing oldest script "+cachedPath[0]);
+      for (int i=0;i<9;i++) {
+        script[i] = script[i+1];
+        cachedPath[i] = cachedPath[i+1];
+      }
+      cacheSlot = 9;
+      script[cacheSlot] = readFileToString(path.c_str());
+      cachedPath[cacheSlot] = path;
+      if (script[cacheSlot].isEmpty()) {
+        result = "Failed to load lua script "+path;
+        return result;
+      }
+    }
+  } else {
+    //Serial.println("Caching disabled");
+    script[0] = readFileToString(path.c_str());
+    cacheSlot = 0;
+  }
+  if (luaL_dostring(luaState, script[cacheSlot].c_str())) {
+    result = "# lua error:\n" + String(lua_tostring(luaState, -1));
+    lua_pop(luaState, 1);
+    Serial.println("Error lua file "+path+": " + result);
+    if (luaStrictMode) {
+      checkFailWithMessage(result);
+    }
+  }
+  return result;
+}
+
+String lua_dostring(const char* script) {
+  String result;
+  if (luaL_dostring(luaState, script)) {
+    result += "# lua error:\n" + String(lua_tostring(luaState, -1));
+    lua_pop(luaState, 1);
+    Serial.println("Error lua string: " + result);
+    if (luaStrictMode) {
+      checkFailWithMessage(result);
+    }
+  }
+  return result;
+}
+
+static int lua_wrapper_disableCaching(lua_State* luaState) {
+  luaCacheGameCode = false;
+  return 0;
+}
+
 static int lua_wrapper_serialPrint(lua_State* luaState) {
   Serial.println(luaL_checkstring(luaState, 1));
   return 0;
@@ -50,7 +127,7 @@ static int lua_wrapper_runScript(lua_State* luaState) {
     Serial.println("Error: Failed to load script "+path);
     return 0;
   }
-  String error = lua.Lua_dostring(&script);
+  String error = lua_dostring(script.c_str());
   if (!error.isEmpty()) {
     Serial.println("Error in script " + path + ": " + error);
   }
@@ -389,57 +466,64 @@ static int lua_wrapper_getFreeRAM(lua_State* luaState) {
   return 1;
 }
 
-void initLuaBindings() {
+void initLua() {
   static bool bindingsInitiated = false;
   if (bindingsInitiated) {
     return;
   }
-  lua.Lua_register("serialPrintln", (const lua_CFunction) &lua_wrapper_serialPrintln);
-  lua.Lua_register("serialPrint", (const lua_CFunction) &lua_wrapper_serialPrintln);
-  lua.Lua_register("runScript", (const lua_CFunction) &lua_wrapper_runScript);
-  lua.Lua_register("loadSprite", (const lua_CFunction) &lua_wrapper_loadSprite);
-  lua.Lua_register("loadAnimSprite", (const lua_CFunction) &lua_wrapper_loadAnimSprite);
-  lua.Lua_register("freeSprite", (const lua_CFunction) &lua_wrapper_freeSprite);
-  lua.Lua_register("drawSprite", (const lua_CFunction) &lua_wrapper_drawSprite);
-  lua.Lua_register("drawSpriteRegion", (const lua_CFunction) &lua_wrapper_drawSpriteRegion);
-  lua.Lua_register("drawAnimSprite", (const lua_CFunction) &lua_wrapper_drawAnimSprite);
-  lua.Lua_register("spriteWidth", (const lua_CFunction) &lua_wrapper_spriteWidth);
-  lua.Lua_register("spriteHeight", (const lua_CFunction) &lua_wrapper_spriteHeight);
-  lua.Lua_register("log", (const lua_CFunction) &lua_wrapper_log);
-  lua.Lua_register("drawString", (const lua_CFunction) &lua_wrapper_drawString);
-  lua.Lua_register("drawRect", (const lua_CFunction) &lua_wrapper_drawRect);
-  lua.Lua_register("fillRect", (const lua_CFunction) &lua_wrapper_fillRect);
-  lua.Lua_register("drawCircle", (const lua_CFunction) &lua_wrapper_drawCircle);
-  lua.Lua_register("fillCircle", (const lua_CFunction) &lua_wrapper_fillCircle);
-  lua.Lua_register("drawLine", (const lua_CFunction) &lua_wrapper_drawLine);
-  lua.Lua_register("drawFastHLine", (const lua_CFunction) &lua_wrapper_drawFastHLine);
-  lua.Lua_register("drawFastWLine", (const lua_CFunction) &lua_wrapper_drawFastWLine);
-  lua.Lua_register("fillScreen", (const lua_CFunction) &lua_wrapper_fillScreen);
-  lua.Lua_register("setTextColor", (const lua_CFunction) &lua_wrapper_setTextColor);
-  lua.Lua_register("setTextSize", (const lua_CFunction) &lua_wrapper_setTextSize);
-  lua.Lua_register("setTextDatum", (const lua_CFunction) &lua_wrapper_setTextDatum);
-  lua.Lua_register("setCursor", (const lua_CFunction) &lua_wrapper_setCursor);
-  lua.Lua_register("print", (const lua_CFunction) &lua_wrapper_print);
-  lua.Lua_register("println", (const lua_CFunction) &lua_wrapper_println);
-  lua.Lua_register("cls", (const lua_CFunction) &lua_wrapper_cls);
-  lua.Lua_register("prefsSetString", (const lua_CFunction) &lua_wrapper_prefsSetString);
-  lua.Lua_register("prefsGetString", (const lua_CFunction) &lua_wrapper_prefsGetString);
-  lua.Lua_register("prefsSetInt", (const lua_CFunction) &lua_wrapper_prefsSetInt);
-  lua.Lua_register("prefsGetInt", (const lua_CFunction) &lua_wrapper_prefsGetInt);
-  lua.Lua_register("prefsSetNumber", (const lua_CFunction) &lua_wrapper_prefsSetNumber);
-  lua.Lua_register("prefsGetNumber", (const lua_CFunction) &lua_wrapper_prefsGetNumber);
-  lua.Lua_register("closeProgressionMenu", (const lua_CFunction) &lua_wrapper_closeProgressionMenu);
-  lua.Lua_register("constrain", (const lua_CFunction) &lua_wrapper_constrain);
-  lua.Lua_register("isTouchInZone", (const lua_CFunction) &lua_wrapper_isTouchInZone);
-  lua.Lua_register("getFreeRAM", (const lua_CFunction) &lua_wrapper_getFreeRAM);
+  luaState = luaL_newstate();
+  luaopen_base(luaState);
+  luaopen_table(luaState);
+  luaopen_string(luaState);
+  luaopen_math(luaState);
+
+  lua_register(luaState, "serialPrintln", (const lua_CFunction) &lua_wrapper_serialPrintln);
+  lua_register(luaState, "serialPrint", (const lua_CFunction) &lua_wrapper_serialPrintln);
+  lua_register(luaState, "runScript", (const lua_CFunction) &lua_wrapper_runScript);
+  lua_register(luaState, "loadSprite", (const lua_CFunction) &lua_wrapper_loadSprite);
+  lua_register(luaState, "loadAnimSprite", (const lua_CFunction) &lua_wrapper_loadAnimSprite);
+  lua_register(luaState, "freeSprite", (const lua_CFunction) &lua_wrapper_freeSprite);
+  lua_register(luaState, "drawSprite", (const lua_CFunction) &lua_wrapper_drawSprite);
+  lua_register(luaState, "drawSpriteRegion", (const lua_CFunction) &lua_wrapper_drawSpriteRegion);
+  lua_register(luaState, "drawAnimSprite", (const lua_CFunction) &lua_wrapper_drawAnimSprite);
+  lua_register(luaState, "spriteWidth", (const lua_CFunction) &lua_wrapper_spriteWidth);
+  lua_register(luaState, "spriteHeight", (const lua_CFunction) &lua_wrapper_spriteHeight);
+  lua_register(luaState, "log", (const lua_CFunction) &lua_wrapper_log);
+  lua_register(luaState, "drawString", (const lua_CFunction) &lua_wrapper_drawString);
+  lua_register(luaState, "drawRect", (const lua_CFunction) &lua_wrapper_drawRect);
+  lua_register(luaState, "fillRect", (const lua_CFunction) &lua_wrapper_fillRect);
+  lua_register(luaState, "drawCircle", (const lua_CFunction) &lua_wrapper_drawCircle);
+  lua_register(luaState, "fillCircle", (const lua_CFunction) &lua_wrapper_fillCircle);
+  lua_register(luaState, "drawLine", (const lua_CFunction) &lua_wrapper_drawLine);
+  lua_register(luaState, "drawFastHLine", (const lua_CFunction) &lua_wrapper_drawFastHLine);
+  lua_register(luaState, "drawFastWLine", (const lua_CFunction) &lua_wrapper_drawFastWLine);
+  lua_register(luaState, "fillScreen", (const lua_CFunction) &lua_wrapper_fillScreen);
+  lua_register(luaState, "setTextColor", (const lua_CFunction) &lua_wrapper_setTextColor);
+  lua_register(luaState, "setTextSize", (const lua_CFunction) &lua_wrapper_setTextSize);
+  lua_register(luaState, "setTextDatum", (const lua_CFunction) &lua_wrapper_setTextDatum);
+  lua_register(luaState, "setCursor", (const lua_CFunction) &lua_wrapper_setCursor);
+  lua_register(luaState, "print", (const lua_CFunction) &lua_wrapper_print);
+  lua_register(luaState, "println", (const lua_CFunction) &lua_wrapper_println);
+  lua_register(luaState, "cls", (const lua_CFunction) &lua_wrapper_cls);
+  lua_register(luaState, "prefsSetString", (const lua_CFunction) &lua_wrapper_prefsSetString);
+  lua_register(luaState, "prefsGetString", (const lua_CFunction) &lua_wrapper_prefsGetString);
+  lua_register(luaState, "prefsSetInt", (const lua_CFunction) &lua_wrapper_prefsSetInt);
+  lua_register(luaState, "prefsGetInt", (const lua_CFunction) &lua_wrapper_prefsGetInt);
+  lua_register(luaState, "prefsSetNumber", (const lua_CFunction) &lua_wrapper_prefsSetNumber);
+  lua_register(luaState, "prefsGetNumber", (const lua_CFunction) &lua_wrapper_prefsGetNumber);
+  lua_register(luaState, "closeProgressionMenu", (const lua_CFunction) &lua_wrapper_closeProgressionMenu);
+  lua_register(luaState, "constrain", (const lua_CFunction) &lua_wrapper_constrain);
+  lua_register(luaState, "isTouchInZone", (const lua_CFunction) &lua_wrapper_isTouchInZone);
+  lua_register(luaState, "getFreeRAM", (const lua_CFunction) &lua_wrapper_getFreeRAM);
+  lua_register(luaState, "disableCaching", (const lua_CFunction) &lua_wrapper_disableCaching);
   bindingsInitiated = true;
 }
 
 void initGames_lua(String gamePath, GameConfig* gameConfig, String* errorMessage) {
   String ignoreErrorMessage;
-  initLuaBindings();
+  initLua();
   String msString = "ms="+String(millis());
-  lua.Lua_dostring(&msString);
+  lua_dostring(msString.c_str());
   luaGamePath = gamePath;
   String luaGameIniPath = gamePath + "gameconfig.ini";
   luaStrictMode = getIniValue(luaGameIniPath, "[game]", "strictMode", &ignoreErrorMessage).equalsIgnoreCase("true");
@@ -450,7 +534,7 @@ void initGames_lua(String gamePath, GameConfig* gameConfig, String* errorMessage
   String initScript = readFileToString((gamePath + "init.lua").c_str());
   if (!initScript.isEmpty()) {
     Serial.println("Running init script");
-    String error = lua.Lua_dostring(&initScript);
+    String error = lua_dostring(initScript.c_str());
     if (!error.isEmpty()) {
       Serial.println("Error in init.lua: " + error);
       if (luaStrictMode) {
@@ -488,105 +572,56 @@ void updateBlowData(BlowData* blowData) {
                           "totalTaskNumber="+String(blowData->totalTaskNumber)+"\n"+
                           "isNewTask="+String(taskNumber != lastKnownTaskNumber ? "true" : "false");
   lastKnownTaskNumber = taskNumber;
-  lua.Lua_dostring(&blowDataString);
+  lua_dostring(blowDataString.c_str());
   lastMs = blowData->ms;
 }
 
 void updateJumpData(JumpData* jumpData) {
   String jumpDataString = "ms="+jumpData->ms;
-  lua.Lua_dostring(&jumpDataString);
+  lua_dostring(jumpDataString.c_str());
 }
 
 void drawShortBlowGame_lua(DISPLAY_T* display, BlowData* blowData, String* errorMessage) {
-  String script = readFileToString((luaGamePath + "shortBlow.lua").c_str());
   luaDisplay = display;
   updateBlowData(blowData);
-  String error = lua.Lua_dostring(&script);
-  if (!error.isEmpty()) {
-    Serial.println("Error in shortBlow.lua: " + error);
-    if (luaStrictMode) {
-      checkFailWithMessage("Error in shortBlow.lua: " + error);
-    }
-  }
+  lua_dofile(luaGamePath + "shortBlow.lua");
 }
 
 void drawLongBlowGame_lua(DISPLAY_T* display, BlowData* blowData, String* errorMessage) {
-  String script = readFileToString((luaGamePath + "longBlow.lua").c_str());
   luaDisplay = display;
   updateBlowData(blowData);
-  String error = lua.Lua_dostring(&script);
-  if (!error.isEmpty()) {
-    Serial.println("Error in longBlow.lua: " + error);
-    if (luaStrictMode) {
-      checkFailWithMessage("Error in longBlow.lua: " + error);
-    }
-  }
+  lua_dofile(luaGamePath + "longBlow.lua");
 }
 
 void drawEqualBlowGame_lua(DISPLAY_T* display, BlowData* blowData, String* errorMessage) {
-  String script = readFileToString((luaGamePath + "equalBlow.lua").c_str());
   luaDisplay = display;
   updateBlowData(blowData);
-  String error = lua.Lua_dostring(&script);
-  if (!error.isEmpty()) {
-    Serial.println("Error in equalBlow.lua: " + error);
-    if (luaStrictMode) {
-      checkFailWithMessage("Error in equalBlow.lua: " + error);
-    }
-  }
+  lua_dofile(luaGamePath + "equalBlow.lua");
 }
 
 void drawTrampolineGame_lua(DISPLAY_T* display, JumpData* jumpData, String* errorMessage) {
-  String script = readFileToString((luaGamePath + "trampoline.lua").c_str());
   luaDisplay = display;
   updateJumpData(jumpData);
-  String error = lua.Lua_dostring(&script);
-  if (!error.isEmpty()) {
-    Serial.println("Error in trampoline.lua: " + error);
-    if (luaStrictMode) {
-      checkFailWithMessage("Error in trampoline.lua: " + error);
-    }
-  }
+  lua_dofile(luaGamePath + "trampoline.lua");
 }
 
 void drawInhalationGame_lua(DISPLAY_T* display, BlowData* blowData, String* errorMessage) {
-  String script = readFileToString((luaGamePath + "inhalationBlow.lua").c_str());
   luaDisplay = display;
   updateBlowData(blowData);
-  String error = lua.Lua_dostring(&script);
-  if (!error.isEmpty()) {
-    Serial.println("Error in inhalationBlow.lua: " + error);
-    if (luaStrictMode) {
-      checkFailWithMessage("Error in inhalationBlow.lua: " + error);
-    }
-  }
+  lua_dofile(luaGamePath + "inhalationBlow.lua");
 }
 
 bool displayProgressionMenu_lua(DISPLAY_T *display, String *errorMessage) {
   luaProgressionMenuRunning = true;
-  String script = readFileToString((luaGamePath + "progressionMenu.lua").c_str());
-  if (script.isEmpty()) {
-    errorMessage->concat("Failed to load progression menu script");
-    return false;
-  }
   luaDisplay = display;
-  String error = lua.Lua_dostring(&script);
+  String error = lua_dofile(luaGamePath + "progressionMenu.lua");
   if (!error.isEmpty()) {
-    Serial.println("Error in progressionMenu.lua: " + error);
-    if (luaStrictMode) {
-      checkFailWithMessage("Error in progressionMenu.lua: " + error);
-    }
+    errorMessage->concat(error);
+    return false;
   }
   return luaProgressionMenuRunning;
 }
 
 void endGame_lua(String *errorMessage) {
-  String script = readFileToString((luaGamePath + "end.lua").c_str());
-  String error = lua.Lua_dostring(&script);
-  if (!error.isEmpty()) {
-    Serial.println("Error in end.lua: " + error);
-    if (luaStrictMode) {
-      checkFailWithMessage("Error in end.lua: " + error);
-    }
-  }
+  lua_dofile(luaGamePath + "end.lua");
 }

@@ -409,14 +409,14 @@ void drawInhalationGame_racing(DISPLAY_T* display, BlowData* blowData, String* e
 
 }
 
-bool displayProgressionMenu_racing(DISPLAY_T* display, String* errorMessage) {
-  initLuaBindings();
-  String progressionMenuScript = readFileToString((racerGamePath + "progressionMenu.lua").c_str());
-  if (progressionMenuScript.isEmpty()) {
-    errorMessage->concat("Failed to load progression menu script");
+bool displayProgressionMenu_racing(DISPLAY_T *display, String *errorMessage) {
+  initLua();
+  luaProgressionMenuRunning = true;
+  luaDisplay = display;
+  String error = lua_dofile(racerGamePath + "progressionMenu.lua");
+  if (!error.isEmpty()) {
+    errorMessage->concat(error);
     return false;
   }
-  luaDisplay = display;
-  lua.Lua_dostring(&progressionMenuScript);
   return luaProgressionMenuRunning;
 }
