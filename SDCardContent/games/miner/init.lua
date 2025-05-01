@@ -2,6 +2,21 @@ function isNextToTunnel(x, y)
   return (x>0 and worldMapArray[x-1][y]==0) or (x<7 and worldMapArray[x+1][y]==0) or (y>0 and worldMapArray[x][y-1]==0) or (y<5 and worldMapArray[x][y+1]==0) or (x>0 and y>0 and worldMapArray[x-1][y-1]==0) or (x<7 and y>0 and worldMapArray[x+1][y-1]==0) or (x>0 and y<5 and worldMapArray[x-1][y+1]==0) or (x<7 and y<5 and worldMapArray[x+1][y+1]==0)
 end
 
+function drawFOW(x, y, yOffset)
+  if (x==0 or not isNextToTunnel(x-1, y)) then
+    drawSprite(sTileFOWLeft, x*40, y*40 - yOffset, 0x0)
+  end
+  if (x==7 or not isNextToTunnel(x+1, y)) then
+    drawSprite(sTileFOWRight, x*40+31, y*40 - yOffset, 0x0)
+  end
+  if (y==0 or not isNextToTunnel(x, y-1)) then
+    drawSprite(sTileFOWUp, x*40, y*40 - yOffset, 0x0)
+  end
+  if (y==5 or not isNextToTunnel(x, y+1)) then
+    drawSprite(sTileFOWDown, x*40, y*40+31 - yOffset, 0x0)
+  end
+end
+
 function drawTile(x, y, yOffset, showHidden)
   if (worldMapArray[x][y] == 0) then
     if (worldMapArray[x][y-1] == 0 or y == 0) then -- up
@@ -74,6 +89,9 @@ function drawTile(x, y, yOffset, showHidden)
       drawSprite(sTileOreDiamond, x*40, y*40 - yOffset)
     end
   end
+  if (not showHidden) then
+    drawFOW(x, y, yOffset)
+  end
 end
 
 function mineTile(x,y)
@@ -133,6 +151,13 @@ sTileTunnelTLeft = loadSprite("gfx/tile_tunnel_T_left.bmp")
 sTileTunnelTRight = loadSprite("gfx/tile_tunnel_T_left.bmp", 1)
 sTileTunnelX = loadSprite("gfx/tile_tunnel_X.bmp")
 
+sTileFOWDown = loadSprite("gfx/tile_fow_down.bmp")
+sTileFOWUp = loadSprite("gfx/tile_fow_down.bmp", 2)
+sTileFOWLeft = loadSprite("gfx/tile_fow_left.bmp")
+sTileFOWRight = loadSprite("gfx/tile_fow_left.bmp", 1)
+
+sItemLantern = loadSprite("gfx/item_lantern.bmp")
+
 sExplosionAnim = loadAnimSprite("gfx/explosion-0.bmp", 80, 48)
 
 math.randomseed(ms)
@@ -146,7 +171,6 @@ for x = 0, 7 do
 end
 worldMapArray[2][0] = 0
 worldMapArray[2][1] = 0
-worldMapArray[2][2] = 0
 
 --[[worldMapArray[4][1] = 2
 worldMapArray[4][2] = 3
@@ -162,6 +186,7 @@ stepsLeft = 2
 money = prefsGetInt("money", 0)
 earnValue = 0
 earnTime = 0
+fullVisibilityTime = 0
 
 rockImageLoaded = -1
 
