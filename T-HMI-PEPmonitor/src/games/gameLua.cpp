@@ -139,6 +139,13 @@ static int lua_wrapper_loadSprite(lua_State* luaState) {
   String path = luaGamePath + luaL_checkstring(luaState, 1);
   Serial.println(path);
   int32_t flipped = luaL_optinteger(luaState, 2, 0);
+
+  Serial.print("Collect garbage before loading sprite, free RAM before: ");
+  Serial.println(ESP.getFreeHeap());
+  lua_gc(luaState, LUA_GCCOLLECT, 0);
+  Serial.print("Free RAM after: ");
+  Serial.println(ESP.getFreeHeap());
+
   for (int32_t i=0;i<SPRITE_COUNT_LIMIT;i++) {
     if (!sprites[i].created()) {
       if (!loadBmp(&sprites[i], path, flipped)) {
@@ -180,6 +187,13 @@ static int lua_wrapper_loadAnimSprite(lua_State* luaState) {
   String path = luaGamePath + luaL_checkstring(luaState, 1);
   Serial.println(path);
   int32_t flipped = luaL_optinteger(luaState, 4, 0);
+
+  Serial.print("Collect garbage before loading sprite, free RAM before: ");
+  Serial.println(ESP.getFreeHeap());
+  lua_gc(luaState, LUA_GCCOLLECT, 0);
+  Serial.print("Free RAM after: ");
+  Serial.println(ESP.getFreeHeap());
+
   for (int32_t i=0;i<SPRITE_COUNT_LIMIT;i++) {
     if (!sprites[i].created()) {
       loadBmp(&sprites[i], path, flipped);
