@@ -104,12 +104,16 @@ bool loadBmpAnim(DISPLAY_T** displays, String filename, uint8_t animFrames, uint
   // Open requested file on SD card
   bmpFS = SD_MMC.open(filename);
 
-  if (!bmpFS)
-  {
+  if (!bmpFS) {
     Serial.print("File not found: ");
-    Serial.println(filename);
-    Serial.println("#");
-    return false;
+    Serial.print(filename);
+    Serial.println(", retrying.");
+    bmpFS = SD_MMC.open(filename);
+    if (!bmpFS) {
+      Serial.print("Retry failed, file not found: ");
+      Serial.println(filename);
+      return false;
+    }
   }
 
   uint32_t seekOffset;
