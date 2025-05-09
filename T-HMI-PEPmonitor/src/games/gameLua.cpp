@@ -51,6 +51,13 @@ String lua_dofile(const String path) {
         if (cachedPath[i].isEmpty()) {
           cacheSlot = i;
           //Serial.println("Caching script "+path+" in slot "+String(cacheSlot));
+          
+          Serial.print("Collect garbage before caching script, free RAM before: ");
+          Serial.println(ESP.getFreeHeap());
+          lua_gc(luaState, LUA_GCCOLLECT, 0);
+          Serial.print("Free RAM after: ");
+          Serial.println(ESP.getFreeHeap());
+          
           script[cacheSlot] = readFileToString(path.c_str());
           cachedPath[cacheSlot] = path;
           if (script[cacheSlot].isEmpty()) {
@@ -638,4 +645,9 @@ bool displayProgressionMenu_lua(DISPLAY_T *display, String *errorMessage) {
 
 void endGame_lua(String *errorMessage) {
   lua_dofile(luaGamePath + "end.lua");
+  Serial.print("Collect garbage after running end script, free RAM before: ");
+  Serial.println(ESP.getFreeHeap());
+  lua_gc(luaState, LUA_GCCOLLECT, 0);
+  Serial.print("Free RAM after: ");
+  Serial.println(ESP.getFreeHeap());
 }
