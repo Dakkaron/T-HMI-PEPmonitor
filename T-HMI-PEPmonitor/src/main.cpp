@@ -108,8 +108,6 @@ void setup() {
   Serial.print(VERSION);
   Serial.println("' initialized");
 
-  String ignoreMessage;
-
   tft.setTextSize(1);
   tft.drawString("Warte auf WLAN-Verbindung...", 0, 230);
 
