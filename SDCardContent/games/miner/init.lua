@@ -1,18 +1,14 @@
-function isNextToTunnel(x, y)
-  return (x>0 and worldMapArray[x-1][y]==0) or (x<7 and worldMapArray[x+1][y]==0) or (y>0 and worldMapArray[x][y-1]==0) or (y<5 and worldMapArray[x][y+1]==0) or (x>0 and y>0 and worldMapArray[x-1][y-1]==0) or (x<7 and y>0 and worldMapArray[x+1][y-1]==0) or (x>0 and y<5 and worldMapArray[x-1][y+1]==0) or (x<7 and y<5 and worldMapArray[x+1][y+1]==0)
-end
-
 function drawFOW(x, y, yOffset)
-  if (x==0 or not isNextToTunnel(x-1, y)) then
+  if (x==0 or (worldMapArray[x-1][y] & 0x1000) ~= 0) then
     drawSprite(sTileFOWLeft, x*40, y*40 - yOffset, 0x0)
   end
-  if (x==7 or not isNextToTunnel(x+1, y)) then
+  if (x==7 or (worldMapArray[x+1][y] & 0x1000) ~= 0) then
     drawSprite(sTileFOWRight, x*40+31, y*40 - yOffset, 0x0)
   end
-  if (y==0 or not isNextToTunnel(x, y-1)) then
+  if (y==0 or (worldMapArray[x][y-1] & 0x1000) ~= 0) then
     drawSprite(sTileFOWUp, x*40, y*40 - yOffset, 0x0)
   end
-  if (y==5 or not isNextToTunnel(x, y+1)) then
+  if (y==5 or (worldMapArray[x][y+1] & 0x1000) ~= 0) then
     drawSprite(sTileFOWDown, x*40, y*40+31 - yOffset, 0x0)
   end
 end
@@ -74,7 +70,7 @@ function drawTile(x, y, yOffset, showHidden)
         end
       end
     end
-  elseif (showHidden or isNextToTunnel(x, y)) then
+  elseif (showHidden or (worldMapArray[x][y] & 0x1000) == 0) then
     if (worldMapArray[x][y] == 1) then
       drawSprite(sTileDirt, x*40, y*40 - yOffset)
     elseif (worldMapArray[x][y] == 2) then
@@ -113,6 +109,16 @@ function mineTile(x,y)
     money = money + r
   end
   worldMapArray[x][y] = 0
+   -- remove FOW flags
+  for fx = x-1, x+1 do
+    for fy = y-1, y+1 do
+      if (fx >= 0 and fx <= 7 and fy >= 0 and fy <= 5) then
+        if (worldMapArray[fx][fy] & 0x1000) ~= 0 then
+          worldMapArray[fx][fy] = worldMapArray[fx][fy] & 0x0FFF
+        end
+      end
+    end
+  end
   return r
 end
 
@@ -125,6 +131,38 @@ function genTile(x, y)
   else
     worldMapArray[x][y] = 1
   end
+  worldMapArray[x][y] = worldMapArray[x][y] + 0x1000 -- add FOW flag
+end
+
+function initTileFragment(dirtPath, overlayPath)
+  tile = loadSprite(dirtPath)
+  overlay = loadSprite(overlayPath)
+  drawSpriteToSprite(overlay, tile, 0, 0)
+  freeSprite(overlay)
+  return tile
+end
+
+function initFOWFragments(dirtPath)
+  spritesTable[shadowLeft] = loadSprite(dirtPath)
+end
+
+function initTileFragments(spritesTable, dirtPath)
+  spritesTable[dirt] = loadSprite(dirtPath)
+  spritesTable[tunnel] = initTileFragment(dirtPath, "gfx/tile_tunnel.bmp")
+  spritesTable[tunnelI] = initTileFragment(dirtPath, "gfx/tile_tunnel_I.bmp")
+  spritesTable[tunnelFlat] = initTileFragment(dirtPath, "gfx/tile_tunnel_flat.bmp")
+  spritesTable[tunnelLeft] = initTileFragment(dirtPath, "gfx/tile_tunnel_left.bmp")
+  spritesTable[tunnelRight] = initTileFragment(dirtPath, "gfx/tile_tunnel_left.bmp", 1)
+  spritesTable[tunnelLLeft] = initTileFragment(dirtPath, "gfx/tile_tunnel_L_left.bmp")
+  spritesTable[tunnelLRight] = initTileFragment(dirtPath, "gfx/tile_tunnel_L_left.bmp", 1)
+  spritesTable[tunnelFLeft] = initTileFragment(dirtPath, "gfx/tile_tunnel_L_left.bmp", 2)
+  spritesTable[tunnelFRight] = initTileFragment(dirtPath, "gfx/tile_tunnel_L_left.bmp", 3)
+  spritesTable[tunnelT] = initTileFragment(dirtPath, "gfx/tile_tunnel_T.bmp")
+  spritesTable[tunnelTDown] = initTileFragment(dirtPath, "gfx/tile_tunnel_T.bmp", 2)
+  spritesTable[tunnelTLeft] = initTileFragment(dirtPath, "gfx/tile_tunnel_T_left.bmp")
+  spritesTable[tunnelTRight] = initTileFragment(dirtPath, "gfx/tile_tunnel_T_left.bmp", 1)
+  spritesTable[tunnelX] = initTileFragment(dirtPath, "gfx/tile_tunnel_X.bmp")
+
 end
 
 sRobotIdle = loadSprite("gfx/idle.bmp")
@@ -169,14 +207,10 @@ for x = 0, 7 do
     genTile(x,y)
   end
 end
-worldMapArray[2][0] = 0
-worldMapArray[2][1] = 0
-
---[[worldMapArray[4][1] = 2
-worldMapArray[4][2] = 3
-worldMapArray[4][3] = 4
-worldMapArray[5][1] = 5
-worldMapArray[5][2] = 6]]
+worldMapArray[2][0] = 1
+worldMapArray[2][1] = 1
+mineTile(2, 0)
+mineTile(2, 1)
 
 yDigOffset = 0
 playerX = 2
@@ -198,5 +232,6 @@ rockImageLoaded = -1
 -- 4 = emerald
 -- 5 = gold
 -- 6 = diamond
+-- +0x1000 = FOW
 ]]
 
