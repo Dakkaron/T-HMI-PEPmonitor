@@ -91,7 +91,7 @@ boolean XPT2046::pressed(void)
             data[4] = _spi->transfer16(0x90) >> 4; // X
             data[5] = _spi->transfer16(0xD0) >> 4; // Last Y touch power down
         } else {
-            data[0] = data[1] = data[2] = data[3] = 0;
+            data[0] = data[1] = data[2] = data[3] = data[4] = data[5] = 0;
         }
         _spi->transfer16(0);
         digitalWrite(_cs, HIGH);

@@ -202,7 +202,8 @@ void drawRace_tunnel(DISPLAY_T* display, float x, int32_t y, float w, int32_t ro
 static void drawRace(DISPLAY_T* display, BlowData* blowData, int32_t animTime) {
   int32_t enemyY = -1;
   int32_t enemy2Y = -1;
-  float x,w;
+  float w = 0;
+  float x = 160.0;
   int32_t roadYOffset;
   float lastX, lastW;
   float speed = SPEED;

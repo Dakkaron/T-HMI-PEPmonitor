@@ -271,7 +271,7 @@ String getIniValue(String iniPath, String section, String key, String* errorMess
 }
 
 String getIniValueFromSection(char* sectionData, String key, String* errorMessage) {
-  int16_t lineStartMarker;
+  int16_t lineStartMarker = 0;
   int16_t keyEndMarker = -1;
   int16_t valStartMarker = -1;
   int16_t i = 0;

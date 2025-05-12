@@ -152,11 +152,9 @@ bool loadBmpAnim(DISPLAY_T** displays, String filename, uint8_t animFrames, uint
       }
       bmpFS.seek(seekOffset);
 
-      uint16_t padding;
+      uint16_t padding = 0;
       if (bitDepth == 24) {
         padding = (4 - ((w * 3) & 3)) & 3;
-      } else if (bitDepth == 32) {
-        padding = 0;
       }
       uint8_t lineBuffer[w * bytesPerPixel];
 
@@ -282,11 +280,9 @@ bool drawBmpSlice(String filename, int16_t x, int16_t y, int16_t maxH, bool debu
       maxH = maxH == -1 ? h : maxH;
       bmpFS.seek(seekOffset + (h-maxH)*w*bytesPerPixel);
 
-      uint16_t padding;
+      uint16_t padding = 0;
       if (bitDepth == 24) {
         padding = (4 - ((w * 3) & 3)) & 3;
-      } else if (bitDepth == 32) {
-        padding = 0;
       }
       uint8_t lineBuffer[w * bytesPerPixel];
 
@@ -390,11 +386,9 @@ bool drawBmp(DISPLAY_T* sprite, String filename, int16_t x, int16_t y, bool debu
       sprite->setSwapBytes(true);
       bmpFS.seek(seekOffset);
 
-      uint16_t padding;
+      uint16_t padding = 0;
       if (bitDepth == 24) {
         padding = (4 - ((w * 3) & 3)) & 3;
-      } else if (bitDepth == 32) {
-        padding = 0;
       }
       uint8_t lineBuffer[w * bytesPerPixel];
 
