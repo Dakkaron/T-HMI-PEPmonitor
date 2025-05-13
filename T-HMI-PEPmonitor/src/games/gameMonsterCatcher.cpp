@@ -13,12 +13,7 @@ static MonsterData playerMonsterData;
 static MonsterData enemyMonsterData;
 static uint8_t* monsterLevels;
 static String loadedAttacks[2] = {"",""}; //-1 == no attack loaded
-static TFT_eSprite attackSprites[2][ATTACK_SPRITE_NUMBER] {
-  {TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft),
-   TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft)},
-  {TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft),
-   TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft), TFT_eSprite(&tft)},
-};
+static TFT_eSprite* attackSprites[2] = {nullptr, nullptr};
 
 static void loadPlayerMonsterId(String* errorMessage);
 static void savePlayerMonsterId();
@@ -31,6 +26,7 @@ static uint16_t getRandomPreviouslyCaughtMonster() {
     if (monsterLevels[monsterId] > 0) {
       return monsterId;
     }
+    vTaskDelay(1); // watchdog
   }
 }
 
@@ -420,7 +416,9 @@ void drawShortBlowGame_monsterCatcher(DISPLAY_T* display, BlowData* blowData, St
     };
     loadBmpAnim(playerSpriteRefs, monsterCatcherGamePath + playerMonsterData.imagePath + "/anim_front.bmp", 2);
     if (playerEvolutionTarget != 0 && enemyCanBeCaught) {
-      while (touch.pressed()) {}
+      while (touch.pressed()) {
+        vTaskDelay(1); // watchdog
+      }
       while (true) {
         display->fillSprite(TFT_BLACK);
         display->fillRect(15,55,130,130,TFT_BLUE);
@@ -440,6 +438,7 @@ void drawShortBlowGame_monsterCatcher(DISPLAY_T* display, BlowData* blowData, St
             break;
           }
         }
+        vTaskDelay(1); // watchdog
       }
     } else if (playerEvolutionTarget != 0) {
       Serial.println("Defaulting to evolution");
@@ -474,6 +473,7 @@ void drawShortBlowGame_monsterCatcher(DISPLAY_T* display, BlowData* blowData, St
         if (enemyMonsterData.id==0) {
           while (!enemyMonsterData.isBasicMonster) {
             loadMonsterData(monsterCatcherGameIniPath, &enemyMonsterData, getRandomMonsterId(monsterCatcherGameIniPath, errorMessage), errorMessage);
+            vTaskDelay(1); // watchdog
           }
         }
         loadMonsterData(monsterCatcherGameIniPath, &playerMonsterData, enemyMonsterData.id, errorMessage);
@@ -553,12 +553,25 @@ void drawInhalationGame_monsterCatcher(DISPLAY_T* display, BlowData* blowData, S
 
 }
 
-
 void initGames_monsterCatcher(String gamePath, GameConfig* gameConfig, String* errorMessage) {
   Serial.print("Game path: ");
   Serial.println(gamePath);
   monsterCatcherGamePath = gamePath;
   monsterCatcherGameIniPath = gamePath + "gameconfig.ini";
+
+  for (int8_t i=0;i<2;i++) {
+    attackSprites[i] = (TFT_eSprite*) heap_caps_malloc(sizeof(TFT_eSprite) * ATTACK_SPRITE_NUMBER, MALLOC_CAP_SPIRAM);
+    if (!attackSprites) {
+      Serial.println("Failed to allocate attack sprites in PSRAM!");
+      checkFailWithMessage("Failed to allocate attack sprites in PSRAM!");
+      return;
+    }
+
+    for (size_t j = 0; j < ATTACK_SPRITE_NUMBER; ++j) {
+      new (&attackSprites[i][j]) TFT_eSprite(&tft); 
+    }
+  }
+
   maxMonsterCount = getMaxMonsterCount(monsterCatcherGameIniPath, errorMessage);
   monsterCount = getMonsterCount(monsterCatcherGameIniPath, errorMessage);
   monsterLevels = (uint8_t*)calloc(maxMonsterCount, sizeof(uint8_t));

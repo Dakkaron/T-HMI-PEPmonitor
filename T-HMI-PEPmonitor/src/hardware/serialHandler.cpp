@@ -115,6 +115,7 @@ void listDir(const char *dirname, uint8_t levels) {
 
 String readSerialLine() {
   String serialRead;
+  uint32_t nextYield = millis() + 1;
   while (true) { //  Read file path
     if (Serial.available() > 0) {
       char readCharacter = Serial.read();
@@ -123,6 +124,10 @@ String readSerialLine() {
         return serialRead;
       }
       serialRead += readCharacter;
+    }
+    if (millis() > nextYield) {
+      nextYield = millis() + 1;
+      vTaskDelay(1); // watchdog
     }
   }
 }
@@ -193,6 +198,7 @@ void handleUploadFileModeMedium() {
       remainingBytes--;
       if (remainingBytes%1024 == 0) {
         Serial.println(remainingBytes);
+        vTaskDelay(1); // watchdog
       }
     }
   }

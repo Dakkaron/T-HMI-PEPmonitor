@@ -57,6 +57,7 @@ void runProfileSelection() {
       runGameSelection();
       while (displayProgressionMenu(&spr, &errorMessage)) {
         checkFailWithMessage(errorMessage);
+        vTaskDelay(1); // watchdog
       }
       
       profileSuccessfullyLoaded = false;
@@ -95,6 +96,7 @@ void runProfileSelection() {
         break;
       }
     }
+    vTaskDelay(1); // watchdog
   }
   for (uint32_t i=0;i<profileData.tasks;i++) {
     switch (profileData.taskType[i]) {
@@ -294,6 +296,7 @@ void displayPhysioRotateScreen() {
       spr.pushSpriteFast(0, 0);
       displayOkButtonMs = 0;
     }
+    vTaskDelay(1); // watchdog
   }
   
   tft.fillScreen(TFT_BLACK);
