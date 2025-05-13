@@ -52,6 +52,61 @@ static uint32_t read32(fs::File &f) {
   return result;
 }
 
+static void parseBitmapLine(File* bmpFS, uint8_t* lineBuffer, uint16_t bytesPerPixel, uint16_t w, bool hasAlpha, uint16_t padding, uint16_t maskingColor) {
+  uint8_t r, g, b, a;
+  bmpFS->read(lineBuffer, w * bytesPerPixel);
+  uint8_t*  bptr = lineBuffer;
+  uint16_t* tptr = (uint16_t*)lineBuffer;
+  // Convert 24 to 16 bit colours
+  for (uint16_t col = 0; col < w; col++) {
+    if (bytesPerPixel == 4) {
+      b = *bptr++;
+      g = *bptr++;
+      r = *bptr++;
+      a = *bptr++;
+      if (a == 0) {
+        *tptr++ = maskingColor;
+      } else {
+        uint16_t res = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+        if (res == maskingColor) {
+          res = (res & 0xFFDF) | (~res & 0x0020); // flip lowest green bit
+        }
+        *tptr++ = res;
+      }
+    } else if (bytesPerPixel == 3) {
+      b = *bptr++;
+      g = *bptr++;
+      r = *bptr++;
+      *tptr++ = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+    } else if (bytesPerPixel == 2) {
+      if (hasAlpha) {
+        uint16_t color = (*bptr++);
+        color |= (*bptr++) << 8;
+        a = (color & 0x8000) >> 15;
+        if (a == 0) {
+          *tptr++ = maskingColor;
+        } else {
+          r = (color & 0xFC00) >> 10;
+          g = (color & 0x03E0) >> 5;
+          b = (color & 0x001F);
+          if (color == maskingColor) {
+            g = (g & 0xFFFE) | (~g & 0x1); // flip lowest green bit
+          }
+          *tptr++ = (r << 11) | (g << 6) | b;
+        }
+      } else {
+        uint16_t color = (*bptr++);
+        color |= (*bptr++) << 8;
+        *tptr++ = color;
+      }
+    }
+  }
+  // Read any line padding
+  if (padding) {
+    bmpFS->read((uint8_t*)tptr, padding);
+  }
+}
+
 bool loadBmp(DISPLAY_T* display, String filename) {
   return loadBmp(display, filename, 0);
 }
@@ -93,10 +148,14 @@ bool getBmpDimensions(String filename, int16_t* w, int16_t* h) {
   return true;
 }
 
+bool loadBmpAnim(DISPLAY_T** displays, String filename, uint8_t animFrames, uint8_t flipped) {
+  return loadBmpAnim(displays, filename, animFrames, flipped, TFT_BLACK);
+}
+
 /*
  * animFrames -> number of frames to export, 1 == no animation, still image
  */
-bool loadBmpAnim(DISPLAY_T** displays, String filename, uint8_t animFrames, uint8_t flipped) {
+bool loadBmpAnim(DISPLAY_T** displays, String filename, uint8_t animFrames, uint8_t flipped, uint16_t maskingColor) {
   Serial.print("File: ");
   Serial.println(filename);
   Serial.println("#");
@@ -119,8 +178,7 @@ bool loadBmpAnim(DISPLAY_T** displays, String filename, uint8_t animFrames, uint
   }
 
   uint32_t seekOffset;
-  uint16_t w, h, row, col, frameNr, frameH;
-  uint8_t  r, g, b, a;
+  uint16_t w, h, row, frameNr, frameH;
 
   uint32_t startTime = millis();
 
@@ -170,58 +228,7 @@ bool loadBmpAnim(DISPLAY_T** displays, String filename, uint8_t animFrames, uint
         Serial.print("Loading frame: ");
         Serial.println(frameNr);
         for (row = 0; row < frameH; row++) {
-          bmpFS.read(lineBuffer, sizeof(lineBuffer));
-          uint8_t*  bptr = lineBuffer;
-          uint16_t* tptr = (uint16_t*)lineBuffer;
-          // Convert 24 to 16 bit colours
-          for (uint16_t col = 0; col < w; col++) {
-            if (bytesPerPixel == 4) {
-              b = *bptr++;
-              g = *bptr++;
-              r = *bptr++;
-              a = *bptr++;
-              if (a == 0) {
-                *tptr++ = 0x0020;
-              } else {
-                uint16_t res = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
-                if (res == 0x0000) {
-                  res = ((2 & 0xF8) << 8) | ((0 & 0xFC) << 3) | (0 >> 3); // substitute transparent with r1,g0,b0
-                }
-                *tptr++ = res;
-              }
-            } else if (bytesPerPixel == 3) {
-              b = *bptr++;
-              g = *bptr++;
-              r = *bptr++;
-              *tptr++ = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
-            } else if (bytesPerPixel == 2) {
-              if (hasAlpha) {
-                uint16_t color = (*bptr++);
-                color |= (*bptr++) << 8;
-                a = (color & 0x8000) >> 15;
-                if (a == 0) {
-                  *tptr++ = 0x0000;
-                } else {
-                  if (color == 0x0000) {
-                    *tptr++ = 0x0020;
-                  } else {
-                    r = (color & 0xFC00) >> 10;
-                    g = (color & 0x03E0) >> 5;
-                    b = (color & 0x001F);
-                    *tptr++ = (r << 11) | (g << 6) | b;
-                  }
-                }
-              } else {
-                uint16_t color = (*bptr++);
-                color |= (*bptr++) << 8;
-                *tptr++ = color;
-              }
-            }
-          }
-          // Read any line padding
-          if (padding) {
-            bmpFS.read((uint8_t*)tptr, padding);
-          }
+          parseBitmapLine(&bmpFS, lineBuffer, bytesPerPixel, w, hasAlpha, padding, maskingColor);
 
           if (flipped & FLIPPED_H) {
             std::reverse((uint16_t*)lineBuffer, ((uint16_t*)lineBuffer)+w);
@@ -281,8 +288,7 @@ bool drawBmpSlice(String filename, int16_t x, int16_t y, int16_t maxH, bool debu
   }
 
   uint32_t seekOffset;
-  uint16_t w, h, row, col, frameNr;
-  uint8_t  r, g, b, a;
+  uint16_t w, h, row;
 
   uint32_t startTime = millis();
 
@@ -318,55 +324,8 @@ bool drawBmpSlice(String filename, int16_t x, int16_t y, int16_t maxH, bool debu
       uint8_t lineBuffer[w * bytesPerPixel];
 
       for (row = h-maxH; row < h; row++) {
-        bmpFS.read(lineBuffer, sizeof(lineBuffer));
-        uint8_t*  bptr = lineBuffer;
-        uint16_t* tptr = (uint16_t*)lineBuffer;
-        // Convert 24 to 16 bit colours
-        for (uint16_t col = 0; col < w; col++) {
-          b = *bptr++;
-          g = *bptr++;
-          r = *bptr++;
-          if (bytesPerPixel == 4) {
-            a = *bptr++;
-            if (a == 0) {
-              *tptr++ = 0x0000;
-            } else {
-              uint16_t res = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
-              if (res == 0x0000) {
-                res = 0x0001;
-              }
-              *tptr++ = res;
-            }
-          } else if (bytesPerPixel == 3) {
-            *tptr++ = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
-          } else if (bytesPerPixel == 2) {
-            if (hasAlpha) {
-              uint16_t color = (*bptr++);
-              color |= (*bptr++) << 8;
-              a = (color & 0x8000) >> 15;
-              if (a == 0) {
-                *tptr++ = 0x0000;
-              } else {
-                if (color == 0x0000) {
-                  *tptr++ = 0x0020;
-                } else {
-                  r = (color & 0xFC00) >> 10;
-                  g = (color & 0x03E0) >> 5;
-                  b = (color & 0x001F);
-                  *tptr++ = (r << 11) | (g << 6) | b;
-                }
-              }
-            } else {
-              uint16_t color = (*bptr++);
-              color |= (*bptr++) << 8;
-              *tptr++ = color;
-            }
-          }
-        }
-        // Read any line padding
-        if (padding) {
-          bmpFS.read((uint8_t*)tptr, padding);
-        }
+        parseBitmapLine(&bmpFS, lineBuffer, bytesPerPixel, w, hasAlpha, padding, TFT_BLACK);
+
         // Push the pixel row to screen, pushImage will crop the line if needed
         tft.pushImage(x, y + h - 1 - row, w, 1, (uint16_t*)lineBuffer, 0x0000);
       }
@@ -415,8 +374,7 @@ bool drawBmp(DISPLAY_T* sprite, String filename, int16_t x, int16_t y, bool debu
   }
 
   uint32_t seekOffset;
-  uint16_t w, h, row, col, frameNr;
-  uint8_t  r, g, b, a;
+  uint16_t w, h, row;
 
   uint32_t startTime = millis();
 
@@ -452,55 +410,8 @@ bool drawBmp(DISPLAY_T* sprite, String filename, int16_t x, int16_t y, bool debu
       uint8_t lineBuffer[w * bytesPerPixel];
 
       for (row = 0; row < h; row++) {
-        bmpFS.read(lineBuffer, sizeof(lineBuffer));
-        uint8_t*  bptr = lineBuffer;
-        uint16_t* tptr = (uint16_t*)lineBuffer;
-        // Convert 24 to 16 bit colours
-        for (uint16_t col = 0; col < w; col++) {
-          b = *bptr++;
-          g = *bptr++;
-          r = *bptr++;
-          if (bytesPerPixel == 4) {
-            a = *bptr++;
-            if (a == 0) {
-              *tptr++ = 0x0000;
-            } else {
-              uint16_t res = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
-              if (res == 0x0000) {
-                res = 0x0001;
-              }
-              *tptr++ = res;
-            }
-          } else if (bytesPerPixel == 3) {
-            *tptr++ = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
-          } else if (bytesPerPixel == 2) {
-            if (hasAlpha) {
-              uint16_t color = (*bptr++);
-              color |= (*bptr++) << 8;
-              a = (color & 0x8000) >> 15;
-              if (a == 0) {
-                *tptr++ = 0x0000;
-              } else {
-                if (color == 0x0000) {
-                  *tptr++ = 0x0020;
-                } else {
-                  r = (color & 0xFC00) >> 10;
-                  g = (color & 0x03E0) >> 5;
-                  b = (color & 0x001F);
-                  *tptr++ = (r << 11) | (g << 6) | b;
-                }
-              }
-            } else {
-              uint16_t color = (*bptr++);
-              color |= (*bptr++) << 8;
-              *tptr++ = color;
-            }
-          }
-        }
-        // Read any line padding
-        if (padding) {
-          bmpFS.read((uint8_t*)tptr, padding);
-        }
+        parseBitmapLine(&bmpFS, lineBuffer, bytesPerPixel, w, hasAlpha, padding, TFT_BLACK);
+
         // Push the pixel row to screen, pushImage will crop the line if needed
         sprite->pushImage(x, y + h - 1 - row, w, 1, (uint16_t*)lineBuffer, 0x0000);
       }
