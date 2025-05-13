@@ -11,11 +11,12 @@ bool luaProgressionMenuRunning;
 bool luaStrictMode = false;
 bool luaCacheGameCode = false;
 
-#define SPRITE_COUNT_LIMIT 50
+#define SPRITE_COUNT_LIMIT 100
 
 struct SpriteMetadata {
   uint32_t frameW;
   uint32_t frameH;
+  int32_t maskingColor;
 };
 
 static SpriteMetadata spriteMetadata[50];
@@ -146,6 +147,7 @@ static int lua_wrapper_loadSprite(lua_State* luaState) {
   String path = luaGamePath + luaL_checkstring(luaState, 1);
   Serial.println(path);
   int32_t flipped = luaL_optinteger(luaState, 2, 0);
+  int32_t maskingColor = luaL_optinteger(luaState, 3, -1);
 
   Serial.print("Collect garbage before loading sprite, free RAM before: ");
   Serial.println(ESP.getFreeHeap());
@@ -155,7 +157,7 @@ static int lua_wrapper_loadSprite(lua_State* luaState) {
 
   for (int32_t i=0;i<SPRITE_COUNT_LIMIT;i++) {
     if (!sprites[i].created()) {
-      if (!loadBmp(&sprites[i], path, flipped)) {
+      if (!loadBmp(&sprites[i], path, flipped, maskingColor)) {
         Serial.println("Failed to load sprite "+path);
         if (luaStrictMode) {
           checkFailWithMessage("Failed to load sprite "+path);
@@ -165,6 +167,7 @@ static int lua_wrapper_loadSprite(lua_State* luaState) {
       }
       spriteMetadata[i].frameW = sprites[i].width();
       spriteMetadata[i].frameH = sprites[i].height();
+      spriteMetadata[i].maskingColor = maskingColor;
       Serial.print("Found sprite slot: ");
       Serial.println(i);
       lua_pushinteger(luaState, i);
@@ -194,6 +197,7 @@ static int lua_wrapper_loadAnimSprite(lua_State* luaState) {
   String path = luaGamePath + luaL_checkstring(luaState, 1);
   Serial.println(path);
   int32_t flipped = luaL_optinteger(luaState, 4, 0);
+  int32_t maskingColor = luaL_optinteger(luaState, 5, -1);
 
   Serial.print("Collect garbage before loading sprite, free RAM before: ");
   Serial.println(ESP.getFreeHeap());
@@ -203,11 +207,16 @@ static int lua_wrapper_loadAnimSprite(lua_State* luaState) {
 
   for (int32_t i=0;i<SPRITE_COUNT_LIMIT;i++) {
     if (!sprites[i].created()) {
-      loadBmp(&sprites[i], path, flipped);
+      if (maskingColor != -1) {
+        loadBmp(&sprites[i], path, flipped, maskingColor);
+      } else {
+        loadBmp(&sprites[i], path, flipped);
+      }
       Serial.print("Found sprite slot: ");
       Serial.println(i);
       spriteMetadata[i].frameW = luaL_checknumber(luaState, 2);
       spriteMetadata[i].frameH = luaL_checknumber(luaState, 3);
+      spriteMetadata[i].maskingColor = maskingColor;
       lua_pushinteger(luaState, i);
       return 1;
     }
@@ -223,15 +232,20 @@ static int lua_wrapper_drawSprite(lua_State* luaState) {
   //Serial.println(handle);
   int16_t x = luaL_checknumber(luaState, 2);
   int16_t y = luaL_checknumber(luaState, 3);
-  int16_t transp = luaL_optinteger(luaState, 4, 0x0000);
-  if (handle<0 || handle>=SPRITE_COUNT_LIMIT | !sprites[handle].created()) {
+  if ((handle<0) || (handle>=SPRITE_COUNT_LIMIT) || (!sprites[handle].created())) {
     Serial.println("ERROR: Could not draw sprite: invalid sprite handle!");
     if (luaStrictMode) {
       checkFailWithMessage("ERROR: Could not draw sprite: invalid sprite handle!");
     }
     return 0;
   }
-  sprites[handle].pushToSprite(luaDisplay, x, y, transp);
+  int32_t maskingColor = spriteMetadata[handle].maskingColor;
+  if (maskingColor != -1) {
+    sprites[handle].pushToSprite(luaDisplay, x, y, spriteMetadata[handle].maskingColor);
+  } else {
+    sprites[handle].pushToSprite(luaDisplay, x, y);
+  }
+  
   //Serial.println("Draw sprite done");
   return 0;
 }
@@ -245,8 +259,12 @@ static int lua_wrapper_drawSpriteRegion(lua_State* luaState) {
   int16_t sy = luaL_checknumber(luaState, 5);
   int16_t sw = luaL_checknumber(luaState, 6);
   int16_t sh = luaL_checknumber(luaState, 7);
-  int16_t transp = luaL_optinteger(luaState, 8, 0x0000);
-  sprites[handle].pushToSprite(luaDisplay, tx, ty, sx, sy, sw, sh, transp);
+  int32_t maskingColor = spriteMetadata[handle].maskingColor;
+  if (maskingColor != -1) {
+    sprites[handle].pushToSprite(luaDisplay, tx, ty, sx, sy, sw, sh, maskingColor);
+  } else {
+    sprites[handle].pushToSprite(luaDisplay, tx, ty, sx, sy, sw, sh);
+  }
   Serial.println("Draw sprite region done");
   return 0;
 }
@@ -258,19 +276,58 @@ static int lua_wrapper_drawAnimSprite(lua_State* luaState) {
   int16_t tx = luaL_checknumber(luaState, 2);
   int16_t ty = luaL_checknumber(luaState, 3);
   int16_t frame = luaL_checknumber(luaState, 4);
-  int16_t transp = luaL_optnumber(luaState, 5, 0x0000);
   
   int16_t sw = spriteMetadata[handle].frameW;
   int16_t sh = spriteMetadata[handle].frameH;
 
   int16_t cols = sprites[handle].width() / sw;
-  int16_t rows = sprites[handle].height() / sh;
 
   int16_t col = frame % cols;
   int16_t row = frame / cols;
 
-  sprites[handle].pushToSprite(luaDisplay, tx, ty, sw*col, sh*row, sw, sh, transp);
+  int32_t maskingColor = spriteMetadata[handle].maskingColor;
+  if (maskingColor != -1) {
+    sprites[handle].pushToSprite(luaDisplay, tx, ty, sw*col, sh*row, sw, sh, maskingColor);
+  } else {
+    sprites[handle].pushToSprite(luaDisplay, tx, ty, sw*col, sh*row, sw, sh);
+  }
+  
   Serial.println("Draw anim sprite done");
+  return 0;
+}
+
+static int lua_wrapper_drawSpriteToSprite(lua_State* luaState) {
+  //Serial.print("Draw sprite ");
+  int16_t srcHandle = luaL_checkinteger(luaState, 1);
+  int16_t dstHandle = luaL_checkinteger(luaState, 2);
+  //Serial.println(handle);
+  int16_t x = luaL_checknumber(luaState, 3);
+  int16_t y = luaL_checknumber(luaState, 4);
+
+  if ((srcHandle<0) || (srcHandle>=SPRITE_COUNT_LIMIT) || (!sprites[srcHandle].created())) {
+    Serial.println("ERROR: Could not draw sprite to sprite: invalid src sprite handle!");
+    if (luaStrictMode) {
+      checkFailWithMessage("ERROR: Could not draw sprite to sprite: invalid src sprite handle!");
+    }
+    return 0;
+  }
+  if ((dstHandle<0) || (dstHandle>=SPRITE_COUNT_LIMIT) || (!sprites[dstHandle].created())) {
+    Serial.println("ERROR: Could not draw sprite to sprite: invalid dst sprite handle!");
+    if (luaStrictMode) {
+      checkFailWithMessage("ERROR: Could not draw sprite to sprite: invalid dst sprite handle!");
+    }
+    return 0;
+  }
+
+  int32_t maskingColor = spriteMetadata[srcHandle].maskingColor;
+  Serial.print("PSTS: Masking color: ");
+  Serial.println(maskingColor);
+  if (maskingColor != -1) {
+    sprites[srcHandle].pushToSprite(&sprites[dstHandle], x, y, maskingColor);
+  } else {
+    sprites[srcHandle].pushToSprite(&sprites[dstHandle], x, y);
+  }
+  //Serial.println("Draw sprite done");
   return 0;
 }
 
@@ -498,45 +555,58 @@ void initLua() {
   luaopen_string(luaState);
   luaopen_math(luaState);
 
-  lua_register(luaState, "serialPrintln", (const lua_CFunction) &lua_wrapper_serialPrintln);
-  lua_register(luaState, "serialPrint", (const lua_CFunction) &lua_wrapper_serialPrintln);
-  lua_register(luaState, "runScript", (const lua_CFunction) &lua_wrapper_runScript);
-  lua_register(luaState, "loadSprite", (const lua_CFunction) &lua_wrapper_loadSprite);
-  lua_register(luaState, "loadAnimSprite", (const lua_CFunction) &lua_wrapper_loadAnimSprite);
-  lua_register(luaState, "freeSprite", (const lua_CFunction) &lua_wrapper_freeSprite);
-  lua_register(luaState, "drawSprite", (const lua_CFunction) &lua_wrapper_drawSprite);
-  lua_register(luaState, "drawSpriteRegion", (const lua_CFunction) &lua_wrapper_drawSpriteRegion);
-  lua_register(luaState, "drawAnimSprite", (const lua_CFunction) &lua_wrapper_drawAnimSprite);
-  lua_register(luaState, "spriteWidth", (const lua_CFunction) &lua_wrapper_spriteWidth);
-  lua_register(luaState, "spriteHeight", (const lua_CFunction) &lua_wrapper_spriteHeight);
-  lua_register(luaState, "log", (const lua_CFunction) &lua_wrapper_log);
-  lua_register(luaState, "drawString", (const lua_CFunction) &lua_wrapper_drawString);
-  lua_register(luaState, "drawRect", (const lua_CFunction) &lua_wrapper_drawRect);
-  lua_register(luaState, "fillRect", (const lua_CFunction) &lua_wrapper_fillRect);
-  lua_register(luaState, "drawCircle", (const lua_CFunction) &lua_wrapper_drawCircle);
-  lua_register(luaState, "fillCircle", (const lua_CFunction) &lua_wrapper_fillCircle);
-  lua_register(luaState, "drawLine", (const lua_CFunction) &lua_wrapper_drawLine);
-  lua_register(luaState, "drawFastHLine", (const lua_CFunction) &lua_wrapper_drawFastHLine);
-  lua_register(luaState, "drawFastWLine", (const lua_CFunction) &lua_wrapper_drawFastWLine);
-  lua_register(luaState, "fillScreen", (const lua_CFunction) &lua_wrapper_fillScreen);
-  lua_register(luaState, "setTextColor", (const lua_CFunction) &lua_wrapper_setTextColor);
-  lua_register(luaState, "setTextSize", (const lua_CFunction) &lua_wrapper_setTextSize);
-  lua_register(luaState, "setTextDatum", (const lua_CFunction) &lua_wrapper_setTextDatum);
-  lua_register(luaState, "setCursor", (const lua_CFunction) &lua_wrapper_setCursor);
-  lua_register(luaState, "print", (const lua_CFunction) &lua_wrapper_print);
-  lua_register(luaState, "println", (const lua_CFunction) &lua_wrapper_println);
-  lua_register(luaState, "cls", (const lua_CFunction) &lua_wrapper_cls);
-  lua_register(luaState, "prefsSetString", (const lua_CFunction) &lua_wrapper_prefsSetString);
-  lua_register(luaState, "prefsGetString", (const lua_CFunction) &lua_wrapper_prefsGetString);
-  lua_register(luaState, "prefsSetInt", (const lua_CFunction) &lua_wrapper_prefsSetInt);
-  lua_register(luaState, "prefsGetInt", (const lua_CFunction) &lua_wrapper_prefsGetInt);
-  lua_register(luaState, "prefsSetNumber", (const lua_CFunction) &lua_wrapper_prefsSetNumber);
-  lua_register(luaState, "prefsGetNumber", (const lua_CFunction) &lua_wrapper_prefsGetNumber);
-  lua_register(luaState, "closeProgressionMenu", (const lua_CFunction) &lua_wrapper_closeProgressionMenu);
-  lua_register(luaState, "constrain", (const lua_CFunction) &lua_wrapper_constrain);
-  lua_register(luaState, "isTouchInZone", (const lua_CFunction) &lua_wrapper_isTouchInZone);
-  lua_register(luaState, "getFreeRAM", (const lua_CFunction) &lua_wrapper_getFreeRAM);
-  lua_register(luaState, "disableCaching", (const lua_CFunction) &lua_wrapper_disableCaching);
+  sprites = (TFT_eSprite*) heap_caps_malloc(sizeof(TFT_eSprite) * SPRITE_COUNT_LIMIT, MALLOC_CAP_SPIRAM);
+  if (!sprites) {
+    Serial.println("Failed to allocate sprites in PSRAM!");
+    checkFailWithMessage("Failed to allocate sprites in PSRAM!");
+    return;
+  }
+
+  for (size_t i = 0; i < SPRITE_COUNT_LIMIT; ++i) {
+    new (&sprites[i]) TFT_eSprite(&tft);
+  }
+
+
+  lua_register(luaState, "serialPrintln", (lua_CFunction) &lua_wrapper_serialPrintln);
+  lua_register(luaState, "serialPrint", (lua_CFunction) &lua_wrapper_serialPrintln);
+  lua_register(luaState, "runScript", (lua_CFunction) &lua_wrapper_runScript);
+  lua_register(luaState, "loadSprite", (lua_CFunction) &lua_wrapper_loadSprite);
+  lua_register(luaState, "loadAnimSprite", (lua_CFunction) &lua_wrapper_loadAnimSprite);
+  lua_register(luaState, "freeSprite", (lua_CFunction) &lua_wrapper_freeSprite);
+  lua_register(luaState, "drawSprite", (lua_CFunction) &lua_wrapper_drawSprite);
+  lua_register(luaState, "drawSpriteRegion", (lua_CFunction) &lua_wrapper_drawSpriteRegion);
+  lua_register(luaState, "drawAnimSprite", (lua_CFunction) &lua_wrapper_drawAnimSprite);
+  lua_register(luaState, "drawSpriteToSprite", (lua_CFunction) &lua_wrapper_drawSpriteToSprite);
+  lua_register(luaState, "spriteWidth", (lua_CFunction) &lua_wrapper_spriteWidth);
+  lua_register(luaState, "spriteHeight", (lua_CFunction) &lua_wrapper_spriteHeight);
+  lua_register(luaState, "log", (lua_CFunction) &lua_wrapper_log);
+  lua_register(luaState, "drawString", (lua_CFunction) &lua_wrapper_drawString);
+  lua_register(luaState, "drawRect", (lua_CFunction) &lua_wrapper_drawRect);
+  lua_register(luaState, "fillRect", (lua_CFunction) &lua_wrapper_fillRect);
+  lua_register(luaState, "drawCircle", (lua_CFunction) &lua_wrapper_drawCircle);
+  lua_register(luaState, "fillCircle", (lua_CFunction) &lua_wrapper_fillCircle);
+  lua_register(luaState, "drawLine", (lua_CFunction) &lua_wrapper_drawLine);
+  lua_register(luaState, "drawFastHLine", (lua_CFunction) &lua_wrapper_drawFastHLine);
+  lua_register(luaState, "drawFastWLine", (lua_CFunction) &lua_wrapper_drawFastWLine);
+  lua_register(luaState, "fillScreen", (lua_CFunction) &lua_wrapper_fillScreen);
+  lua_register(luaState, "setTextColor", (lua_CFunction) &lua_wrapper_setTextColor);
+  lua_register(luaState, "setTextSize", (lua_CFunction) &lua_wrapper_setTextSize);
+  lua_register(luaState, "setTextDatum", (lua_CFunction) &lua_wrapper_setTextDatum);
+  lua_register(luaState, "setCursor", (lua_CFunction) &lua_wrapper_setCursor);
+  lua_register(luaState, "print", (lua_CFunction) &lua_wrapper_print);
+  lua_register(luaState, "println", (lua_CFunction) &lua_wrapper_println);
+  lua_register(luaState, "cls", (lua_CFunction) &lua_wrapper_cls);
+  lua_register(luaState, "prefsSetString", (lua_CFunction) &lua_wrapper_prefsSetString);
+  lua_register(luaState, "prefsGetString", (lua_CFunction) &lua_wrapper_prefsGetString);
+  lua_register(luaState, "prefsSetInt", (lua_CFunction) &lua_wrapper_prefsSetInt);
+  lua_register(luaState, "prefsGetInt", (lua_CFunction) &lua_wrapper_prefsGetInt);
+  lua_register(luaState, "prefsSetNumber", (lua_CFunction) &lua_wrapper_prefsSetNumber);
+  lua_register(luaState, "prefsGetNumber", (lua_CFunction) &lua_wrapper_prefsGetNumber);
+  lua_register(luaState, "closeProgressionMenu", (lua_CFunction) &lua_wrapper_closeProgressionMenu);
+  lua_register(luaState, "constrain", (lua_CFunction) &lua_wrapper_constrain);
+  lua_register(luaState, "isTouchInZone", (lua_CFunction) &lua_wrapper_isTouchInZone);
+  lua_register(luaState, "getFreeRAM", (lua_CFunction) &lua_wrapper_getFreeRAM);
+  lua_register(luaState, "disableCaching", (lua_CFunction) &lua_wrapper_disableCaching);
   bindingsInitiated = true;
 }
 

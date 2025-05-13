@@ -107,18 +107,6 @@ static void parseBitmapLine(File* bmpFS, uint8_t* lineBuffer, uint16_t bytesPerP
   }
 }
 
-bool loadBmp(DISPLAY_T* display, String filename) {
-  return loadBmp(display, filename, 0);
-}
-
-bool loadBmp(DISPLAY_T* display, String filename, uint8_t flipped) {
-  return loadBmpAnim(&display, filename, 1, flipped);
-}
-
-bool loadBmpAnim(DISPLAY_T** display, String filename, uint8_t animFrames) {
-  return loadBmpAnim(display, filename, animFrames, 0);
-}
-
 bool getBmpDimensions(String filename, int16_t* w, int16_t* h) {
   File bmpFS;
   bmpFS = SD_MMC.open(filename);
@@ -146,6 +134,22 @@ bool getBmpDimensions(String filename, int16_t* w, int16_t* h) {
   }
   bmpFS.close();
   return true;
+}
+
+bool loadBmp(DISPLAY_T* display, String filename) {
+  return loadBmp(display, filename, 0);
+}
+
+bool loadBmp(DISPLAY_T* display, String filename, uint8_t flipped) {
+  return loadBmpAnim(&display, filename, 1, flipped);
+}
+
+bool loadBmp(DISPLAY_T* display, String filename, uint8_t flipped, uint16_t maskingColor) {
+  return loadBmpAnim(&display, filename, 1, flipped, maskingColor);
+}
+
+bool loadBmpAnim(DISPLAY_T** display, String filename, uint8_t animFrames) {
+  return loadBmpAnim(display, filename, animFrames, 0);
 }
 
 bool loadBmpAnim(DISPLAY_T** displays, String filename, uint8_t animFrames, uint8_t flipped) {
