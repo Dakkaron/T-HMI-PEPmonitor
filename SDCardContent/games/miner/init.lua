@@ -1,15 +1,24 @@
-function drawFOW(x, y, yOffset)
-  if (x==0 or (worldMapArray[x-1][y] & 0x1000) ~= 0) then
-    drawSprite(sTileFOWLeft, x*40, y*40 - yOffset, 0x0)
-  end
-  if (x==7 or (worldMapArray[x+1][y] & 0x1000) ~= 0) then
-    drawSprite(sTileFOWRight, x*40+31, y*40 - yOffset, 0x0)
-  end
-  if (y==0 or (worldMapArray[x][y-1] & 0x1000) ~= 0) then
-    drawSprite(sTileFOWUp, x*40, y*40 - yOffset, 0x0)
-  end
-  if (y==5 or (worldMapArray[x][y+1] & 0x1000) ~= 0) then
-    drawSprite(sTileFOWDown, x*40, y*40+31 - yOffset, 0x0)
+function drawFOWDirt(x, y, yOffset, showHidden)
+  if (showHidden) then
+    drawSprite(tiles.dirt, x*40, y*40 - yOffset)
+  elseif ((x==0 or (worldMapArray[x-1][y] & 0x1000) ~= 0) and (y==0 or (worldMapArray[x][y-1] & 0x1000) ~= 0)) then
+    drawSprite(tiles.shadowTopLeft, x*40, y*40 - yOffset, 0x0)
+  elseif ((x==7 or (worldMapArray[x+1][y] & 0x1000) ~= 0) and (y==0 or (worldMapArray[x][y-1] & 0x1000) ~= 0)) then
+    drawSprite(tiles.shadowTopRight, x*40, y*40 - yOffset, 0x0)
+  elseif ((x==0 or (worldMapArray[x-1][y] & 0x1000) ~= 0) and (y==5 or (worldMapArray[x][y+1] & 0x1000) ~= 0)) then
+    drawSprite(tiles.shadowBottomLeft, x*40, y*40 - yOffset, 0x0)
+  elseif ((x==7 or (worldMapArray[x+1][y] & 0x1000) ~= 0) and (y==5 or (worldMapArray[x][y+1] & 0x1000) ~= 0)) then
+    drawSprite(tiles.shadowBottomRight, x*40, y*40 - yOffset, 0x0)
+  elseif (x==0 or (worldMapArray[x-1][y] & 0x1000) ~= 0) then
+    drawSprite(tiles.shadowLeft, x*40, y*40 - yOffset, 0x0)
+  elseif (x==7 or (worldMapArray[x+1][y] & 0x1000) ~= 0) then
+    drawSprite(tiles.shadowRight, x*40, y*40 - yOffset, 0x0)
+  elseif (y==0 or (worldMapArray[x][y-1] & 0x1000) ~= 0) then
+    drawSprite(tiles.shadowTop, x*40, y*40 - yOffset, 0x0)
+  elseif (y==5 or (worldMapArray[x][y+1] & 0x1000) ~= 0) then
+    drawSprite(tiles.shadowBottom, x*40, y*40 - yOffset, 0x0)
+  else
+    drawSprite(tiles.dirt, x*40, y*40 - yOffset, 0x0)
   end
 end
 
@@ -19,29 +28,29 @@ function drawTile(x, y, yOffset, showHidden)
       if (x > 0 and worldMapArray[x-1][y] == 0) then -- left
         if (x < 7 and worldMapArray[x+1][y] == 0) then -- right
           if (worldMapArray[x][y+1] == 0) then -- down
-            drawSprite(sTileTunnelX, x*40, y*40 - yOffset)
+            drawSprite(tiles.tunnelX, x*40, y*40 - yOffset)
           else -- up, left, right, not down
-            drawSprite(sTileTunnelT, x*40, y*40 - yOffset)
+            drawSprite(tiles.tunnelT, x*40, y*40 - yOffset)
           end
         else -- up, left, not right
           if (worldMapArray[x][y+1] == 0) then -- down
-            drawSprite(sTileTunnelTLeft, x*40, y*40 - yOffset)
+            drawSprite(tiles.tunnelTLeft, x*40, y*40 - yOffset)
           else -- not down
-            drawSprite(sTileTunnelLLeft, x*40, y*40 - yOffset)
+            drawSprite(tiles.tunnelLLeft, x*40, y*40 - yOffset)
           end
         end
       else -- up, not left
         if (x < 7 and worldMapArray[x+1][y] == 0) then -- right
           if (worldMapArray[x][y+1] == 0) then -- down
-            drawSprite(sTileTunnelTRight, x*40, y*40 - yOffset)
+            drawSprite(tiles.tunnelTRight, x*40, y*40 - yOffset)
           else -- not down
-            drawSprite(sTileTunnelLRight, x*40, y*40 - yOffset)
+            drawSprite(tiles.tunnelLRight, x*40, y*40 - yOffset)
           end
         else -- up, not left, not right
           if (worldMapArray[x][y+1] == 0) then -- down
-            drawSprite(sTileTunnelI, x*40, y*40 - yOffset)
+            drawSprite(tiles.tunnelI, x*40, y*40 - yOffset)
           else -- not down
-            drawSprite(sTileTunnel, x*40, y*40 - yOffset)
+            drawSprite(tiles.tunnel, x*40, y*40 - yOffset)
           end
         end
       end
@@ -49,44 +58,40 @@ function drawTile(x, y, yOffset, showHidden)
       if (x > 0 and worldMapArray[x-1][y] == 0) then -- left
         if (x < 7 and worldMapArray[x+1][y] == 0) then -- right
           if (worldMapArray[x][y+1] == 0) then -- down
-            drawSprite(sTileTunnelTDown, x*40, y*40 - yOffset)
+            drawSprite(tiles.tunnelTDown, x*40, y*40 - yOffset)
           else -- not up, left, right, not down
-            drawSprite(sTileTunnelFlat, x*40, y*40 - yOffset)
+            drawSprite(tiles.tunnelFlat, x*40, y*40 - yOffset)
           end
         else -- not up, left, not right
           if (worldMapArray[x][y+1] == 0) then -- down
-            drawSprite(sTileTunnelFLeft, x*40, y*40 - yOffset)
+            drawSprite(tiles.tunnelFLeft, x*40, y*40 - yOffset)
           else -- not down
-            drawSprite(sTileTunnelLeft, x*40, y*40 - yOffset)
+            drawSprite(tiles.tunnelLeft, x*40, y*40 - yOffset)
           end
         end
       else -- not up, not left
         if (x < 7 and worldMapArray[x+1][y] == 0) then -- right
           if (worldMapArray[x][y+1] == 0) then -- down
-            drawSprite(sTileTunnelFRight, x*40, y*40 - yOffset)
+            drawSprite(tiles.tunnelFRight, x*40, y*40 - yOffset)
           else -- not down
-            drawSprite(sTileTunnelRight, x*40, y*40 - yOffset)
+            drawSprite(tiles.tunnelRight, x*40, y*40 - yOffset)
           end
         end
       end
     end
   elseif (showHidden or (worldMapArray[x][y] & 0x1000) == 0) then
-    if (worldMapArray[x][y] == 1) then
-      drawSprite(sTileDirt, x*40, y*40 - yOffset)
-    elseif (worldMapArray[x][y] == 2) then
+    drawFOWDirt(x, y, yOffset, showHidden)
+    if (worldMapArray[x][y] & 0xFFF == 2) then
       drawSprite(sTileOreIron, x*40, y*40 - yOffset)
-    elseif (worldMapArray[x][y] == 3) then
+    elseif (worldMapArray[x][y] & 0xFFF == 3) then
       drawSprite(sTileOreCopper, x*40, y*40 - yOffset)
-    elseif (worldMapArray[x][y] == 4) then
+    elseif (worldMapArray[x][y] & 0xFFF == 4) then
       drawSprite(sTileOreEmerald, x*40, y*40 - yOffset)
-    elseif (worldMapArray[x][y] == 5) then
+    elseif (worldMapArray[x][y] & 0xFFF == 5) then
       drawSprite(sTileOreGold, x*40, y*40 - yOffset)
-    elseif (worldMapArray[x][y] == 6) then
+    elseif (worldMapArray[x][y] & 0xFFF == 6) then
       drawSprite(sTileOreDiamond, x*40, y*40 - yOffset)
     end
-  end
-  if (not showHidden) then
-    drawFOW(x, y, yOffset)
   end
 end
 
@@ -134,69 +139,91 @@ function genTile(x, y)
   worldMapArray[x][y] = worldMapArray[x][y] + 0x1000 -- add FOW flag
 end
 
-function initTileFragment(dirtPath, overlayPath)
+function initTileFragment(dirtPath, overlayPath, flip)
   tile = loadSprite(dirtPath)
-  overlay = loadSprite(overlayPath)
-  drawSpriteToSprite(overlay, tile, 0, 0)
+  tmp = loadSprite(overlayPath, flip, 0x0000)
+  overlay = loadSprite(overlayPath, flip, 0x0000)
+  drawSpriteToSprite(overlay, tmp, 0, 0) -- TODO: Fix drawSpriteToSprite so that it doesn't invert colors
+  drawSpriteToSprite(tmp, tile, 0, 0)
+  freeSprite(tmp)
   freeSprite(overlay)
   return tile
 end
 
-function initFOWFragments(dirtPath)
-  spritesTable[shadowLeft] = loadSprite(dirtPath)
+function initTileFragments(tileTable, dirtPath)
+  tileTable["dirt"] = loadSprite(dirtPath, 0, 0x0000)
+  tileTable["tunnel"] = initTileFragment(dirtPath, "gfx/tilefragments/tile_tunnel.bmp", 0)
+  tileTable["tunnelI"] = initTileFragment(dirtPath, "gfx/tilefragments/tile_tunnel_I.bmp", 0)
+  tileTable["tunnelFlat"] = initTileFragment(dirtPath, "gfx/tilefragments/tile_tunnel_flat.bmp", 0)
+  tileTable["tunnelLeft"] = initTileFragment(dirtPath, "gfx/tilefragments/tile_tunnel_left.bmp", 0)
+  tileTable["tunnelRight"] = initTileFragment(dirtPath, "gfx/tilefragments/tile_tunnel_left.bmp", 1)
+  tileTable["tunnelLLeft"] = initTileFragment(dirtPath, "gfx/tilefragments/tile_tunnel_L_left.bmp", 0)
+  tileTable["tunnelLRight"] = initTileFragment(dirtPath, "gfx/tilefragments/tile_tunnel_L_left.bmp", 1)
+  tileTable["tunnelFLeft"] = initTileFragment(dirtPath, "gfx/tilefragments/tile_tunnel_L_left.bmp", 2)
+  tileTable["tunnelFRight"] = initTileFragment(dirtPath, "gfx/tilefragments/tile_tunnel_L_left.bmp", 3)
+  tileTable["tunnelT"] = initTileFragment(dirtPath, "gfx/tilefragments/tile_tunnel_T.bmp", 0)
+  tileTable["tunnelTDown"] = initTileFragment(dirtPath, "gfx/tilefragments/tile_tunnel_T.bmp", 2)
+  tileTable["tunnelTLeft"] = initTileFragment(dirtPath, "gfx/tilefragments/tile_tunnel_T_left.bmp", 0)
+  tileTable["tunnelTRight"] = initTileFragment(dirtPath, "gfx/tilefragments/tile_tunnel_T_left.bmp", 1)
+  tileTable["tunnelX"] = initTileFragment(dirtPath, "gfx/tilefragments/tile_tunnel_X.bmp", 0)
+
+  sFOWBottom = loadSprite("gfx/tilefragments/tile_fow_down.bmp", 0, 0x0001)
+  sFOWTop = loadSprite("gfx/tilefragments/tile_fow_down.bmp", 2, 0x0001)
+  sFOWLeft = loadSprite("gfx/tilefragments/tile_fow_left.bmp", 0, 0x0001)
+  sFOWRight = loadSprite("gfx/tilefragments/tile_fow_left.bmp", 1, 0x0001)
+  tileTable["shadowLeft"] = loadSprite(dirtPath)
+  tileTable["shadowRight"] = loadSprite(dirtPath)
+  tileTable["shadowTop"] = loadSprite(dirtPath)
+  tileTable["shadowBottom"] = loadSprite(dirtPath)
+  tileTable["shadowTopLeft"] = loadSprite(dirtPath)
+  tileTable["shadowTopRight"] = loadSprite(dirtPath)
+  tileTable["shadowBottomLeft"] = loadSprite(dirtPath)
+  tileTable["shadowBottomRight"] = loadSprite(dirtPath)
+
+  drawSpriteToSprite(sFOWLeft, tileTable["shadowLeft"], 0, 0)
+  drawSpriteToSprite(sFOWRight, tileTable["shadowRight"], 31, 0)
+  drawSpriteToSprite(sFOWTop, tileTable["shadowTop"], 0, 0)
+  drawSpriteToSprite(sFOWBottom, tileTable["shadowBottom"], 0, 31)
+
+  drawSpriteToSprite(sFOWLeft, tileTable["shadowTopLeft"], 0, 0)
+  drawSpriteToSprite(sFOWTop, tileTable["shadowTopLeft"], 0, 0)
+
+  drawSpriteToSprite(sFOWRight, tileTable["shadowTopRight"], 31, 0)
+  drawSpriteToSprite(sFOWTop, tileTable["shadowTopRight"], 0, 0)
+
+  drawSpriteToSprite(sFOWLeft, tileTable["shadowBottomLeft"], 0, 0)
+  drawSpriteToSprite(sFOWBottom, tileTable["shadowBottomLeft"], 0, 31)
+
+  drawSpriteToSprite(sFOWRight, tileTable["shadowBottomRight"], 31, 0)
+  drawSpriteToSprite(sFOWBottom, tileTable["shadowBottomRight"], 0, 31)
+
+  freeSprite(sFOWBottom)
+  freeSprite(sFOWTop)
+  freeSprite(sFOWLeft)
+  freeSprite(sFOWRight)
 end
 
-function initTileFragments(spritesTable, dirtPath)
-  spritesTable[dirt] = loadSprite(dirtPath)
-  spritesTable[tunnel] = initTileFragment(dirtPath, "gfx/tile_tunnel.bmp")
-  spritesTable[tunnelI] = initTileFragment(dirtPath, "gfx/tile_tunnel_I.bmp")
-  spritesTable[tunnelFlat] = initTileFragment(dirtPath, "gfx/tile_tunnel_flat.bmp")
-  spritesTable[tunnelLeft] = initTileFragment(dirtPath, "gfx/tile_tunnel_left.bmp")
-  spritesTable[tunnelRight] = initTileFragment(dirtPath, "gfx/tile_tunnel_left.bmp", 1)
-  spritesTable[tunnelLLeft] = initTileFragment(dirtPath, "gfx/tile_tunnel_L_left.bmp")
-  spritesTable[tunnelLRight] = initTileFragment(dirtPath, "gfx/tile_tunnel_L_left.bmp", 1)
-  spritesTable[tunnelFLeft] = initTileFragment(dirtPath, "gfx/tile_tunnel_L_left.bmp", 2)
-  spritesTable[tunnelFRight] = initTileFragment(dirtPath, "gfx/tile_tunnel_L_left.bmp", 3)
-  spritesTable[tunnelT] = initTileFragment(dirtPath, "gfx/tile_tunnel_T.bmp")
-  spritesTable[tunnelTDown] = initTileFragment(dirtPath, "gfx/tile_tunnel_T.bmp", 2)
-  spritesTable[tunnelTLeft] = initTileFragment(dirtPath, "gfx/tile_tunnel_T_left.bmp")
-  spritesTable[tunnelTRight] = initTileFragment(dirtPath, "gfx/tile_tunnel_T_left.bmp", 1)
-  spritesTable[tunnelX] = initTileFragment(dirtPath, "gfx/tile_tunnel_X.bmp")
-
+function freeTileFragments(tileTable)
+  for k, v in pairs(tileTable) do
+    freeSprite(v)
+  end
 end
 
-sRobotIdle = loadSprite("gfx/idle.bmp")
-sRobotDig = loadSprite("gfx/dig.bmp")
-sRobotFunnel = loadSprite("gfx/funnel.bmp")
-sTileDirt = loadSprite("gfx/tile_dirt.bmp")
-sTileOreIron = loadSprite("gfx/tile_ore_iron.bmp")
-sTileOreCopper = loadSprite("gfx/tile_ore_copper.bmp")
-sTileOreEmerald = loadSprite("gfx/tile_ore_emerald.bmp")
-sTileOreGold = loadSprite("gfx/tile_ore_gold.bmp")
-sTileOreDiamond = loadSprite("gfx/tile_ore_diamond.bmp")
-sTileTunnel = loadSprite("gfx/tile_tunnel.bmp")
-sTileTunnelI = loadSprite("gfx/tile_tunnel_I.bmp")
-sTileTunnelFlat = loadSprite("gfx/tile_tunnel_flat.bmp")
-sTileTunnelLeft = loadSprite("gfx/tile_tunnel_left.bmp")
-sTileTunnelRight = loadSprite("gfx/tile_tunnel_left.bmp", 1)
-sTileTunnelLLeft = loadSprite("gfx/tile_tunnel_L_left.bmp")
-sTileTunnelLRight = loadSprite("gfx/tile_tunnel_L_left.bmp", 1)
-sTileTunnelFLeft = loadSprite("gfx/tile_tunnel_L_left.bmp", 2)
-sTileTunnelFRight = loadSprite("gfx/tile_tunnel_L_left.bmp", 3)
-sTileTunnelT = loadSprite("gfx/tile_tunnel_T.bmp")
-sTileTunnelTDown = loadSprite("gfx/tile_tunnel_T.bmp", 2)
-sTileTunnelTLeft = loadSprite("gfx/tile_tunnel_T_left.bmp")
-sTileTunnelTRight = loadSprite("gfx/tile_tunnel_T_left.bmp", 1)
-sTileTunnelX = loadSprite("gfx/tile_tunnel_X.bmp")
+tiles = {}
+initTileFragments(tiles, "gfx/tilefragments/tile_dirt1.bmp")
 
-sTileFOWDown = loadSprite("gfx/tile_fow_down.bmp")
-sTileFOWUp = loadSprite("gfx/tile_fow_down.bmp", 2)
-sTileFOWLeft = loadSprite("gfx/tile_fow_left.bmp")
-sTileFOWRight = loadSprite("gfx/tile_fow_left.bmp", 1)
+sRobotIdle = loadSprite("gfx/idle.bmp", 0, 0x0001)
+sRobotDig = loadSprite("gfx/dig.bmp", 0, 0x0001)
+sRobotFunnel = loadSprite("gfx/funnel.bmp", 0, 0x0001)
+sTileOreIron = loadSprite("gfx/tilefragments/tile_ore_iron.bmp", 0, 0x0001)
+sTileOreCopper = loadSprite("gfx/tilefragments/tile_ore_copper.bmp", 0, 0x0001)
+sTileOreEmerald = loadSprite("gfx/tilefragments/tile_ore_emerald.bmp", 0, 0x0001)
+sTileOreGold = loadSprite("gfx/tilefragments/tile_ore_gold.bmp", 0, 0x0001)
+sTileOreDiamond = loadSprite("gfx/tilefragments/tile_ore_diamond.bmp", 0, 0x0001)
 
-sItemLantern = loadSprite("gfx/item_lantern.bmp")
+sItemLantern = loadSprite("gfx/item_lantern.bmp", 0, 0x0001)
 
-sExplosionAnim = loadAnimSprite("gfx/explosion-0.bmp", 80, 48)
+sExplosionAnim = loadAnimSprite("gfx/explosion-0.bmp", 80, 48, 0, 0x0001)
 
 math.randomseed(ms)
 
@@ -234,4 +261,3 @@ rockImageLoaded = -1
 -- 6 = diamond
 -- +0x1000 = FOW
 ]]
-

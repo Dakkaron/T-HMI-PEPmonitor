@@ -9,7 +9,7 @@ if rockImageLoaded < targetRockImageNumber then
   end
   rockImageLoaded = targetRockImageNumber
   if rockImageLoaded < 10 then
-    sRock = loadSprite("gfx/rock_" .. rockImageLoaded .. ".bmp")
+    sRock = loadSprite("gfx/rock_" .. rockImageLoaded .. ".bmp", 0, 0x0000)
   end
   if rockImageLoaded > 0 then
     earnTime = ms + 1000
