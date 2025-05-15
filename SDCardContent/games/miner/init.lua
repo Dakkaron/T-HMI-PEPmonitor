@@ -1,21 +1,25 @@
+function isNextToTunnel(x, y)
+  return (x>0 and worldMapArray[x-1][y]==0) or (x<7 and worldMapArray[x+1][y]==0) or (y>0 and worldMapArray[x][y-1]==0) or (y<5 and worldMapArray[x][y+1]==0) or (x>0 and y>0 and worldMapArray[x-1][y-1]==0) or (x<7 and y>0 and worldMapArray[x+1][y-1]==0) or (x>0 and y<5 and worldMapArray[x-1][y+1]==0) or (x<7 and y<5 and worldMapArray[x+1][y+1]==0)
+end
+
 function drawFOWDirt(x, y, yOffset, showHidden)
   if (showHidden) then
     drawSprite(tiles.dirt, x*40, y*40 - yOffset)
-  elseif ((x==0 or (worldMapArray[x-1][y] & 0x1000) ~= 0) and (y==0 or (worldMapArray[x][y-1] & 0x1000) ~= 0)) then
+  elseif ((x==0 or not isNextToTunnel(x-1, y)) and (y==0 or not isNextToTunnel(x, y-1))) then
     drawSprite(tiles.shadowTopLeft, x*40, y*40 - yOffset, 0x0)
-  elseif ((x==7 or (worldMapArray[x+1][y] & 0x1000) ~= 0) and (y==0 or (worldMapArray[x][y-1] & 0x1000) ~= 0)) then
+  elseif ((x==7 or not isNextToTunnel(x+1, y)) and (y==0 or not isNextToTunnel(x, y-1))) then
     drawSprite(tiles.shadowTopRight, x*40, y*40 - yOffset, 0x0)
-  elseif ((x==0 or (worldMapArray[x-1][y] & 0x1000) ~= 0) and (y==5 or (worldMapArray[x][y+1] & 0x1000) ~= 0)) then
+  elseif ((x==0 or not isNextToTunnel(x-1, y)) and (y==5 or not isNextToTunnel(x, y+1))) then
     drawSprite(tiles.shadowBottomLeft, x*40, y*40 - yOffset, 0x0)
-  elseif ((x==7 or (worldMapArray[x+1][y] & 0x1000) ~= 0) and (y==5 or (worldMapArray[x][y+1] & 0x1000) ~= 0)) then
+  elseif ((x==7 or not isNextToTunnel(x+1, y)) and (y==5 or not isNextToTunnel(x, y+1))) then
     drawSprite(tiles.shadowBottomRight, x*40, y*40 - yOffset, 0x0)
-  elseif (x==0 or (worldMapArray[x-1][y] & 0x1000) ~= 0) then
+  elseif (x==0 or not isNextToTunnel(x-1, y)) then
     drawSprite(tiles.shadowLeft, x*40, y*40 - yOffset, 0x0)
-  elseif (x==7 or (worldMapArray[x+1][y] & 0x1000) ~= 0) then
+  elseif (x==7 or not isNextToTunnel(x+1, y)) then
     drawSprite(tiles.shadowRight, x*40, y*40 - yOffset, 0x0)
-  elseif (y==0 or (worldMapArray[x][y-1] & 0x1000) ~= 0) then
+  elseif (y==0 or not isNextToTunnel(x, y-1)) then
     drawSprite(tiles.shadowTop, x*40, y*40 - yOffset, 0x0)
-  elseif (y==5 or (worldMapArray[x][y+1] & 0x1000) ~= 0) then
+  elseif (y==5 or not isNextToTunnel(x, y+1)) then
     drawSprite(tiles.shadowBottom, x*40, y*40 - yOffset, 0x0)
   else
     drawSprite(tiles.dirt, x*40, y*40 - yOffset, 0x0)
@@ -79,17 +83,17 @@ function drawTile(x, y, yOffset, showHidden)
         end
       end
     end
-  elseif (showHidden or (worldMapArray[x][y] & 0x1000) == 0) then
+  elseif (showHidden or isNextToTunnel(x, y)) then
     drawFOWDirt(x, y, yOffset, showHidden)
-    if (worldMapArray[x][y] & 0xFFF == 2) then
+    if (worldMapArray[x][y] == 2) then
       drawSprite(sTileOreIron, x*40, y*40 - yOffset)
-    elseif (worldMapArray[x][y] & 0xFFF == 3) then
+    elseif (worldMapArray[x][y] == 3) then
       drawSprite(sTileOreCopper, x*40, y*40 - yOffset)
-    elseif (worldMapArray[x][y] & 0xFFF == 4) then
+    elseif (worldMapArray[x][y] == 4) then
       drawSprite(sTileOreEmerald, x*40, y*40 - yOffset)
-    elseif (worldMapArray[x][y] & 0xFFF == 5) then
+    elseif (worldMapArray[x][y] == 5) then
       drawSprite(sTileOreGold, x*40, y*40 - yOffset)
-    elseif (worldMapArray[x][y] & 0xFFF == 6) then
+    elseif (worldMapArray[x][y] == 6) then
       drawSprite(sTileOreDiamond, x*40, y*40 - yOffset)
     end
   end
@@ -114,16 +118,6 @@ function mineTile(x,y)
     money = money + r
   end
   worldMapArray[x][y] = 0
-   -- remove FOW flags
-  for fx = x-1, x+1 do
-    for fy = y-1, y+1 do
-      if (fx >= 0 and fx <= 7 and fy >= 0 and fy <= 5) then
-        if (worldMapArray[fx][fy] & 0x1000) ~= 0 then
-          worldMapArray[fx][fy] = worldMapArray[fx][fy] & 0x0FFF
-        end
-      end
-    end
-  end
   return r
 end
 
@@ -136,7 +130,7 @@ function genTile(x, y)
   else
     worldMapArray[x][y] = 1
   end
-  worldMapArray[x][y] = worldMapArray[x][y] + 0x1000 -- add FOW flag
+  worldMapArray[x][y] = worldMapArray[x][y]
 end
 
 function initTileFragment(dirtPath, overlayPath, flip)
@@ -259,5 +253,4 @@ rockImageLoaded = -1
 -- 4 = emerald
 -- 5 = gold
 -- 6 = diamond
--- +0x1000 = FOW
 ]]
