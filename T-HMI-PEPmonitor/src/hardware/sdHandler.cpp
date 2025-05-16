@@ -377,6 +377,24 @@ String getRandomWinScreenPath(String gamePath, String* errorMessage) {
   return "";
 }
 
+char* readFileToNewPSBuffer(const char *path) {
+  File file = SD_MMC.open(path);
+  if (!file) {
+    Serial.print("Failed to open file");
+    Serial.print(path);
+    Serial.println(" for reading");
+    return nullptr;
+  }
+
+  uint32_t fileSize = file.size();
+  //Serial.println("File size: "+String(fileSize));
+  char* buffer = (char*)heap_caps_malloc(fileSize+1, MALLOC_CAP_SPIRAM);
+  file.readBytes(buffer, fileSize);
+  buffer[fileSize] = 0;
+  file.close();
+  return buffer;
+}
+
 
 String readFileToString(const char *path) {
   File file = SD_MMC.open(path);
@@ -442,7 +460,6 @@ int32_t readIntFromFile(const char *path) {
 }
 
 int32_t readIntFromFile(const char *path, uint32_t lineNr) {
-  uint16_t line = 0;
   String data = readFileLineToString(path, lineNr);
   if (data.equals("")) {
     return 0;
