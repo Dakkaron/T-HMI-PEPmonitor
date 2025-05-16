@@ -24,12 +24,12 @@ static SpriteMetadata spriteMetadata[50];
 // Block of 50 sprites to be used within Lua games
 static TFT_eSprite* sprites = nullptr;
 
-String lua_dofile(const String path) {
-  static String script[10];
+String lua_dofile(const String path, bool dontCache) {
+  static char* script[10];
   static String cachedPath[10];
   String result;
   int cacheSlot = -1;
-  if (luaCacheGameCode) {
+  if (luaCacheGameCode && !dontCache) {
     //Serial.println("Caching enalbed");
     for (int i=0;i<10;i++) {
       if (cachedPath[i] == path) {
@@ -50,9 +50,12 @@ String lua_dofile(const String path) {
           Serial.print("Free RAM after: ");
           Serial.println(ESP.getFreeHeap());
           
-          script[cacheSlot] = readFileToString(path.c_str());
+          if (script[cacheSlot] != nullptr) {
+            free(script[cacheSlot]);
+          }
+          script[cacheSlot] = readFileToNewPSBuffer(path.c_str());
           cachedPath[cacheSlot] = path;
-          if (script[cacheSlot].isEmpty()) {
+          if (script[cacheSlot] == nullptr) {
             result = "Failed to load lua script "+path;
             return result;
           }
@@ -63,31 +66,48 @@ String lua_dofile(const String path) {
     if (cacheSlot == -1) {
       //Serial.println("Cache full, removing oldest script "+cachedPath[0]);
       for (int i=0;i<9;i++) {
+        if (script[i] != nullptr) {
+          free(script[i]);
+        }
         script[i] = script[i+1];
         cachedPath[i] = cachedPath[i+1];
       }
       cacheSlot = 9;
-      script[cacheSlot] = readFileToString(path.c_str());
+      script[cacheSlot] = readFileToNewPSBuffer(path.c_str());
       cachedPath[cacheSlot] = path;
-      if (script[cacheSlot].isEmpty()) {
+      if (script[cacheSlot] == nullptr) {
         result = "Failed to load lua script "+path;
         return result;
       }
     }
   } else {
     //Serial.println("Caching disabled");
-    script[0] = readFileToString(path.c_str());
+    script[0] = readFileToNewPSBuffer(path.c_str());
     cacheSlot = 0;
+    if (script[cacheSlot] == nullptr) {
+      result = "Failed to load lua script "+path;
+      return result;
+    }
   }
-  if (luaL_dostring(luaState, script[cacheSlot].c_str())) {
+  if (luaL_dostring(luaState, script[cacheSlot])) {
     result = "# lua error:\n" + String(lua_tostring(luaState, -1));
     lua_pop(luaState, 1);
-    Serial.println("Error lua file "+path+": " + result);
+    Serial.println("Error in lua file "+path+": " + result);
     if (luaStrictMode) {
-      checkFailWithMessage(result);
+      checkFailWithMessage("Error in lua file "+path+": " + result);
+    }
+  }
+  if (!luaCacheGameCode || dontCache) {
+    if (script[cacheSlot] != nullptr) {
+      free(script[cacheSlot]);
+      script[cacheSlot] = nullptr;
     }
   }
   return result;
+}
+
+String lua_dofile(const String path) {
+  return lua_dofile(path, false);
 }
 
 String lua_dostring(const char* script) {
@@ -95,9 +115,9 @@ String lua_dostring(const char* script) {
   if (luaL_dostring(luaState, script)) {
     result += "# lua error:\n" + String(lua_tostring(luaState, -1));
     lua_pop(luaState, 1);
-    Serial.println("Error lua string: " + result);
+    Serial.println("Error in lua string: " + result);
     if (luaStrictMode) {
-      checkFailWithMessage(result);
+      checkFailWithMessage("Error in lua string: " + result);
     }
   }
   return result;
@@ -549,7 +569,7 @@ void initLua() {
   sprites = (TFT_eSprite*) heap_caps_malloc(sizeof(TFT_eSprite) * SPRITE_COUNT_LIMIT, MALLOC_CAP_SPIRAM);
   if (!sprites) {
     Serial.println("Failed to allocate sprites in PSRAM!");
-    checkFailWithMessage("Failed to allocate sprites in PSRAM!");
+    checkFailWithMessage("init: Failed to allocate sprites in PSRAM!");
     return;
   }
 
@@ -613,17 +633,7 @@ void initGames_lua(String gamePath, GameConfig* gameConfig, String* errorMessage
 
   setGamePrefsNamespace(gameConfig->prefsNamespace.c_str());
 
-  String initScript = readFileToString((gamePath + "init.lua").c_str());
-  if (!initScript.isEmpty()) {
-    Serial.println("Running init script");
-    String error = lua_dostring(initScript.c_str());
-    if (!error.isEmpty()) {
-      Serial.println("Error in init.lua: " + error);
-      if (luaStrictMode) {
-        checkFailWithMessage("Error in init.lua: " + error);
-      }
-    }
-  }
+  lua_dofile(luaGamePath + "init.lua");
 }
 
 void updateBlowData(BlowData* blowData) {
@@ -696,6 +706,7 @@ void drawInhalationGame_lua(DISPLAY_T* display, BlowData* blowData, String* erro
 bool displayProgressionMenu_lua(DISPLAY_T *display, String *errorMessage) {
   luaProgressionMenuRunning = true;
   luaDisplay = display;
+  lua_dostring(("ms="+String(millis())).c_str());
   String error = lua_dofile(luaGamePath + "progressionMenu.lua");
   if (!error.isEmpty()) {
     errorMessage->concat(error);
@@ -705,7 +716,7 @@ bool displayProgressionMenu_lua(DISPLAY_T *display, String *errorMessage) {
 }
 
 void endGame_lua(String *errorMessage) {
-  lua_dofile(luaGamePath + "end.lua");
+  lua_dofile(luaGamePath + "end.lua", true);
   Serial.print("Collect garbage after running end script, free RAM before: ");
   Serial.println(ESP.getFreeHeap());
   lua_gc(luaState, LUA_GCCOLLECT, 0);
