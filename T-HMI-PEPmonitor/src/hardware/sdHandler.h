@@ -34,6 +34,7 @@ String getIniValue(String iniPath, String section, String key, String* errorMess
 
 String getRandomWinScreenPath(String gamePath, String* errorMessage);
 
+char* readFileToNewPSBuffer(const char *path);
 String readFileToString(const char *path);
 String readFileLineToString(const char *path, uint32_t lineNr);
 void writeStringToFile(const char *path, String val);

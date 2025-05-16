@@ -389,7 +389,6 @@ void drawEqualBlowGame_racing(DISPLAY_T* display, BlowData* blowData, String* er
 void drawTrampolineGame_racing(DISPLAY_T* display, JumpData* jumpData, String* errorMessage) {
   static bool saved=false;
   uint8_t earnedNitro = (jumpData->jumpCount / 100);
-  uint8_t currentBottle = 0;
   int32_t bottleSpacingX = (nitroLSprite.width()+5);
   for (uint8_t currentBottle=0; currentBottle<earnedNitro; currentBottle++) {
     nitroLSprite.pushToSprite(display, 50 + bottleSpacingX*currentBottle, 70, 0x0000);
