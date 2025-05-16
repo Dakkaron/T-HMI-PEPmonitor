@@ -1,12 +1,28 @@
+if (lastBlowStatus == 1 and ms-blowEndMs > 0 and ms-blowEndMs < 1000) then
+  yDigOffset = (ms - blowEndMs) / 22
+  mineTile(playerX, 2)
+elseif yDigOffset > 0 then
+  for x = 0, 7 do
+    for y = 0, 4 do
+      worldMapArray[x][y] = worldMapArray[x][y+1]
+    end
+    genTile(x, 5)
+  end
+  yDigOffset = 0
+  stepsLeft = 2
+else
+  yDigOffset = 0
+end
+
 if (isTouchInZone(0, 0, 100, 240)) then
-  if (playerX > 0 and not isCurrentlyTouching and stepsLeft > 0) then
+  if (yDigOffset == 0 and playerX > 0 and not isCurrentlyTouching and stepsLeft > 0 and worldMapArray[playerX-1][1] ~= 7) then
     isCurrentlyTouching = true
     playerX = playerX - 1
     mineTile(playerX, 1)
     stepsLeft = stepsLeft - 1
   end
 elseif (isTouchInZone(220, 0, 100, 240)) then
-  if (playerX < 7 and not isCurrentlyTouching and stepsLeft > 0) then
+  if (yDigOffset == 0 and playerX < 7 and not isCurrentlyTouching and stepsLeft > 0 and worldMapArray[playerX+1][1] ~= 7) then
     isCurrentlyTouching = true
     playerX = playerX + 1
     mineTile(playerX, 1)
@@ -22,23 +38,6 @@ elseif (isTouchInZone(110, 0, 40, 53)) then
   end
 else
   isCurrentlyTouching = false
-end
-
-if (lastBlowStatus == 1 and ms-blowEndMs > 0 and ms-blowEndMs < 1000) then
-  yDigOffset = (ms - blowEndMs) / 22
-  mineTile(playerX, 2)
-elseif yDigOffset > 0 then
-  for x = 0, 7 do
-    for y = 0, 4 do
-      worldMapArray[x][y] = worldMapArray[x][y+1]
-    end
-    v = math.random(0, 100)
-    genTile(x, 5)
-  end
-  yDigOffset = 0
-  stepsLeft = 2
-else
-  yDigOffset = 0
 end
 
 for x = 0, 7 do

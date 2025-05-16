@@ -95,6 +95,8 @@ function drawTile(x, y, yOffset, showHidden)
       drawSprite(sTileOreGold, x*40, y*40 - yOffset)
     elseif (worldMapArray[x][y] == 6) then
       drawSprite(sTileOreDiamond, x*40, y*40 - yOffset)
+    elseif (worldMapArray[x][y] == 7) then
+      drawSprite(sTileRock, x*40, y*40 - yOffset)
     end
   end
 end
@@ -123,9 +125,11 @@ end
 
 function genTile(x, y)
   v = math.random(0, 100)
-  if (v < 5) then
+  if (v < 2) then
+    worldMapArray[x][y] = 7
+  elseif (v < 7) then
     worldMapArray[x][y] = 3
-  elseif (v < 15) then
+  elseif (v < 17) then
     worldMapArray[x][y] = 2
   else
     worldMapArray[x][y] = 1
@@ -204,16 +208,20 @@ function freeTileFragments(tileTable)
 end
 
 tiles = {}
-initTileFragments(tiles, "gfx/tilefragments/tile_dirt1.bmp")
+stage = prefsGetInt("stage", 1)
+initTileFragments(tiles, "gfx/tilefragments/tile_dirt" .. stage .. ".bmp")
 
 sRobotIdle = loadSprite("gfx/idle.bmp", 0, 0x0001)
 sRobotDig = loadSprite("gfx/dig.bmp", 0, 0x0001)
 sRobotFunnel = loadSprite("gfx/funnel.bmp", 0, 0x0001)
+
 sTileOreIron = loadSprite("gfx/tilefragments/tile_ore_iron.bmp", 0, 0x0001)
 sTileOreCopper = loadSprite("gfx/tilefragments/tile_ore_copper.bmp", 0, 0x0001)
 sTileOreEmerald = loadSprite("gfx/tilefragments/tile_ore_emerald.bmp", 0, 0x0001)
 sTileOreGold = loadSprite("gfx/tilefragments/tile_ore_gold.bmp", 0, 0x0001)
 sTileOreDiamond = loadSprite("gfx/tilefragments/tile_ore_diamond.bmp", 0, 0x0001)
+
+sTileRock = loadSprite("gfx/tilefragments/tile_rock.bmp", 0, 0x0001)
 
 sItemLantern = loadSprite("gfx/item_lantern.bmp", 0, 0x0001)
 
@@ -243,6 +251,7 @@ earnValue = 0
 earnTime = 0
 fullVisibilityTime = 0
 
+
 rockImageLoaded = -1
 
 --[[
@@ -253,4 +262,5 @@ rockImageLoaded = -1
 -- 4 = emerald
 -- 5 = gold
 -- 6 = diamond
+-- 7 = rock
 ]]
