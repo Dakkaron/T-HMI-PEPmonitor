@@ -5,6 +5,7 @@
 #include "hardware/touchHandler.h"
 #include "hardware/pressuresensor.h"
 #include "hardware/wifiHandler.h"
+#include "hardware/serialHandler.h"
 #include "games/games.h"
 #include "constants.h"
 #include "updateHandler.h"
@@ -55,10 +56,19 @@ void runProfileSelection() {
     profileSuccessfullyLoaded = true;
     if (selectedProfileId == PROGRESS_MENU_SELECTION_ID) {
       runGameSelection();
+      uint32_t ms = millis();
+      spr.fillSprite(TFT_BLACK);
       while (displayProgressionMenu(&spr, &errorMessage)) {
         checkFailWithMessage(errorMessage);
+        lastMs = ms;
+        ms = millis();
+        drawSystemStats(ms, lastMs);
+        spr.pushSpriteFast(0,0);
+        spr.fillSprite(TFT_BLACK);
+        handleSerial();
         vTaskDelay(1); // watchdog
       }
+      ESP.restart(); // Todo: don't restart, just go back to profile selection, but clear running game data
       
       profileSuccessfullyLoaded = false;
       continue;
