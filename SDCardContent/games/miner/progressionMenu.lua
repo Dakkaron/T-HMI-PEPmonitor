@@ -11,15 +11,15 @@ if (stage == 1) then
     fillRect(10, 60, 220, 35, 0xF800)
   else
     fillRect(10, 60, 220, 35, 0x001F)
+    setTextSize(1)
+    drawString("Nicht genug Geld", 15, 84, 0xFFFF)
   end
   
+  setTextSize(2)
   drawString("Tiefer graben: $2000", 15, 65, 0xFFFF)
   if (money >= 2000 and isTouchInZone(10, 60, 220, 35)) then
     money = money - 2000
     stage = 2
-  else
-    setTextSize(1)
-    drawString("Nicht genug Geld", 15, 84, 0xFFFF)
     prefsSetInt("stage", stage)
     prefsSetInt("money", money)
   end
@@ -28,18 +28,18 @@ elseif (stage == 2) then
     fillRect(10, 60, 220, 35, 0xF800)
   else
     fillRect(10, 60, 220, 35, 0x001F)
-  end
-
-  drawString("Tiefer graben: $10000", 15, 65, 0xFFFF)
-  if (money >= 10000 and isTouchInZone(10, 60, 220, 35)) then
-    drawString("Kaufen", 10, 95, 0xFFFF)
-    money = money - 10000
-    stage = 3
-    prefsSetNumber("stage", stage)
-    prefsSetNumber("money", money)
-  else
     setTextSize(1)
     drawString("Nicht genug Geld", 15, 84, 0xFFFF)
+  end
+
+
+  setTextSize(2)
+  drawString("Tiefer graben: $10000", 15, 65, 0xFFFF)
+  if (money >= 10000 and isTouchInZone(10, 60, 220, 35)) then
+    money = money - 10000
+    stage = 3
+    prefsSetInt("stage", stage)
+    prefsSetInt("money", money)
   end
 end
 

@@ -124,15 +124,43 @@ function mineTile(x,y)
 end
 
 function genTile(x, y)
-  v = math.random(0, 100)
-  if (v < 2) then
-    worldMapArray[x][y] = 7
-  elseif (v < 7) then
-    worldMapArray[x][y] = 3
-  elseif (v < 17) then
-    worldMapArray[x][y] = 2
-  else
-    worldMapArray[x][y] = 1
+  v = math.random(0, 1000)
+  if (stage == 1) then
+    if (v < 20) then
+      worldMapArray[x][y] = 7
+    elseif (v < 70) then
+      worldMapArray[x][y] = 3
+    elseif (v < 170) then
+      worldMapArray[x][y] = 2
+    else
+      worldMapArray[x][y] = 1
+    end
+  elseif (stage == 2) then
+    if (v < 20) then
+      worldMapArray[x][y] = 7
+    elseif (v < 50) then
+      worldMapArray[x][y] = 4
+    elseif (v < 100) then
+      worldMapArray[x][y] = 3
+    elseif (v < 200) then
+      worldMapArray[x][y] = 2
+    else
+      worldMapArray[x][y] = 1
+    end
+  elseif (stage == 3) then
+    if (v < 20) then
+      worldMapArray[x][y] = 7
+    elseif (v < 40) then
+      worldMapArray[x][y] = 5
+    elseif (v < 70) then
+      worldMapArray[x][y] = 4
+    elseif (v < 120) then
+      worldMapArray[x][y] = 3
+    elseif (v < 220) then
+      worldMapArray[x][y] = 2
+    else
+      worldMapArray[x][y] = 1
+    end
   end
   worldMapArray[x][y] = worldMapArray[x][y]
 end
