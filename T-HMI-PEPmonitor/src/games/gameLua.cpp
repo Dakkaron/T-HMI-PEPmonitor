@@ -486,6 +486,8 @@ static int lua_wrapper_prefsSetString(lua_State* luaState) {
   String key = luaL_checkstring(luaState, 1);
   String value = luaL_checkstring(luaState, 2);
   prefs.putString(key.c_str(), value.c_str());
+  prefs.end();
+  applyGamePrefsNamespace();
   return 0;
 }
 
@@ -501,6 +503,8 @@ static int lua_wrapper_prefsSetInt(lua_State* luaState) {
   String key = luaL_checkstring(luaState, 1);
   int value = luaL_checknumber(luaState, 2);
   prefs.putInt(key.c_str(), value);
+  prefs.end();
+  applyGamePrefsNamespace();
   return 0;
 }
 
@@ -516,6 +520,8 @@ static int lua_wrapper_prefsSetNumber(lua_State* luaState) {
   String key = luaL_checkstring(luaState, 1);
   float value = luaL_checknumber(luaState, 2);
   prefs.putFloat(key.c_str(), value);
+  prefs.end();
+  applyGamePrefsNamespace();
   return 0;
 }
 
