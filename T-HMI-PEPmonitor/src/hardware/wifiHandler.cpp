@@ -179,7 +179,7 @@ void getNTPTime(String* ntpDateString, String* ntpTimeString, String* errorMessa
     *ntpDateString = "N/A";
     *ntpTimeString = "N/A";
   }
-  *ntpDateString = String(timeinfo.tm_year+1900) + "-" + String(timeinfo.tm_mon) + "-" + String(timeinfo.tm_mday);
+  *ntpDateString = String(timeinfo.tm_year+1900) + "-" + String(timeinfo.tm_mon+1) + "-" + String(timeinfo.tm_mday);
   *ntpTimeString = leftPad(String(timeinfo.tm_hour), 2, "0") + ":" + leftPad(String(timeinfo.tm_min), 2, "0");
 }
 
