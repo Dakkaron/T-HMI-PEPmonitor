@@ -651,6 +651,7 @@ void initGames_lua(String gamePath, GameConfig* gameConfig, String* errorMessage
 void updateBlowData(BlowData* blowData) {
   static uint32_t lastMs = 0;
   static int32_t lastKnownTaskNumber = -1;
+  static uint32_t lastBlowCount = 0;
   int32_t taskNumber = blowData->taskNumber + blowData->cycleNumber * blowData->totalTaskNumber;
   String blowDataString = "currentlyBlowing="+String(blowData->currentlyBlowing ? "true" : "false")+"\n"+\
                           "ms="+String(blowData->ms)+"\n"+\
@@ -661,6 +662,7 @@ void updateBlowData(BlowData* blowData) {
                           "cycleNumber="+String(blowData->cycleNumber)+"\n"+\
                           "totalCycleNumber="+String(blowData->totalCycleNumber)+"\n"+\
                           "blowNumber="+String(blowData->blowCount)+"\n"+\
+                          "newBlow="+String((blowData->blowCount>lastBlowCount) ? "true" : "false")+"\n"+\
                           "totalBlowNumber="+String(blowData->totalBlowCount)+"\n"+\
                           "pressure="+String(blowData->pressure)+"\n"+\
                           "peakPressure="+String(blowData->peakPressure)+"\n"+\
@@ -677,7 +679,7 @@ void updateBlowData(BlowData* blowData) {
                           "isNewTask="+String(taskNumber != lastKnownTaskNumber ? "true" : "false")+"\n"+
                           "breathingScore="+String(blowData->breathingScore);
   lastKnownTaskNumber = taskNumber;
-  lua_dostring(blowDataString.c_str());
+  lua_dostring(blowDataString.c_str(), "updateBlowData()");
   lastMs = blowData->ms;
 }
 
