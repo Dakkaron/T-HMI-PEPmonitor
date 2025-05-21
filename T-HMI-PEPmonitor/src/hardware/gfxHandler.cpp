@@ -544,7 +544,7 @@ static void drawProfileSelectionPage(DISPLAY_T* display, uint16_t startNr, uint1
   }
 }
 
-static void drawGameSelectionPage(DISPLAY_T* display, uint16_t startNr, uint16_t nr, bool drawArrows, String* errorMessage) {
+static void drawGameSelectionPage(DISPLAY_T* display, uint16_t startNr, uint16_t nr, bool drawArrows, uint32_t requiredTaskTypes, String* errorMessage) {
   int32_t columns = _min(4, nr);
   int32_t rows = nr>4 ? 2 : 1;
   int32_t cWidth = (290 - 10*columns) / columns;
@@ -552,7 +552,7 @@ static void drawGameSelectionPage(DISPLAY_T* display, uint16_t startNr, uint16_t
   for (int32_t c = 0; c<columns; c++) {
     for (int32_t r = 0; r<rows; r++) {
       if (c + r*columns < nr) {
-        String gamePath = getGamePath(c + r*columns, errorMessage);
+        String gamePath = getGamePath(c + r*columns, requiredTaskTypes, errorMessage);
         display->fillRect(20 + c*(cWidth + 10), 30+r*(cHeight+10), cWidth, cHeight, TFT_BLUE);
         int16_t imgW, imgH;
         getBmpDimensions(gamePath + "logo.bmp", &imgW, &imgH);
@@ -562,7 +562,7 @@ static void drawGameSelectionPage(DISPLAY_T* display, uint16_t startNr, uint16_t
   }
 }
 
-static int16_t checkSelectionPageSelection(uint16_t startNr, uint16_t nr, bool drawArrows, bool progressMenuIcon, bool systemupdateAvailable) {
+static int16_t checkSelectionPageSelection(uint16_t startNr, uint16_t nr, bool drawArrows, bool progressMenuIcon, bool executionListIcon, bool systemupdateAvailable) {
   int32_t columns = _min(4, nr);
   int32_t rows = nr>4 ? 2 : 1;
   int32_t cWidth = (290 - 10*columns) / columns;
@@ -584,14 +584,14 @@ static int16_t checkSelectionPageSelection(uint16_t startNr, uint16_t nr, bool d
   return -1;
 }
 
-int16_t displayGameSelection(DISPLAY_T* display, uint16_t nr, String* errorMessage) {
+int16_t displayGameSelection(DISPLAY_T* display, uint16_t nr, uint32_t requiredTaskTypes, String* errorMessage) {
   uint16_t startNr = 0;
   uint32_t ms = millis();
   uint32_t lastMs = millis();
 
   for (uint32_t i = 0;i<2;i++) {
     display->fillSprite(TFT_BLACK);
-    drawGameSelectionPage(display, startNr, _min(nr, 8), nr>8, errorMessage);
+    drawGameSelectionPage(display, startNr, _min(nr, 8), nr>8, requiredTaskTypes, errorMessage);
     display->pushSpriteFast(0, 0);
   }
 
@@ -601,7 +601,7 @@ int16_t displayGameSelection(DISPLAY_T* display, uint16_t nr, String* errorMessa
     lastMs = ms;
     ms = millis();
     handleSerial();
-    int16_t selection = checkSelectionPageSelection(startNr, _min(nr, 8), nr>8, false, false);
+    int16_t selection = checkSelectionPageSelection(startNr, _min(nr, 8), nr>8, false, false, false);
     if (selection != -1 && selection<nr) {
       return selection;
     }

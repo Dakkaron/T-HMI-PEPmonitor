@@ -19,21 +19,21 @@ JumpData jumpData;
 
 uint32_t lastMs = 0;
 
-void runGameSelection() {
+void runGameSelection(uint32_t requiredTaskTypes) {
   spr.fillSprite(TFT_BLACK);
   spr.pushSpriteFast(0,0);
   spr.fillSprite(TFT_BLACK);
   tft.fillScreen(TFT_BLACK);
   String errorMessage;
-  uint16_t numberOfGames = getNumberOfGames(&errorMessage);
+  uint16_t numberOfGames = getNumberOfGames(&errorMessage, requiredTaskTypes);
   checkFailWithMessage(errorMessage);
   Serial.print("Number of games: ");
   Serial.println(numberOfGames);
   String gamePath;
-  if (numberOfGames == 1) {
-    gamePath = getGamePath(0, &errorMessage);
+  if (numberOfGames == 0) {
+    checkFailWithMessage("No fitting game found!");
   } else {
-    gamePath = getGamePath(displayGameSelection(&spr, numberOfGames, &errorMessage), &errorMessage);
+    gamePath = getGamePath(displayGameSelection(&spr, numberOfGames, requiredTaskTypes, &errorMessage), requiredTaskTypes, &errorMessage);
   }
   checkFailWithMessage(errorMessage);
   Serial.print("Game path: ");
@@ -42,9 +42,10 @@ void runGameSelection() {
   checkFailWithMessage(errorMessage);
 }
 
-void runProfileSelection() {
+uint32_t runProfileSelection() {
   String errorMessage;
   bool profileSuccessfullyLoaded = false;
+  uint32_t requiredTaskTypes = 0;
   while (!profileSuccessfullyLoaded) {
     spr.fillSprite(TFT_BLACK);
     spr.pushSpriteFast(0,0);
@@ -55,7 +56,7 @@ void runProfileSelection() {
     int32_t selectedProfileId = displayProfileSelection(&spr, totalNumberOfProfiles, &errorMessage);
     profileSuccessfullyLoaded = true;
     if (selectedProfileId == PROGRESS_MENU_SELECTION_ID) {
-      runGameSelection();
+      runGameSelection(REQUIRED_TASK_TYPE_PROGRESSION_MENU);
       uint32_t ms = millis();
       spr.fillSprite(TFT_BLACK);
       while (displayProgressionMenu(&spr, &errorMessage)) {
@@ -82,7 +83,16 @@ void runProfileSelection() {
     readProfileData(selectedProfileId, &profileData, &errorMessage);
     checkFailWithMessage(errorMessage);
     for (uint32_t i=0;i<profileData.tasks;i++) {
-      if (profileData.taskType[i] == PROFILE_TASK_TYPE_TRAMPOLINE) {
+      if (profileData.taskType[i] == PROFILE_TASK_TYPE_SHORTBLOWS) {
+        requiredTaskTypes |= REQUIRED_TASK_TYPE_SHORTBLOWS;
+      } else if (profileData.taskType[i] == PROFILE_TASK_TYPE_LONGBLOWS) {
+        requiredTaskTypes |= REQUIRED_TASK_TYPE_LONGBLOWS;
+      } else if (profileData.taskType[i] == PROFILE_TASK_TYPE_EQUALBLOWS) {
+        requiredTaskTypes |= REQUIRED_TASK_TYPE_EQUALBLOWS;
+      } else if (profileData.taskType[i] == PROFILE_TASK_TYPE_INHALATION) {
+        requiredTaskTypes |= REQUIRED_TASK_TYPE_INHALATION;
+      } else if (profileData.taskType[i] == PROFILE_TASK_TYPE_TRAMPOLINE) {
+        requiredTaskTypes |= REQUIRED_TASK_TYPE_TRAMPOLINE;
         spr.fillSprite(TFT_BLACK);
         spr.setTextSize(2);
         spr.setTextColor(TFT_WHITE);
@@ -122,6 +132,7 @@ void runProfileSelection() {
   blowData.totalTaskNumber = profileData.tasks;
   jumpData.totalCycleNumber = profileData.cycles;
   jumpData.totalTaskNumber = profileData.tasks;
+  return requiredTaskTypes;
 }
 
 inline static unsigned long getTaskDurationUntilLastAction() {

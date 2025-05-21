@@ -125,7 +125,40 @@ void readProfileData(uint32_t profileId, ProfileData* profileData, String* error
   }
 }
 
-uint16_t getNumberOfGames(String* errorMessage) {
+bool gameSupportsTaskTypes(String gamePath, uint32_t requiredTaskTypes, String* errorMessage) {
+  String gameTemplate = getIniValue(gamePath+"/gameconfig.ini", "[game]", "template", errorMessage);
+  uint32_t gameTaskTypes = 0;
+  if (gameTemplate == "monster" || gameTemplate == "race") {
+    gameTaskTypes = REQUIRED_TASK_TYPE_SHORTBLOWS | REQUIRED_TASK_TYPE_LONGBLOWS | REQUIRED_TASK_TYPE_EQUALBLOWS | REQUIRED_TASK_TYPE_TRAMPOLINE;
+  }
+  if (SD_MMC.exists(gamePath+"/shortBlow.lua")) {
+    gameTaskTypes |= REQUIRED_TASK_TYPE_SHORTBLOWS;
+  }
+  if (SD_MMC.exists(gamePath+"/longBlow.lua")) {
+    gameTaskTypes |= REQUIRED_TASK_TYPE_LONGBLOWS;
+  }
+  if (SD_MMC.exists(gamePath+"/equalBlow.lua")) {
+    gameTaskTypes |= REQUIRED_TASK_TYPE_EQUALBLOWS;
+  }
+  if (SD_MMC.exists(gamePath+"/trampoline.lua")) {
+    gameTaskTypes |= REQUIRED_TASK_TYPE_TRAMPOLINE;
+  }
+  if (SD_MMC.exists(gamePath+"/inhalation.lua")) {
+    gameTaskTypes |= REQUIRED_TASK_TYPE_INHALATION;
+  }
+  if (SD_MMC.exists(gamePath+"/progressionMenu.lua")) {
+    gameTaskTypes |= REQUIRED_TASK_TYPE_PROGRESSION_MENU;
+  }
+  Serial.print("Game task types: ");
+  Serial.print(gameTaskTypes, BIN);
+  Serial.print(", required task types: ");
+  Serial.print(requiredTaskTypes, BIN);
+  Serial.print(", result: ");
+  Serial.println((requiredTaskTypes & ~gameTaskTypes) == 0);
+  return (requiredTaskTypes & ~gameTaskTypes) == 0;
+}
+
+uint16_t getNumberOfGames(String* errorMessage, uint32_t requiredTaskTypes) {
   Serial.println("getNumberOfGames()");
   File root = SD_MMC.open(GAMES_ROOT_DIR);
 
@@ -148,8 +181,12 @@ uint16_t getNumberOfGames(String* errorMessage) {
       File gameIni = SD_MMC.open(String(GAMES_ROOT_DIR) + "/" + file.name() + "/" + "gameconfig.ini");
       Serial.print(", ");
       if (gameIni && !gameIni.isDirectory()) {
-        gameCount++;
-        Serial.println("CONFIRMED!");
+        if (gameSupportsTaskTypes(String(String(GAMES_ROOT_DIR) + "/" + file.name()), requiredTaskTypes, errorMessage)) {
+          gameCount++;
+          Serial.println("CONFIRMED!");
+        } else {
+          Serial.println("Game " + String(file.name()) + "does not support requred task types.");
+        }
       } else {
         Serial.println("NOT A GAME!");
       }
@@ -161,7 +198,7 @@ uint16_t getNumberOfGames(String* errorMessage) {
   return gameCount;
 }
 
-String getGamePath(uint16_t gameId, String* errorMessage) {
+String getGamePath(uint16_t gameId, uint32_t requiredTaskTypes, String* errorMessage) {
   Serial.println("getGamePath()");
   File root = SD_MMC.open(GAMES_ROOT_DIR);
 
@@ -180,7 +217,7 @@ String getGamePath(uint16_t gameId, String* errorMessage) {
   while (file) {
     if (file.isDirectory()) {
       File gameIni = SD_MMC.open(String(GAMES_ROOT_DIR) + "/" + file.name() + "/" + "gameconfig.ini");
-      if (gameIni && !gameIni.isDirectory()) {
+      if (gameIni && !gameIni.isDirectory() && gameSupportsTaskTypes(String(String(GAMES_ROOT_DIR) + "/" + file.name()), requiredTaskTypes, errorMessage)) {
         if (gameCount == gameId) {
           Serial.print("Game ini returned: ");
           Serial.println(String(GAMES_ROOT_DIR) + "/" + file.name() + "/");

@@ -20,8 +20,8 @@ void initSD(String* errorMessage);
 
 void readSystemConfig(SystemConfig* systemConfig, String* errorMessage);
 
-uint16_t getNumberOfGames(String* errorMessage);
-String getGamePath(uint16_t gameId, String* errorMessage);
+uint16_t getNumberOfGames(String* errorMessage, uint32_t requiredTaskTypes);
+String getGamePath(uint16_t gameId, uint32_t requiredTaskTypes, String* errorMessage);
 uint32_t getNumberOfProfiles(String* errorMessage);
 void readProfileData(uint32_t profileId, ProfileData* profileData, String* errorMessage);
 

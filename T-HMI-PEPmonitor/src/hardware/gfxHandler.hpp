@@ -35,7 +35,7 @@ bool checkButton(int16_t x, int16_t y, int16_t w, int16_t h);
 bool drawAndCheckImageButton(DISPLAY_T* display, String path, int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
 bool drawAndCheckButton(DISPLAY_T* display, String text, int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
 int16_t displayProfileSelection(DISPLAY_T* display, uint16_t nr, String* errorMessage);
-int16_t displayGameSelection(DISPLAY_T* display, uint16_t nr, String* errorMessage);
+int16_t displayGameSelection(DISPLAY_T* display, uint16_t nr, uint32_t requiredTaskTypes, String* errorMessage);
 void drawKeyboard(DISPLAY_T* display, uint16_t keyColor, uint16_t textColor);
 void checkKeyboard(DISPLAY_T* display, String* output, uint32_t maxCharacters, uint16_t keyColor, uint16_t textColor);
 void checkFailWithMessage(String message);

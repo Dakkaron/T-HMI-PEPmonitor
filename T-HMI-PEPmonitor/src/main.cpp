@@ -113,8 +113,8 @@ void setup() {
   tft.setTextSize(1);
   tft.drawString("Warte auf WLAN-Verbindung...", 0, 230);
 
-  runProfileSelection();
-  runGameSelection();
+  uint32_t requiredTaskTypes = runProfileSelection();
+  runGameSelection(requiredTaskTypes);
   displayPhysioRotateScreen();
 }
 
