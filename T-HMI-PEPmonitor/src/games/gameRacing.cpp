@@ -202,7 +202,8 @@ void drawRace_tunnel(DISPLAY_T* display, float x, int32_t y, float w, int32_t ro
 static void drawRace(DISPLAY_T* display, BlowData* blowData, int32_t animTime) {
   int32_t enemyY = -1;
   int32_t enemy2Y = -1;
-  float x,w;
+  float w = 0;
+  float x = 160.0;
   int32_t roadYOffset;
   float lastX, lastW;
   float speed = SPEED;
@@ -388,7 +389,6 @@ void drawEqualBlowGame_racing(DISPLAY_T* display, BlowData* blowData, String* er
 void drawTrampolineGame_racing(DISPLAY_T* display, JumpData* jumpData, String* errorMessage) {
   static bool saved=false;
   uint8_t earnedNitro = (jumpData->jumpCount / 100);
-  uint8_t currentBottle = 0;
   int32_t bottleSpacingX = (nitroLSprite.width()+5);
   for (uint8_t currentBottle=0; currentBottle<earnedNitro; currentBottle++) {
     nitroLSprite.pushToSprite(display, 50 + bottleSpacingX*currentBottle, 70, 0x0000);
@@ -409,14 +409,14 @@ void drawInhalationGame_racing(DISPLAY_T* display, BlowData* blowData, String* e
 
 }
 
-bool displayProgressionMenu_racing(DISPLAY_T* display, String* errorMessage) {
-  initLuaBindings();
-  String progressionMenuScript = readFileToString((racerGamePath + "progressionMenu.lua").c_str());
-  if (progressionMenuScript.isEmpty()) {
-    errorMessage->concat("Failed to load progression menu script");
+bool displayProgressionMenu_racing(DISPLAY_T *display, String *errorMessage) {
+  initLua();
+  luaProgressionMenuRunning = true;
+  luaDisplay = display;
+  String error = lua_dofile(racerGamePath + "progressionMenu.lua");
+  if (!error.isEmpty()) {
+    errorMessage->concat(error);
     return false;
   }
-  luaDisplay = display;
-  lua.Lua_dostring(&progressionMenuScript);
   return luaProgressionMenuRunning;
 }

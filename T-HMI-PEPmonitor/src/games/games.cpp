@@ -96,3 +96,62 @@ bool displayProgressionMenu(DISPLAY_T *display, String *errorMessage) {
     return false;
   }
 }
+
+static String leftPadString(String str, int len) {
+  for (uint32_t i = str.length(); i < len; i++) {
+    str = " " + str;
+  }
+  return str;
+}
+
+bool displayExecutionList(DISPLAY_T *display, String *executionLog, String *errorMessage) {
+  uint32_t lineStart = 0;
+  uint32_t totalLineCount = 0;
+  uint32_t yPos = 40;
+
+  while (lineStart < executionLog->length()) {
+    uint32_t lineEnd = executionLog->indexOf('\n', lineStart);
+    if (lineEnd == -1) {
+      lineEnd = executionLog->length();
+    }
+    lineStart = lineEnd + 1;
+    totalLineCount++;
+  }
+
+  uint32_t skipLines = 0;
+  if (totalLineCount > 25) {
+    skipLines = totalLineCount - 25;
+  }
+
+  lineStart = 0;
+  while (lineStart < executionLog->length()) {
+    uint32_t lineEnd = executionLog->indexOf('\n', lineStart);
+    if (lineEnd == -1) {
+      lineEnd = executionLog->length();
+    }
+    if (skipLines > 0) {
+      skipLines--;
+      lineStart = lineEnd + 1;
+      continue;
+    }
+    String line = executionLog->substring(lineStart, lineEnd);
+    uint32_t sepIndex = line.indexOf(';');
+    String profile = line.substring(0, sepIndex);
+    sepIndex = line.indexOf(';', sepIndex + 1);
+    String date = line.substring(profile.length() + 1, sepIndex);
+    String time = line.substring(sepIndex + 1, line.length());
+    time = leftPadString(time, 5);
+    spr.drawString(date, 0, yPos);
+    spr.drawString(time, 80, yPos);
+    spr.drawString(profile, 150, yPos);
+    yPos += 8;
+    lineStart = lineEnd + 1;
+  }
+  return true;
+}
+
+void endGame(String* errorMessage) {
+  if (gameConfig.templateName == "lua") {
+    endGame_lua(errorMessage);
+  }
+}

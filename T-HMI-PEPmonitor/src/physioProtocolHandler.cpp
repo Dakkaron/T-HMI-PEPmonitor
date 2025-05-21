@@ -5,6 +5,7 @@
 #include "hardware/touchHandler.h"
 #include "hardware/pressuresensor.h"
 #include "hardware/wifiHandler.h"
+#include "hardware/serialHandler.h"
 #include "games/games.h"
 #include "constants.h"
 #include "updateHandler.h"
@@ -18,21 +19,21 @@ JumpData jumpData;
 
 uint32_t lastMs = 0;
 
-void runGameSelection() {
+void runGameSelection(uint32_t requiredTaskTypes) {
   spr.fillSprite(TFT_BLACK);
   spr.pushSpriteFast(0,0);
   spr.fillSprite(TFT_BLACK);
   tft.fillScreen(TFT_BLACK);
   String errorMessage;
-  uint16_t numberOfGames = getNumberOfGames(&errorMessage);
+  uint16_t numberOfGames = getNumberOfGames(&errorMessage, requiredTaskTypes);
   checkFailWithMessage(errorMessage);
   Serial.print("Number of games: ");
   Serial.println(numberOfGames);
   String gamePath;
-  if (numberOfGames == 1) {
-    gamePath = getGamePath(0, &errorMessage);
+  if (numberOfGames == 0) {
+    checkFailWithMessage("No fitting game found!");
   } else {
-    gamePath = getGamePath(displayGameSelection(&spr, numberOfGames, &errorMessage), &errorMessage);
+    gamePath = getGamePath(displayGameSelection(&spr, numberOfGames, requiredTaskTypes, &errorMessage), requiredTaskTypes, &errorMessage);
   }
   checkFailWithMessage(errorMessage);
   Serial.print("Game path: ");
@@ -41,9 +42,10 @@ void runGameSelection() {
   checkFailWithMessage(errorMessage);
 }
 
-void runProfileSelection() {
+uint32_t runProfileSelection() {
   String errorMessage;
   bool profileSuccessfullyLoaded = false;
+  uint32_t requiredTaskTypes = 0;
   while (!profileSuccessfullyLoaded) {
     spr.fillSprite(TFT_BLACK);
     spr.pushSpriteFast(0,0);
@@ -54,13 +56,38 @@ void runProfileSelection() {
     int32_t selectedProfileId = displayProfileSelection(&spr, totalNumberOfProfiles, &errorMessage);
     profileSuccessfullyLoaded = true;
     if (selectedProfileId == PROGRESS_MENU_SELECTION_ID) {
-      runGameSelection();
+      runGameSelection(REQUIRED_TASK_TYPE_PROGRESSION_MENU);
+      uint32_t ms = millis();
+      spr.fillSprite(TFT_BLACK);
       while (displayProgressionMenu(&spr, &errorMessage)) {
         checkFailWithMessage(errorMessage);
+        lastMs = ms;
+        ms = millis();
+        drawSystemStats(ms, lastMs);
+        spr.pushSpriteFast(0,0);
+        spr.fillSprite(TFT_BLACK);
+        handleSerial();
+        vTaskDelay(1); // watchdog
       }
+      ESP.restart(); // Todo: don't restart, just go back to profile selection, but clear running game data
       
       profileSuccessfullyLoaded = false;
       continue;
+    } else if (selectedProfileId == EXECUTION_LIST_SELECTION_ID) {
+      spr.fillSprite(TFT_BLACK);
+      spr.pushSpriteFast(0,0);
+      String executionLog = readFileToString(EXECUTION_LOG_PATH);
+      while (displayExecutionList(&spr, &executionLog, &errorMessage)) {
+        uint32_t ms = millis();
+        checkFailWithMessage(errorMessage);
+        lastMs = ms;
+        ms = millis();
+        drawSystemStats(ms, lastMs);
+        spr.pushSpriteFast(0,0);
+        spr.fillSprite(TFT_BLACK);
+        handleSerial();
+        vTaskDelay(1); // watchdog
+      }
     } else if (selectedProfileId == SYSTEM_UPDATE_SELECTION_ID) {
       downloadAndRunSystemUpdate(&errorMessage);
       checkFailWithMessage(errorMessage);
@@ -71,7 +98,16 @@ void runProfileSelection() {
     readProfileData(selectedProfileId, &profileData, &errorMessage);
     checkFailWithMessage(errorMessage);
     for (uint32_t i=0;i<profileData.tasks;i++) {
-      if (profileData.taskType[i] == PROFILE_TASK_TYPE_TRAMPOLINE) {
+      if (profileData.taskType[i] == PROFILE_TASK_TYPE_SHORTBLOWS) {
+        requiredTaskTypes |= REQUIRED_TASK_TYPE_SHORTBLOWS;
+      } else if (profileData.taskType[i] == PROFILE_TASK_TYPE_LONGBLOWS) {
+        requiredTaskTypes |= REQUIRED_TASK_TYPE_LONGBLOWS;
+      } else if (profileData.taskType[i] == PROFILE_TASK_TYPE_EQUALBLOWS) {
+        requiredTaskTypes |= REQUIRED_TASK_TYPE_EQUALBLOWS;
+      } else if (profileData.taskType[i] == PROFILE_TASK_TYPE_INHALATION) {
+        requiredTaskTypes |= REQUIRED_TASK_TYPE_INHALATION;
+      } else if (profileData.taskType[i] == PROFILE_TASK_TYPE_TRAMPOLINE) {
+        requiredTaskTypes |= REQUIRED_TASK_TYPE_TRAMPOLINE;
         spr.fillSprite(TFT_BLACK);
         spr.setTextSize(2);
         spr.setTextColor(TFT_WHITE);
@@ -95,6 +131,7 @@ void runProfileSelection() {
         break;
       }
     }
+    vTaskDelay(1); // watchdog
   }
   for (uint32_t i=0;i<profileData.tasks;i++) {
     switch (profileData.taskType[i]) {
@@ -110,6 +147,7 @@ void runProfileSelection() {
   blowData.totalTaskNumber = profileData.tasks;
   jumpData.totalCycleNumber = profileData.cycles;
   jumpData.totalTaskNumber = profileData.tasks;
+  return requiredTaskTypes;
 }
 
 inline static unsigned long getTaskDurationUntilLastAction() {
@@ -120,8 +158,7 @@ static void drawInhalationDisplay() {
   spr.fillSprite(TFT_BLACK);
   String errorMessage;
   drawInhalationGame(&spr, &blowData, &errorMessage);
-  int32_t taskBreathingScore = 200 * blowData.totalTimeSpentBreathing / getTaskDurationUntilLastAction();
-  drawProgressBar(&spr, taskBreathingScore, 0, PRESSURE_BAR_X, PRESSURE_BAR_Y+25, PRESSURE_BAR_WIDTH, PRESSURE_BAR_HEIGHT);
+  drawProgressBar(&spr, blowData.breathingScore, 0, PRESSURE_BAR_X, PRESSURE_BAR_Y+25, PRESSURE_BAR_WIDTH, PRESSURE_BAR_HEIGHT);
   checkFailWithMessage(errorMessage);
   
   drawProgressBar(&spr, blowData.pressure, 10, PRESSURE_BAR_X, PRESSURE_BAR_Y, PRESSURE_BAR_WIDTH, PRESSURE_BAR_HEIGHT);
@@ -238,8 +275,10 @@ static void drawFinished() {
   static uint32_t winscreenTimeout = 0;
   static String winScreenPath = "";
   if (winscreenTimeout == 0) { // Only runs on first execution
-    winscreenTimeout = millis() + WIN_SCREEN_TIMEOUT;
     String errorMessage;
+    endGame(&errorMessage);
+    checkFailWithMessage(errorMessage);
+    winscreenTimeout = millis() + WIN_SCREEN_TIMEOUT;
     winScreenPath = getRandomWinScreenPathForCurrentGame(&errorMessage);
     Serial.println("Win screen path: "+winScreenPath);
     checkFailWithMessage(errorMessage);
@@ -292,6 +331,7 @@ void displayPhysioRotateScreen() {
       spr.pushSpriteFast(0, 0);
       displayOkButtonMs = 0;
     }
+    vTaskDelay(1); // watchdog
   }
   
   tft.fillScreen(TFT_BLACK);
@@ -365,6 +405,7 @@ void handlePhysioTask() {
     } else if (blowData.pressure<=blowData.minPressure && blowData.currentlyBlowing) {
       blowData.blowEndMs = blowData.ms;
       blowData.totalTimeSpentBreathing += blowData.blowEndMs-blowData.blowStartMs;
+      blowData.breathingScore = 200 * blowData.totalTimeSpentBreathing / getTaskDurationUntilLastAction();
       Serial.print(blowData.blowEndMs-blowData.blowStartMs);
       Serial.println(F("ms"));
       blowData.currentlyBlowing = false;

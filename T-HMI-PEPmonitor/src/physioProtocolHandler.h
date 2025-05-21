@@ -2,8 +2,8 @@
 #define __PHYSIO_PROTOCOL_HANDLER_H__
 #include <Arduino.h>
 
-void runProfileSelection();
-void runGameSelection();
+uint32_t runProfileSelection();
+void runGameSelection(uint32_t requiredTaskTypes);
 void handlePhysioTask();
 void displayPhysioRotateScreen();
 

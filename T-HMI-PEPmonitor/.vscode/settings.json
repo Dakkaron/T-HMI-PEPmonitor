@@ -2,5 +2,6 @@
     "files.associations": {
         "string": "cpp"
     },
-    "cmake.ignoreCMakeListsMissing": true
+    "cmake.ignoreCMakeListsMissing": true,
+    "sonarlint.pathToCompileCommands": "${workspaceFolder}/.pio/build/lilygo-t-hmi/bootloader/compile_commands.json"
 }

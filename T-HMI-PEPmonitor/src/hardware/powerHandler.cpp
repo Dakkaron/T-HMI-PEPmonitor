@@ -23,5 +23,6 @@ void power_off() {
         ms = millis();
         spr.pushSpriteFast(0,0);
         handleSerial();
+        vTaskDelay(1); // watchdog
     }
 }

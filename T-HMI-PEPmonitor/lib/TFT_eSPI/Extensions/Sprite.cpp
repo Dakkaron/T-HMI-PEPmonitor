@@ -694,6 +694,7 @@ void TFT_eSprite::pushSpriteFast(int32_t x, int32_t y)
     _tft->setSwapBytes(false);
     _tft->pushImageFast(x, y, _dwidth, _dheight, _img, backBuffer);
     _tft->setSwapBytes(oldSwapBytes);
+    frameBuffer(backBufferId);
   }
   else if (_bpp == 8)
   {

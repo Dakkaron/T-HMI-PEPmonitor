@@ -49,7 +49,9 @@ void runTouchCalibration() {
     spr.pushSpriteFast(0,0);
 
     Serial.println(3);
-    while (!touch.pressed()) {}
+    while (!touch.pressed()) {
+      vTaskDelay(1); // watchdog
+    }
     uint8_t count = 0;
     while (touch.pressed() && count<100) {
       count++;
@@ -64,7 +66,9 @@ void runTouchCalibration() {
         .rawY = y
       });
     }
-    while (touch.pressed()) {}
+    while (touch.pressed()) {
+      vTaskDelay(1); // watchdog
+    }
 
     Serial.println(4);
     uint32_t tmpX = 0;
@@ -132,17 +136,26 @@ void initTouch() {
 }
 
 bool isTouchInZone(int16_t x, int16_t y, int16_t w, int16_t h) {
+  //Serial.println("## Touch in zone");
   if (!touch.pressed()) {
     return false;
   }
   int16_t tx = touch.X();
   int16_t ty = touch.Y();
   int16_t tz = touch.RawZ();
-  Serial.print("Touch: ");
+  /*Serial.print("Touch: ");
+  Serial.print(x);
+  Serial.print("/");
+  Serial.print(y);
+  Serial.print("/");
+  Serial.print(w);
+  Serial.print("/");
+  Serial.print(h);
+  Serial.print(" -> ");
   Serial.print(tx);
   Serial.print("/");
   Serial.print(ty);
   Serial.print("/");
-  Serial.println(tz);
+  Serial.println(tz);*/
   return (tx>=x && tx<=x+w && ty>=y && ty<=y+h);
 }

@@ -55,6 +55,8 @@ void setup() {
   pinMode(BK_LIGHT_PIN, OUTPUT);
   digitalWrite(BK_LIGHT_PIN, HIGH);
 
+  esp_log_level_set("gpio", ESP_LOG_ERROR);
+
   Serial.setRxBufferSize(10240);
   Serial.setTxBufferSize(1024);
   Serial.begin(115200);
@@ -108,13 +110,11 @@ void setup() {
   Serial.print(VERSION);
   Serial.println("' initialized");
 
-  String ignoreMessage;
-
   tft.setTextSize(1);
   tft.drawString("Warte auf WLAN-Verbindung...", 0, 230);
 
-  runProfileSelection();
-  runGameSelection();
+  uint32_t requiredTaskTypes = runProfileSelection();
+  runGameSelection(requiredTaskTypes);
   displayPhysioRotateScreen();
 }
 

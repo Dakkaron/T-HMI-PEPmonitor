@@ -49,10 +49,7 @@ void readPressure(BlowData* blowData) {
       total = total - readings[readIndex];
       readings[readIndex] = sensorValue;
       total = total + readings[readIndex];
-      readIndex = readIndex + 1;
-      if (readIndex >= PRESSURE_SENSOR_SMOOTHING_NUM_READINGS) {
-        readIndex = 0;
-      }
+      readIndex = (readIndex + 1) % PRESSURE_SENSOR_SMOOTHING_NUM_READINGS;
       blowData->pressure = total / PRESSURE_SENSOR_SMOOTHING_NUM_READINGS;
       if ((blowData->ms - blowData->blowStartMs) < blowData->targetDurationMs) {
         blowData->cumulativeError = abs(((int32_t)blowData->pressure - 100)) + ((blowData->cumulativeError * (PRESSURE_SENSOR_CUMULATIVE_ERROR_FACTOR-1)) / PRESSURE_SENSOR_CUMULATIVE_ERROR_FACTOR);
@@ -64,10 +61,7 @@ void readPressure(BlowData* blowData) {
         total = total - readings[readIndex];
         readings[readIndex] = 0;
         total = total + readings[readIndex];
-        readIndex = readIndex + 1;
-        if (readIndex >= PRESSURE_SENSOR_SMOOTHING_NUM_READINGS) {
-          readIndex = 0;
-        }
+        readIndex = (readIndex + 1) % PRESSURE_SENSOR_SMOOTHING_NUM_READINGS;
         blowData->pressure = total / PRESSURE_SENSOR_SMOOTHING_NUM_READINGS;
         if ((blowData->ms - blowData->blowStartMs) < blowData->targetDurationMs) {
           blowData->cumulativeError = abs(((int32_t)blowData->pressure - 100)) + ((blowData->cumulativeError * (PRESSURE_SENSOR_CUMULATIVE_ERROR_FACTOR-1)) / PRESSURE_SENSOR_CUMULATIVE_ERROR_FACTOR);

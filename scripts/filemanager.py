@@ -6,13 +6,14 @@ import os.path
 import os
 import readline
 import atexit
-import esptool
+from esptool.cmds import detect_chip
 import serial.serialutil
 
 MAX_RETRIES = 5
 MAX_READ_RETRIES = 1
 PORT_NAME = "/dev/ttyACM"
 BAUD_RATE = 115200
+detectedPortName = None
 
 histfile = os.path.join(os.path.expanduser("~"), ".pepit_fm_history")
 try:
@@ -25,10 +26,12 @@ except FileNotFoundError:
 atexit.register(readline.write_history_file, histfile)
 
 def connectSerial():
+    global detectedPortName
     ser = None
     for i in range(10):
         try:
             ser = serial.Serial(f"{PORT_NAME}{i}", 115200, timeout=10)
+            detectedPortName = f"{PORT_NAME}{i}"
             print(f"Port {PORT_NAME}{i} connected")
             break
         except serial.serialutil.SerialException:
@@ -41,8 +44,8 @@ def reset():
     global ser
     print("Resetting...")
     ser.close()
-    esp32 = esptool.get_default_connected_device(["/dev/ttyACM0", "/dev/ttyACM1", "/dev/ttyACM2"], None, 1, BAUD_RATE)
-    esp32.hard_reset()
+    with detect_chip(detectedPortName, connect_mode="usb_reset") as esp:
+        esp.hard_reset()
     time.sleep(3)
     ser = connectSerial()
 
@@ -62,6 +65,8 @@ def writeFile(path, data):
     for i in range(1+len(data)):
         ser.write(data[i:i+1])
         ser.flush()
+        if i % 1024 == 0:
+            time.sleep(0.02)
     res = b""
     time.sleep(5)
     while ser.in_waiting > 0:

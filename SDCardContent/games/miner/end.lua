@@ -1,0 +1,1 @@
+prefsSetInt("money", money)
