@@ -1,12 +1,17 @@
-# PepIt Physiotherapy Companion
+# PEPit Physiotherapy Game Console
 
 (Für den Text in Deutsch bitte nach unten scrollen.)
+
+## Disclaimer
+
+PEPit is a toy. It uses a cheap commodity airpressure sensor to control games, which can help kids enjoy their physiotherapy more. It is not a medical product, it doesn't have research, papers or a big pharma company behind it. It does not give medical or physiotherapy advice and in no way does it replace an actual physician or physiotherapist. If you use PEPit you are aware that it is only a toy and not a medical product. If you use it you do so at your own risk and I will not be held liable for anything you do with your PEPit. You have been warned.
+
 
 ## Overview
 
 Physiotherapy is challenging, especially for children with chronic conditions like Cystic Fibrosis. It takes time, is repetitive and often feels like a constant fight to get the child to actually do it right.
 
-PepIt is a small handheld games console that connects to compatible physiotherapy devices (see list below). It automatically monitors the execution of physiotherapy tasks and rewards the player in game when the tasks are executed correctly. There's also instant feedback on how well the task is being performed, so that the user can adjust their execution for a better result.
+PepIt is a small handheld games console that connects to compatible physiotherapy devices (see list below). It automatically monitors the execution of physiotherapy tasks and rewards the player in game when the tasks are executed correctly.
 
 It can also record every time it's used, so that your doctor or physiotherapist can review the data later.
 
@@ -27,20 +32,24 @@ PepIt is currently in early access, more games and features will follow.
 ## Key Features
 
 - **Make therapy fun**: Games with long-term motivation make the therapy engaging.
-- **Make therapy better**: PepIt automatically monitors the execution of the therapy tasks, giving rewards when the therapy is done correctly.
 - **Reduce trouble**: No need to tell your kid that the task should be done better. PepIt automatically takes care of this.
 - **Super easy to use**: PepIt is a standalone device. No booting a PC, trouble with glitchy Bluetooth connections or anything. Simply turn it on and use it.
 - **Log therapy executions**: PepIt can optionally log all physiotherapy sessions so that your physiotherapists or doctors can review them later.
 - **Configurable therapy routines**: Easily adjust PepIt to follow exactly the therapy routine your physiotherapist or doctor prescribed.
 - **LUA-based, extendable game system**: Download additional games to the SD card later on. Or even create your own!
 
-# PepIt Physiotherapie-Companion (Deutsch)
+# PepIt Physiotherapie-Spielekonsole (Deutsch)
+
+
+## Disclaimer
+
+PEPit ist ein Spielzeug. Es verwendet billige, leicht verfügbare Luftdrucksensoren um Spiele zu steuern. Das kann dabei helfen, dass Kinder mehr Spaß an ihrer Physiotherapie haben. PEPit ist kein Medizinprodukt. Es hat weder Forschung, wissenschaftliche Arbeit oder einen Pharma-Konzern hinter sich. Es gibt keine Ratschläge im Bezug auf Medizin oder Physiotherapie und ersetzt auf keine Weise einen Arzt oder Physiotherapeuten. Wenn Sie PEPit verwenden, dann sind Sie sich hiermit bewusst, dass es ein Spielzeug und kein Medizinprodukt ist. Sie verwenden PEPit auf eigene Gefahr und eigenes Risiko hin und ich übernehme keine Haftung für was auch immer sie damit tun.
 
 ## Überblick
 
 Seien wir mal ehrlich, Physiotherapie ist anstrengend, insbesondere für Kinder mit chronischen Krankheiten wie Zystische Fibrose/Mukoviszidose. Die Therapie frisst Zeit, ist monoton und es ist ein dauerhafter Kampf, das Kind dazu zu bringen, sie richtig auszuführen.
 
-PepIt ist eine kleine tragbare Spielkonsole, die man mit kompatiblen Physiotherapiegeräten (siehe nachfolgende Liste) verbinden kann. Es überwacht automatisch die Ausführung der Physiotherapie und belohnt die Spielerin/den Spieler, wenn die Therapie korrekt ausgeführt wurde. Direkte Rückmeldungen helfen die Therapieaufgaben besser auszuführen.
+PepIt ist eine kleine tragbare Spielkonsole, die man mit kompatiblen Physiotherapiegeräten (siehe nachfolgende Liste) verbinden kann. Es erkennt automatisch die Ausführung der Physiotherapie und belohnt die Spielerin/den Spieler, wenn die Therapie korrekt ausgeführt wurde.
 
 Optional können Nutzungsstatistiken von PepIt automatisch auf der SD-Karte gespeichert werden, sodass das medizinische Personal die Häufigkeit und Qualität der Therapieausführungen später auswerten kann.
 
@@ -61,7 +70,6 @@ Aktuell befindet sich PepIt noch im Early Access. Weitere Spiele und Features we
 ## Wichtigste Features
 
 - **Interessantere Therapie**: Spiele mit Langzeitmotivation machen die Therapie interessanter.
-- **Bessere Therapie**: Durch die automatische Überwachung der Therapie und direkte, visuelle Rückmeldungen wird die Ausführung der Therapie besser.
 - **Weniger Ärger**: Mit PepIt müssen Sie nicht mehr mit dem Kind darüber streiten, ob es die Therapie korrekt ausführt. PepIt übernimmt das automatisch.
 - **Sehr einfach zu verwenden**: PepIt ist Standalone. Man braucht dafür keinen PC booten, kein Handy per Bluetooth koppeln oder sonst etwas. Einfach einschalten und es nutzen.
 - **Therapie loggen**: Optional kann PepIt die Nutzung auf die SD-Karte loggen, sodass das zuständige medizinische Personal sie im Nachhinein auswerten kann.
