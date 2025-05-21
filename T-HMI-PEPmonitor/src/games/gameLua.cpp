@@ -110,18 +110,24 @@ String lua_dofile(const String path) {
   return lua_dofile(path, false);
 }
 
-String lua_dostring(const char* script) {
+
+String lua_dostring(const char* script, String marker, bool strictMode) {
   String result;
   if (luaL_dostring(luaState, script)) {
     result += "# lua error:\n" + String(lua_tostring(luaState, -1));
     lua_pop(luaState, 1);
-    Serial.println("Error in lua string: " + result);
+    Serial.println("Error in lua string: " + result + "\n(" + marker + ")");
     if (luaStrictMode) {
-      checkFailWithMessage("Error in lua string: " + result);
+      checkFailWithMessage("Error in lua string: " + result + "\n(" + marker + ")");
     }
   }
   return result;
 }
+
+String lua_dostring(const char* script, String marker) {
+  return lua_dostring(script, marker, luaStrictMode);
+}
+
 
 static int lua_wrapper_disableCaching(lua_State* luaState) {
   luaCacheGameCode = false;
@@ -146,7 +152,7 @@ static int lua_wrapper_runScript(lua_State* luaState) {
     Serial.println("Error: Failed to load script "+path);
     return 0;
   }
-  String error = lua_dostring(script.c_str());
+  String error = lua_dostring(script.c_str(), "runScript()", false);
   if (!error.isEmpty()) {
     Serial.println("Error in script " + path + ": " + error);
   }
@@ -631,7 +637,7 @@ void initGames_lua(String gamePath, GameConfig* gameConfig, String* errorMessage
   String ignoreErrorMessage;
   initLua();
   String msString = "ms="+String(millis());
-  lua_dostring(msString.c_str());
+  lua_dostring(msString.c_str(), "initGames_lua()");
   luaGamePath = gamePath;
   String luaGameIniPath = gamePath + "gameconfig.ini";
   luaStrictMode = getIniValue(luaGameIniPath, "[game]", "strictMode", &ignoreErrorMessage).equalsIgnoreCase("true");
@@ -707,7 +713,7 @@ void drawTrampolineGame_lua(DISPLAY_T* display, JumpData* jumpData, String* erro
 void drawInhalationGame_lua(DISPLAY_T* display, BlowData* blowData, String* errorMessage) {
   luaDisplay = display;
   updateBlowData(blowData);
-  lua_dofile(luaGamePath + "inhalationBlow.lua");
+  lua_dofile(luaGamePath + "inhalation.lua");
 }
 
 bool displayProgressionMenu_lua(DISPLAY_T *display, String *errorMessage) {

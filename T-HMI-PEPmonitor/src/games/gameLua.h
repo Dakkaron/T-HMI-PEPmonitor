@@ -20,7 +20,8 @@ void drawInhalationGame_lua(DISPLAY_T* display, BlowData* blowData, String* erro
 bool displayProgressionMenu_lua(DISPLAY_T *display, String *errorMessage);
 void endGame_lua(String* errorMessage);
 String lua_dofile(const String path);
-String lua_dostring(const char* script);
+String lua_dostring(const char* script, String marker);
+String lua_dostring(const char* script, String marker, bool strictMode);
 
 extern bool luaProgressionMenuRunning;
 extern DISPLAY_T* luaDisplay;
