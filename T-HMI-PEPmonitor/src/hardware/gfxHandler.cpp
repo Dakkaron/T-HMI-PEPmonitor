@@ -283,12 +283,16 @@ bool drawBmpSlice(String filename, int16_t x, int16_t y, int16_t maxH, bool debu
   // Open requested file on SD card
   bmpFS = SD_MMC.open(filename);
 
-  if (!bmpFS)
-  {
+  if (!bmpFS) {
     Serial.print("File not found: ");
-    Serial.println(filename);
-    Serial.println("#");
-    return false;
+    Serial.print(filename);
+    Serial.println(", retrying.");
+    bmpFS = SD_MMC.open(filename);
+    if (!bmpFS) {
+      Serial.print("Retry failed, file not found: ");
+      Serial.println(filename);
+      return false;
+    }
   }
 
   uint32_t seekOffset;
@@ -309,7 +313,7 @@ bool drawBmpSlice(String filename, int16_t x, int16_t y, int16_t maxH, bool debu
     uint16_t bitDepth = read16(bmpFS);
     uint16_t compression = read16(bmpFS);
 
-    if ((colorPanes == 1) && (((bitDepth == 24) && (compression == 0)) || ((bitDepth == 32) && (compression == 3)))) { // BITMAPINFOHEADER
+    if ((colorPanes == 1) && (((bitDepth == 16) && (compression == 3)) || ((bitDepth == 24) && (compression == 0)) || ((bitDepth == 32) && (compression == 3)))) { // BITMAPINFOHEADER
       uint8_t bytesPerPixel = bitDepth/8;
       bool hasAlpha = (bitDepth == 32);
       
