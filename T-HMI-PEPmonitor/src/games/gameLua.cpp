@@ -682,8 +682,28 @@ void updateBlowData(BlowData* blowData) {
 }
 
 void updateJumpData(JumpData* jumpData) {
-  String jumpDataString = "ms="+jumpData->ms;
-  lua_dostring(jumpDataString.c_str());
+  static uint32_t lastMs = 0;
+  static uint32_t lastJumpCount = 0;
+  static uint32_t lastJumpMs = 0;
+  int32_t taskNumber = jumpData->taskNumber + jumpData->cycleNumber * jumpData->totalTaskNumber;
+  if (jumpData->jumpCount > lastJumpCount) {
+    lastJumpMs = jumpData->ms;
+  }
+  String jumpDataString = "ms="+String(jumpData->ms)+"\n"+\
+                          "msDelta="+String(jumpData->ms - lastMs)+"\n"+\
+                          "cycleNumber="+String(jumpData->cycleNumber)+"\n"+\
+                          "totalCycleNumber="+String(jumpData->totalCycleNumber)+"\n"+\
+                          "cumulatedTaskNumber="+String(jumpData->taskNumber + jumpData->cycleNumber * jumpData->totalTaskNumber)+"\n"+\
+                          "taskNumber="+String(taskNumber)+"\n"+\
+                          "totalTaskNumber="+String(jumpData->totalTaskNumber)+"\n"+
+                          "jumpCount="+String(jumpData->jumpCount)+"\n"+\
+                          "currentlyJumping="+String(jumpData->currentlyJumping ? "true" : "false")+"\n"+\
+                          "newJump="+String((jumpData->jumpCount>lastJumpCount) ? "true" : "false")+"\n"+\
+                          "msLeft="+String(jumpData->msLeft)+"\n"+\
+                          "lastJumpMs="+String(lastJumpMs);
+  lua_dostring(jumpDataString.c_str(), "updateJumpData()");
+  lastMs = jumpData->ms;
+  lastJumpCount = jumpData->jumpCount;
 }
 
 void drawShortBlowGame_lua(DISPLAY_T* display, BlowData* blowData, String* errorMessage) {
