@@ -101,21 +101,25 @@ function drawTile(x, y, yOffset, showHidden)
   end
 end
 
-function mineTile(x,y)
-  r = 0
-  if (worldMapArray[x][y] == 2) then
-    r = 1
-  elseif (worldMapArray[x][y] == 3) then
-    r = 2
-  elseif (worldMapArray[x][y] == 4) then
-    r = 3
-  elseif (worldMapArray[x][y] == 5) then
-    r = 4
-  elseif (worldMapArray[x][y] == 6) then
-    r = 5
+function getEarnings(type)
+  if (type == 2) then
+    return 1
+  elseif (type == 3) then
+    return 2
+  elseif (type == 4) then
+    return 3
+  elseif (type == 5) then
+    return 4
+  elseif (type == 6) then
+    return 5
   end
+  return 0
+end
+
+function mineTile(x,y)
+  r = getEarnings(worldMapArray[x][y])
   if (r>0) then
-    earnValue = r
+    earnValue = earnValue + r
     earnTime = ms + 2000
     money = money + r
   end
@@ -123,8 +127,9 @@ function mineTile(x,y)
   return r
 end
 
-function genTile(x, y)
-  v = math.random(0, 1000)
+function genTile(x, y, baseOdds)
+  baseOdds = baseOdds or 1000
+  v = math.random(0, baseOdds)
   if (stage == 1) then
     if (v < 20) then
       worldMapArray[x][y] = 7
@@ -235,6 +240,19 @@ function freeTileFragments(tileTable)
   end
 end
 
+function displayEarnings(x, y)
+  if (earnTime > ms) then
+    setTextSize(2)
+    if (earnValue > 0) then
+      drawString("+" .. earnValue, x, y + (earnTime - ms) * 0.01)
+    else
+      drawString("" .. earnValue, x, y + (earnTime - ms) * 0.01)
+    end
+  else
+    earnValue = 0
+  end
+end
+
 tiles = {}
 stage = prefsGetInt("stage", 1)
 initTileFragments(tiles, "gfx/tilefragments/tile_dirt" .. stage .. ".bmp")
@@ -242,6 +260,9 @@ initTileFragments(tiles, "gfx/tilefragments/tile_dirt" .. stage .. ".bmp")
 sRobotIdle = loadSprite("gfx/idle.bmp", 0, 0x0001)
 sRobotDig = loadSprite("gfx/dig.bmp", 0, 0x0001)
 sRobotFunnel = loadSprite("gfx/funnel.bmp", 0, 0x0001)
+
+sBigDigger = loadSprite("gfx/bigdigger.bmp", 0, 0xf81f)
+sBigDigger2 = loadSprite("gfx/bigdigger2.bmp", 0, 0xf81f)
 
 sTileOreIron = loadSprite("gfx/tilefragments/tile_ore_iron.bmp", 0, 0x0001)
 sTileOreCopper = loadSprite("gfx/tilefragments/tile_ore_copper.bmp", 0, 0x0001)
@@ -280,13 +301,29 @@ earnTime = 0
 fullVisibilityTime = 0
 
 
+-- Inhalation game
+function getDistancePointLine(l1x, l1y, l2x, l2y, px, py)
+  return math.abs(((l2y - l1y) * px - (l2x - l1x) * py + l2x * l1y - l2y * l1x) / math.sqrt((l2y - l1y) * (l2y - l1y) + (l2x - l1x) * (l2x - l1x)))
+end
+
+inhalationCrosshairX = 85
+inhalationCrosshairY = 135
+inhalationVectorX = 1
+inhalationVectorY = 0
+targetPositions = {{210.0, 120.0}, {200.0, 50.0}, {150.0, 20.0}}
+targetEffectiveness = {0.0, 0.0, 0.0}
+targetType = {2, 2, 2}
+typeSprites = {0, sTileOreIron, sTileOreCopper, sTileOreEmerald, sTileOreGold, sTileOreDiamond}
+wasBlowing = false
+
+-- Shortblows
 rockImageLoaded = -1
 
 --[[
 -- 0 = tunnel
 -- 1 = dirt
--- 2 = copper
--- 3 = iron
+-- 2 = iron
+-- 3 = copper
 -- 4 = emerald
 -- 5 = gold
 -- 6 = diamond

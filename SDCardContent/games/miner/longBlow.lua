@@ -69,19 +69,11 @@ if (math.abs(playerXOffset) < 0.1) then
   playerXOffset = 0
 end
 
+displayEarnings(playerX*40 + 20, 40)
+
 setTextSize(2)
-
-if (earnTime > ms) then
-  if (earnValue > 0) then
-    drawString("+" .. earnValue, playerX*40 + 20, 40 + (earnTime - ms) * 0.01)
-  else
-    drawString("" .. earnValue, playerX*40 + 20, 40 + (earnTime - ms) * 0.01)
-  end
-end
-
 drawString("$" .. money, 190, 188)
 drawString("Schritte: " .. stepsLeft, 190, 213)
 
 drawSprite(sItemLantern, 120, 10)
 drawString("$2", 130, 10)
-setTextSize(1)

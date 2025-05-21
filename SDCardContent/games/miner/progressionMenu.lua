@@ -1,4 +1,3 @@
-disableCaching()
 setTextSize(3)
 drawString("Shop", 10, 30, 0xFFFF)
 setTextSize(2)
