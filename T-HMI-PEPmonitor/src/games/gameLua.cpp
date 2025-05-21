@@ -562,6 +562,21 @@ static int lua_wrapper_isTouchInZone(lua_State* luaState) {
   return 1;
 }
 
+static int lua_wrapper_getTouchX(lua_State* luaState) {
+  lua_pushinteger(luaState, touch.X());
+  return 1;
+}
+
+static int lua_wrapper_getTouchY(lua_State* luaState) {
+  lua_pushinteger(luaState, touch.Y());
+  return 1;
+}
+
+static int lua_wrapper_getTouchPressure(lua_State* luaState) {
+  lua_pushinteger(luaState, touch.RawZ());
+  return 1;
+}
+
 static int lua_wrapper_getFreeRAM(lua_State* luaState) {
   lua_pushinteger(luaState, ESP.getFreeHeap());
   return 1;
@@ -628,6 +643,9 @@ void initLua() {
   lua_register(luaState, "closeProgressionMenu", (lua_CFunction) &lua_wrapper_closeProgressionMenu);
   lua_register(luaState, "constrain", (lua_CFunction) &lua_wrapper_constrain);
   lua_register(luaState, "isTouchInZone", (lua_CFunction) &lua_wrapper_isTouchInZone);
+  lua_register(luaState, "getTouchX", (lua_CFunction) &lua_wrapper_getTouchX);
+  lua_register(luaState, "getTouchY", (lua_CFunction) &lua_wrapper_getTouchY);
+  lua_register(luaState, "getTouchPressure", (lua_CFunction) &lua_wrapper_getTouchPressure);
   lua_register(luaState, "getFreeRAM", (lua_CFunction) &lua_wrapper_getFreeRAM);
   lua_register(luaState, "disableCaching", (lua_CFunction) &lua_wrapper_disableCaching);
   bindingsInitiated = true;
@@ -681,6 +699,7 @@ void updateBlowData(BlowData* blowData) {
   lastKnownTaskNumber = taskNumber;
   lua_dostring(blowDataString.c_str(), "updateBlowData()");
   lastMs = blowData->ms;
+  lastBlowCount = blowData->blowCount;
 }
 
 void updateJumpData(JumpData* jumpData) {
@@ -741,7 +760,7 @@ void drawInhalationGame_lua(DISPLAY_T* display, BlowData* blowData, String* erro
 bool displayProgressionMenu_lua(DISPLAY_T *display, String *errorMessage) {
   luaProgressionMenuRunning = true;
   luaDisplay = display;
-  lua_dostring(("ms="+String(millis())).c_str());
+  lua_dostring(("ms="+String(millis())).c_str(), "displayProgressionMenu_lua()");
   String error = lua_dofile(luaGamePath + "progressionMenu.lua");
   if (!error.isEmpty()) {
     errorMessage->concat(error);
