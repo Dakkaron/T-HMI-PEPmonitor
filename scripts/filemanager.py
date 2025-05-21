@@ -66,7 +66,7 @@ def writeFile(path, data):
         ser.write(data[i:i+1])
         ser.flush()
         if i % 1024 == 0:
-            time.sleep(0.01)
+            time.sleep(0.02)
     res = b""
     time.sleep(5)
     while ser.in_waiting > 0:
