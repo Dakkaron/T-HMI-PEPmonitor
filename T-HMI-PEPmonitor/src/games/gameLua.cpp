@@ -668,7 +668,8 @@ void updateBlowData(BlowData* blowData) {
                           "cumulatedTaskNumber="+String(blowData->taskNumber + blowData->cycleNumber * blowData->totalTaskNumber)+"\n"+\
                           "taskNumber="+String(taskNumber)+"\n"+\
                           "totalTaskNumber="+String(blowData->totalTaskNumber)+"\n"+
-                          "isNewTask="+String(taskNumber != lastKnownTaskNumber ? "true" : "false");
+                          "isNewTask="+String(taskNumber != lastKnownTaskNumber ? "true" : "false")+"\n"+
+                          "breathingScore="+String(blowData->breathingScore);
   lastKnownTaskNumber = taskNumber;
   lua_dostring(blowDataString.c_str());
   lastMs = blowData->ms;

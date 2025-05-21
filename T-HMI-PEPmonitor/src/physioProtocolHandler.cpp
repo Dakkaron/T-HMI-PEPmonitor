@@ -158,8 +158,7 @@ static void drawInhalationDisplay() {
   spr.fillSprite(TFT_BLACK);
   String errorMessage;
   drawInhalationGame(&spr, &blowData, &errorMessage);
-  int32_t taskBreathingScore = 200 * blowData.totalTimeSpentBreathing / getTaskDurationUntilLastAction();
-  drawProgressBar(&spr, taskBreathingScore, 0, PRESSURE_BAR_X, PRESSURE_BAR_Y+25, PRESSURE_BAR_WIDTH, PRESSURE_BAR_HEIGHT);
+  drawProgressBar(&spr, blowData.breathingScore, 0, PRESSURE_BAR_X, PRESSURE_BAR_Y+25, PRESSURE_BAR_WIDTH, PRESSURE_BAR_HEIGHT);
   checkFailWithMessage(errorMessage);
   
   drawProgressBar(&spr, blowData.pressure, 10, PRESSURE_BAR_X, PRESSURE_BAR_Y, PRESSURE_BAR_WIDTH, PRESSURE_BAR_HEIGHT);
@@ -406,6 +405,7 @@ void handlePhysioTask() {
     } else if (blowData.pressure<=blowData.minPressure && blowData.currentlyBlowing) {
       blowData.blowEndMs = blowData.ms;
       blowData.totalTimeSpentBreathing += blowData.blowEndMs-blowData.blowStartMs;
+      blowData.breathingScore = 200 * blowData.totalTimeSpentBreathing / getTaskDurationUntilLastAction();
       Serial.print(blowData.blowEndMs-blowData.blowStartMs);
       Serial.println(F("ms"));
       blowData.currentlyBlowing = false;

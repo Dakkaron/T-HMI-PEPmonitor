@@ -98,6 +98,7 @@ struct BlowData {
   unsigned long targetDurationMs = 0;
   unsigned long totalTimeSpentBreathing = 0;
   unsigned long taskStartMs;
+  int32_t breathingScore = 0;
   uint8_t cycleNumber = 0;
   uint8_t totalCycleNumber = 0;
   uint8_t taskNumber = 0;
