@@ -536,6 +536,7 @@ static void drawProfileSelectionPage(DISPLAY_T* display, uint16_t startNr, uint1
     }
   }
   drawBmp("/gfx/progressionmenu.bmp", SCREEN_WIDTH - 32, 0, false);
+  drawBmp("/gfx/executionlist.bmp", SCREEN_WIDTH - 80, 0, true);
   if (systemUpdateAvailableStatus == FIRMWARE_UPDATE_AVAILABLE) {
     display->setTextDatum(BR_DATUM);
     display->setTextSize(1);
@@ -573,6 +574,9 @@ static int16_t checkSelectionPageSelection(uint16_t startNr, uint16_t nr, bool d
   int32_t cHeight = rows==1 ? 220 : 105; 
   if (progressMenuIcon && isTouchInZone(SCREEN_WIDTH - 32, 0, 32, 32)) {
     return PROGRESS_MENU_SELECTION_ID;
+  }
+  if (progressMenuIcon && isTouchInZone(SCREEN_WIDTH - 80, 0, 32, 32)) {
+    return EXECUTION_LIST_SELECTION_ID;
   }
   if (systemupdateAvailable==FIRMWARE_UPDATE_AVAILABLE && isTouchInZone(SCREEN_WIDTH - 32, SCREEN_HEIGHT - 32, 32, 32)) {
     Serial.println("System update selected");
@@ -666,8 +670,8 @@ int16_t displayProfileSelection(DISPLAY_T* display, uint16_t nr, String* errorMe
       }
     }
 
-    int16_t selection = checkSelectionPageSelection(startNr, _min(nr, 8), nr>8, true, systemupdateAvailableStatus);
-    if (selection != -1 && (selection<nr || selection == PROGRESS_MENU_SELECTION_ID || selection == SYSTEM_UPDATE_SELECTION_ID)) {
+    int16_t selection = checkSelectionPageSelection(startNr, _min(nr, 8), nr>8, true, true, systemupdateAvailableStatus);
+    if (selection != -1 && (selection<nr || selection == PROGRESS_MENU_SELECTION_ID || selection == SYSTEM_UPDATE_SELECTION_ID || selection == EXECUTION_LIST_SELECTION_ID)) {
       return selection;
     }
     display->fillRect(0,0,70,20,TFT_BLACK);

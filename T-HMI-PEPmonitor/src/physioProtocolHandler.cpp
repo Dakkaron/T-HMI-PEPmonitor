@@ -73,6 +73,21 @@ uint32_t runProfileSelection() {
       
       profileSuccessfullyLoaded = false;
       continue;
+    } else if (selectedProfileId == EXECUTION_LIST_SELECTION_ID) {
+      spr.fillSprite(TFT_BLACK);
+      spr.pushSpriteFast(0,0);
+      String executionLog = readFileToString(EXECUTION_LOG_PATH);
+      while (displayExecutionList(&spr, &executionLog, &errorMessage)) {
+        uint32_t ms = millis();
+        checkFailWithMessage(errorMessage);
+        lastMs = ms;
+        ms = millis();
+        drawSystemStats(ms, lastMs);
+        spr.pushSpriteFast(0,0);
+        spr.fillSprite(TFT_BLACK);
+        handleSerial();
+        vTaskDelay(1); // watchdog
+      }
     } else if (selectedProfileId == SYSTEM_UPDATE_SELECTION_ID) {
       downloadAndRunSystemUpdate(&errorMessage);
       checkFailWithMessage(errorMessage);
