@@ -16,7 +16,7 @@
 
 - Das T-HMI in den oberen Teil des Gehäuses einsetzen und mit den vier M2x10-Schrauben verschrauben.
 - Die vier Muttern in die Aussparungen des unteren Gehäuses eindrücken.
-- Die Batterie mittels Patafix oder doppelseitigem Klebeband in die untere Gehäusehälfte kleben.
+- Die Batterie mittels Patafix oder doppelseitigem Klebeband (z.B. Tesa Power Strips Small) in die untere Gehäusehälfte kleben.
 - Den Luftdrucksensor in die passende Aussparung in der oberen Gehäusehälfte einsetzen.
 - Die obere Gehäusehälfte auf die Untere aufsetzen.
 - Die vier M3-Schrauben in die Ecken der oberen Gehäusehälfte einsetzen und festschrauben.
