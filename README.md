@@ -76,3 +76,5 @@ Aktuell befindet sich PepIt noch im Early Access. Weitere Spiele und Features we
 - **Anpassbare Therapiepläne**: Die Therapiepläne können in PepIt leicht auf die Anordnung der Physiotherapeuten oder Ärzte angepasst werden.
 - **LUA-basiertes, erweitertes Spielsystem**: Zusätzliche Spiele können nachträglich auf die SD-Karte gespielt werden. Es ist sogar möglich, selbst welche zu erstellen!
 
+## Bauanleitung
+[Hier klicken um zur Bauanleitung zu kommen.](docs/Parts_de.md)
