@@ -22,8 +22,12 @@
 ## Schrauben
 
 - 4x M3x25 Schrauben
-- 4x M3 Muttern
-- 4x M2x16 Schrauben ???
+- 4x M3 Muttern, viereckig
+- 4x M2x16 Schrauben
+
+## Sonstiges
+
+- Doppelseitiges Klebeband, am Besten Tesa Powerstrips Small
 
 ## 3D-Druck
 
