@@ -47,7 +47,7 @@ else
   fillRect(0, 176, 320, 24, 0x0)
 end
 
-drawSprite(sBigDigger2, 157-spriteWidth(sBigDigger)/2, 85-spriteHeight(sBigDigger)/2 - jumpOffset + yDigOffset)
+drawSprite(sBigDigger, 157-spriteWidth(sBigDigger)/2, 85-spriteHeight(sBigDigger)/2 - jumpOffset + yDigOffset)
 
 displayEarnings(160, 80)
 setTextSize(2)

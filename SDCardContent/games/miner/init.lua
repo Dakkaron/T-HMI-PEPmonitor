@@ -262,7 +262,6 @@ sRobotDig = loadSprite("gfx/dig.bmp", 0, 0x0001)
 sRobotFunnel = loadSprite("gfx/funnel.bmp", 0, 0x0001)
 
 sBigDigger = loadSprite("gfx/bigdigger.bmp", 0, 0xf81f)
-sBigDigger2 = loadSprite("gfx/bigdigger2.bmp", 0, 0xf81f)
 
 sTileOreIron = loadSprite("gfx/tilefragments/tile_ore_iron.bmp", 0, 0x0001)
 sTileOreCopper = loadSprite("gfx/tilefragments/tile_ore_copper.bmp", 0, 0x0001)
