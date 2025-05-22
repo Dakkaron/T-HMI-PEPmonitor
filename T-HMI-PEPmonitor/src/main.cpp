@@ -88,6 +88,7 @@ void setup() {
   String errorMessage;
   initSD(&errorMessage);
   checkFailWithMessage(errorMessage);
+  checkForPrefsReset();
   initSystemConfig(&errorMessage);
   checkFailWithMessage(errorMessage);
 

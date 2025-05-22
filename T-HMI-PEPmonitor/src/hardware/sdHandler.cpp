@@ -1,6 +1,7 @@
 #include "sdHandler.h"
 #include "gfxHandler.hpp"
 #include "pins.h"
+#include "prefsHandler.h"
 
 uint32_t numberOfWinScreens;
 
@@ -18,6 +19,15 @@ void initSD(String* errorMessage) {
     Serial.printf("? Detected SdCard insert: %.2f GB\r\n", SD_MMC.cardSize() / 1024.0 / 1024.0 / 1024.0);
   }
   Serial.println(F("done"));
+}
+
+void checkForPrefsReset() {
+  if (SD_MMC.exists("/resetSaves")) {
+    Serial.println("Prefs reset requested!");
+    SD_MMC.remove("/resetSaves");
+    clearPreferences();
+    Serial.println("Prefs reset done!");
+  }
 }
 
 bool stringIsTrue(String str, bool defaultValue) {

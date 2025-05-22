@@ -8,5 +8,6 @@ extern Preferences prefs;
 void printNamespaces();
 void setGamePrefsNamespace(String name);
 void applyGamePrefsNamespace();
+void clearPreferences();
 
 #endif /* __PREFSHANDLER_H__ */

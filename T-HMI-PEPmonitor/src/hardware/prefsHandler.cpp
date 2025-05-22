@@ -44,3 +44,9 @@ void applyGamePrefsNamespace() {
   }
   prefs.begin(gamePrefsNamespace.c_str());
 }
+
+void clearPreferences() {
+  nvs_flash_erase();
+  nvs_flash_init();
+  Serial.println("Preferences cleared.");
+}

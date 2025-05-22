@@ -17,6 +17,7 @@
 #define GAMES_ROOT_DIR "/games"
 
 void initSD(String* errorMessage);
+void checkForPrefsReset();
 
 void readSystemConfig(SystemConfig* systemConfig, String* errorMessage);
 
