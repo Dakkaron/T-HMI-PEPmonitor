@@ -182,6 +182,11 @@ static void drawInhalationDisplay() {
     printShaded(&spr, String(blowData.cycleNumber));
   }
   
+  if (blowData.blowCount >= blowData.totalBlowCount) {
+    spr.fillRect(240, 210, 80, 30, TFT_BLUE);
+    spr.drawString("Fertig", 255, 220);
+  }
+
   drawSystemStats(blowData.ms, lastMs);
   spr.pushSpriteFast(0, 0);
 }
@@ -438,8 +443,11 @@ void handlePhysioTask() {
     }
     // Check for task end on inhalation tasks
     if (blowData.blowCount >= blowData.totalBlowCount) {
-      if (isInhalationTask() && !blowData.currentlyBlowing && blowData.ms-getLastBlowEvent() > INHALATION_TASK_END_TIMEOUT && taskFinishedTimeout==0) {
-        taskFinishedTimeout = blowData.ms + 2000;
+      if (isTouchInZone(240, 210, 80, 30)) {
+        taskFinishedTimeout = blowData.ms;
+        tft.invertDisplay(0);
+      } else if (isInhalationTask() && !blowData.currentlyBlowing && blowData.ms-getLastBlowEvent() > INHALATION_TASK_END_TIMEOUT && taskFinishedTimeout==0) {
+        taskFinishedTimeout = blowData.ms;
         tft.invertDisplay(0);
       } else if (isInhalationTask() && !blowData.currentlyBlowing && blowData.ms-getLastBlowEvent() > INHALATION_TASK_WARN_TIMEOUT) {
         tft.invertDisplay((blowData.ms/500) % 2);
