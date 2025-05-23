@@ -14,7 +14,7 @@ if (isTouchInZone(0, 85, 85, 101, 0xF800)) then
 end
 
 if (currentlyBlowing) then
-  baseEffect = (ms-blowStartMs) / 2000.0
+  baseEffect = (ms-blowStartMs) / 3000.0
   if (not wasBlowing) then
     wasBlowing = true
     targetVector = {}
