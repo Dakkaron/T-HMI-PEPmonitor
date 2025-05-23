@@ -391,7 +391,7 @@ void drawEqualBlowGame_monsterCatcher(DISPLAY_T* display, BlowData* blowData, St
     drawLongBlowGame_monsterCatcher(display, blowData, errorMessage);
   } else if (blowData->blowCount <= blowData->totalBlowCount-2) {
     drawLongBlowGame_monsterCatcher(display, blowData, errorMessage);
-  }else {
+  } else {
     drawShortBlowGame_monsterCatcher(display, blowData, errorMessage);
   }
 }
@@ -403,9 +403,10 @@ void drawShortBlowGame_monsterCatcher(DISPLAY_T* display, BlowData* blowData, St
   static uint16_t playerEvolutionTarget;
   static bool catchMonsterModeEvolution = false;
 
-  uint32_t currentTaskNumber = blowData->taskNumber + blowData->cycleNumber*blowData->cycleNumber;
+  int32_t currentTaskNumber = blowData->taskNumber + blowData->cycleNumber*blowData->cycleNumber;
 
-  if (currentTaskNumber > catchCheckForTask) {
+  if (currentTaskNumber > catchCheckForTask) { // Init task
+    Serial.println("Init new task");
     bool enemyCanBeCaught = enemyMonsterData.isBasicMonster;
     playerEvolutionTarget = playerMonsterData.evolvesTo;
     TFT_eSprite* playerSpriteRefs[] = {
