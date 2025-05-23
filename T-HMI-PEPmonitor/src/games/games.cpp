@@ -105,6 +105,7 @@ static String leftPadString(String str, int len) {
 }
 
 bool displayExecutionList(DISPLAY_T *display, String *executionLog, String *errorMessage) {
+  static uint32_t skipLines = 0xFFFFFFFF;
   uint32_t lineStart = 0;
   uint32_t totalLineCount = 0;
   uint32_t yPos = 40;
@@ -118,19 +119,23 @@ bool displayExecutionList(DISPLAY_T *display, String *executionLog, String *erro
     totalLineCount++;
   }
 
-  uint32_t skipLines = 0;
-  if (totalLineCount > 25) {
-    skipLines = totalLineCount - 25;
+  if (skipLines > totalLineCount) {
+    if (totalLineCount > 25) {
+      skipLines = totalLineCount - 25;
+    } else {
+      skipLines = 0;
+    }
   }
 
   lineStart = 0;
+  uint32_t lineCount = 0;
   while (lineStart < executionLog->length()) {
     uint32_t lineEnd = executionLog->indexOf('\n', lineStart);
     if (lineEnd == -1) {
       lineEnd = executionLog->length();
     }
-    if (skipLines > 0) {
-      skipLines--;
+    lineCount++;
+    if (lineCount < skipLines) {
       lineStart = lineEnd + 1;
       continue;
     }
@@ -147,6 +152,16 @@ bool displayExecutionList(DISPLAY_T *display, String *executionLog, String *erro
     yPos += 8;
     lineStart = lineEnd + 1;
   }
+  drawBmp(&spr, "/gfx/arrow_up.bmp", 280, 40, 0xf81f, false);
+  drawBmp(&spr, "/gfx/arrow_down.bmp", 280, 208, 0xf81f, false);
+  if (skipLines > 0 && isTouchInZone(280, 40, 32, 32)) {
+    skipLines--;
+  } else if (skipLines < totalLineCount - 25 && isTouchInZone(280, 208, 32, 32)) {
+    skipLines++;
+  }
+  uint32_t scrollBarHeight = (200*25)/totalLineCount;
+  uint32_t scrollBarY = (200*skipLines)/totalLineCount;
+  spr.fillRect(315, scrollBarY+40, 5, scrollBarHeight, TFT_WHITE);
   return true;
 }
 

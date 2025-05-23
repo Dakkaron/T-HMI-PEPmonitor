@@ -361,7 +361,7 @@ bool drawBmpSlice(String filename, int16_t x, int16_t y, int16_t maxH, bool debu
   return true;
 }
 
-bool drawBmp(DISPLAY_T* sprite, String filename, int16_t x, int16_t y, bool debugLog) {
+static bool drawBmp(DISPLAY_T* sprite, String filename, int16_t x, int16_t y, uint16_t transp, bool enableTransp, bool debugLog) {
   if (debugLog) {
     Serial.print("File: ");
     Serial.println(filename);
@@ -399,7 +399,7 @@ bool drawBmp(DISPLAY_T* sprite, String filename, int16_t x, int16_t y, bool debu
     uint16_t bitDepth = read16(bmpFS);
     uint16_t compression = read16(bmpFS);
 
-    if ((colorPanes == 1) && (((bitDepth == 24) && (compression == 0)) || ((bitDepth == 32) && (compression == 3)))) { // BITMAPINFOHEADER
+    if ((colorPanes == 1) && (((bitDepth == 16) && (compression == 3)) || ((bitDepth == 24) && (compression == 0)) || ((bitDepth == 32) && (compression == 3)))) { // BITMAPINFOHEADER
       uint8_t bytesPerPixel = bitDepth/8;
       bool hasAlpha = (bitDepth == 32);
       
@@ -418,10 +418,22 @@ bool drawBmp(DISPLAY_T* sprite, String filename, int16_t x, int16_t y, bool debu
       uint8_t lineBuffer[w * bytesPerPixel];
 
       for (row = 0; row < h; row++) {
-        parseBitmapLine(&bmpFS, lineBuffer, bytesPerPixel, w, hasAlpha, padding, TFT_BLACK);
+        parseBitmapLine(&bmpFS, lineBuffer, bytesPerPixel, w, hasAlpha, padding, transp);
 
         // Push the pixel row to screen, pushImage will crop the line if needed
-        sprite->pushImage(x, y + h - 1 - row, w, 1, (uint16_t*)lineBuffer, 0x0000);
+        if (enableTransp) {
+          uint32_t currX = 0;
+          for (uint16_t iX = 0; iX < w; iX++) {
+            uint16_t color = ((uint16_t*)lineBuffer)[iX];
+            if (color == transp) {
+              sprite->pushImage(x + currX, y + h - 1 - row, iX-currX, 1, (uint16_t*)lineBuffer + currX, transp);
+              currX = iX + 1;
+            }
+          }
+          sprite->pushImage(x + currX, y + h - 1 - row, w-currX, 1, (uint16_t*)lineBuffer + currX, transp);
+        } else {
+          sprite->pushImage(x, y + h - 1 - row, w, 1, (uint16_t*)lineBuffer, 0x0000);
+        }
       }
       if (debugLog) {
         Serial.print("Loaded in "); Serial.print(millis() - startTime);
@@ -445,6 +457,14 @@ bool drawBmp(DISPLAY_T* sprite, String filename, int16_t x, int16_t y, bool debu
   }
   bmpFS.close();
   return true;
+}
+
+bool drawBmp(DISPLAY_T* sprite, String filename, int16_t x, int16_t y, bool debugLog) {
+  return drawBmp(sprite, filename, x, y, TFT_BLACK, false, debugLog);
+}
+
+bool drawBmp(DISPLAY_T* sprite, String filename, int16_t x, int16_t y, uint16_t transp, bool debugLog) {
+  return drawBmp(sprite, filename, x, y, transp, true, debugLog);
 }
 
 
