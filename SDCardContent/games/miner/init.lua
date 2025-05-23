@@ -275,6 +275,9 @@ sItemLantern = loadSprite("gfx/item_lantern.bmp", 0, 0x0001)
 
 sExplosionAnim = loadAnimSprite("gfx/explosion-0.bmp", 80, 48, 0, 0x0001)
 
+sArrowRight = loadSprite("gfx/arrow.bmp", 0, 0xf81f)
+sArrowLeft = loadSprite("gfx/arrow.bmp", 1, 0xf81f)
+
 math.randomseed(ms)
 
 worldMapArray = {}

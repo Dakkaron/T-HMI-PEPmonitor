@@ -71,6 +71,15 @@ end
 
 displayEarnings(playerX*40 + 20, 40)
 
+if (stepsLeft > 0) then
+  if (playerX > 0) then
+    drawSprite(sArrowLeft, 3 + math.sin(ms/200)*2, 100)
+  end
+  if (playerX < 7) then
+    drawSprite(sArrowRight, 291 - math.sin(ms/200)*2, 100)
+  end
+end
+
 setTextSize(2)
 drawString("$" .. money, 190, 188)
 drawString("Schritte: " .. stepsLeft, 190, 213)
