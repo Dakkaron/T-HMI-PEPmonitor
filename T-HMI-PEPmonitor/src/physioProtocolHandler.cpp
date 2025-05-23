@@ -76,6 +76,7 @@ uint32_t runProfileSelection() {
     } else if (selectedProfileId == EXECUTION_LIST_SELECTION_ID) {
       spr.fillSprite(TFT_BLACK);
       spr.pushSpriteFast(0,0);
+      tft.fillScreen(TFT_BLACK);
       String executionLog = readFileToString(EXECUTION_LOG_PATH);
       while (displayExecutionList(&spr, &executionLog, &errorMessage)) {
         uint32_t ms = millis();
@@ -89,6 +90,9 @@ uint32_t runProfileSelection() {
         vTaskDelay(1); // watchdog
       }
     } else if (selectedProfileId == SYSTEM_UPDATE_SELECTION_ID) {
+      spr.fillSprite(TFT_BLACK);
+      spr.pushSpriteFast(0,0);
+      tft.fillScreen(TFT_BLACK);
       downloadAndRunSystemUpdate(&errorMessage);
       checkFailWithMessage(errorMessage);
       profileSuccessfullyLoaded = false; // Should never happen
@@ -109,6 +113,9 @@ uint32_t runProfileSelection() {
       } else if (profileData.taskType[i] == PROFILE_TASK_TYPE_TRAMPOLINE) {
         requiredTaskTypes |= REQUIRED_TASK_TYPE_TRAMPOLINE;
         spr.fillSprite(TFT_BLACK);
+        spr.pushSpriteFast(0,0);
+        spr.fillSprite(TFT_BLACK);
+        tft.fillScreen(TFT_BLACK);
         spr.setTextSize(2);
         spr.setTextColor(TFT_WHITE);
         spr.setCursor(1, 16);
