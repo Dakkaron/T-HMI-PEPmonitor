@@ -1,50 +1,50 @@
-setTextSize(3)
-drawString("Shop", 10, 30, 0xFFFF)
-setTextSize(2)
-drawString("Geld: $" .. money, 170, 10, 0xFFFF)
+SetTextSize(3)
+DrawString("Shop", 10, 30)
+SetTextSize(2)
+DrawString("Geld: $" .. money, 170, 10)
 
-setTextSize(2)
+SetTextSize(2)
 
-if (stage == 1) then
-  if (money < 2000) then
-    fillRect(10, 60, 220, 35, 0xF800)
+if (Stage == 1) then
+  if (Money < 2000) then
+    FillRect(10, 60, 220, 35, 0xF800)
   else
-    fillRect(10, 60, 220, 35, 0x001F)
-    setTextSize(1)
-    drawString("Nicht genug Geld", 15, 84, 0xFFFF)
+    FillRect(10, 60, 220, 35, 0x001F)
+    SetTextSize(1)
+    DrawString("Nicht genug Geld", 15, 84)
   end
-  
-  setTextSize(2)
-  drawString("Tiefer graben: $2000", 15, 65, 0xFFFF)
-  if (money >= 2000 and isTouchInZone(10, 60, 220, 35)) then
-    money = money - 2000
-    stage = 2
-    prefsSetInt("stage", stage)
-    prefsSetInt("money", money)
+
+  SetTextSize(2)
+  DrawString("Tiefer graben: $2000", 15, 65)
+  if (Money >= 2000 and IsTouchInZone(10, 60, 220, 35)) then
+    Money = Money - 2000
+    Stage = 2
+    PrefsSetInt("stage", Stage)
+    PrefsSetInt("money", Money)
   end
-elseif (stage == 2) then
-  if (money < 10000) then
-    fillRect(10, 60, 220, 35, 0xF800)
+elseif (Stage == 2) then
+  if (Money < 10000) then
+    FillRect(10, 60, 220, 35, 0xF800)
   else
-    fillRect(10, 60, 220, 35, 0x001F)
-    setTextSize(1)
-    drawString("Nicht genug Geld", 15, 84, 0xFFFF)
+    FillRect(10, 60, 220, 35, 0x001F)
+    SetTextSize(1)
+    DrawString("Nicht genug Geld", 15, 84)
   end
 
 
-  setTextSize(2)
-  drawString("Tiefer graben: $10000", 15, 65, 0xFFFF)
-  if (money >= 10000 and isTouchInZone(10, 60, 220, 35)) then
-    money = money - 10000
-    stage = 3
-    prefsSetInt("stage", stage)
-    prefsSetInt("money", money)
+  SetTextSize(2)
+  DrawString("Tiefer graben: $10000", 15, 65)
+  if (Money >= 10000 and IsTouchInZone(10, 60, 220, 35)) then
+    Money = Money - 10000
+    Stage = 3
+    PrefsSetInt("stage", Stage)
+    PrefsSetInt("money", Money)
   end
 end
 
-setTextSize(2)
-fillRect(220, 200, 100, 40, 0x001F)
-drawString("Fertig", 245, 215, 0xFFFF)
-if (isTouchInZone(220, 200, 100, 40)) then
-  closeProgressionMenu()
+SetTextSize(2)
+FillRect(220, 200, 100, 40, 0x001F)
+DrawString("Fertig", 245, 215)
+if (IsTouchInZone(220, 200, 100, 40)) then
+  CloseProgressionMenu()
 end

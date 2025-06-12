@@ -1,1 +1,1 @@
-runScript("longBlow.lua")
+RunScript("longBlow.lua")

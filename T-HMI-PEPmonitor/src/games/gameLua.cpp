@@ -605,49 +605,49 @@ void initLua() {
   }
 
 
-  lua_register(luaState, "serialPrintln", (lua_CFunction) &lua_wrapper_serialPrintln);
-  lua_register(luaState, "serialPrint", (lua_CFunction) &lua_wrapper_serialPrintln);
-  lua_register(luaState, "runScript", (lua_CFunction) &lua_wrapper_runScript);
-  lua_register(luaState, "loadSprite", (lua_CFunction) &lua_wrapper_loadSprite);
-  lua_register(luaState, "loadAnimSprite", (lua_CFunction) &lua_wrapper_loadAnimSprite);
-  lua_register(luaState, "freeSprite", (lua_CFunction) &lua_wrapper_freeSprite);
-  lua_register(luaState, "drawSprite", (lua_CFunction) &lua_wrapper_drawSprite);
-  lua_register(luaState, "drawSpriteRegion", (lua_CFunction) &lua_wrapper_drawSpriteRegion);
-  lua_register(luaState, "drawAnimSprite", (lua_CFunction) &lua_wrapper_drawAnimSprite);
-  lua_register(luaState, "drawSpriteToSprite", (lua_CFunction) &lua_wrapper_drawSpriteToSprite);
-  lua_register(luaState, "spriteWidth", (lua_CFunction) &lua_wrapper_spriteWidth);
-  lua_register(luaState, "spriteHeight", (lua_CFunction) &lua_wrapper_spriteHeight);
-  lua_register(luaState, "log", (lua_CFunction) &lua_wrapper_log);
-  lua_register(luaState, "drawString", (lua_CFunction) &lua_wrapper_drawString);
-  lua_register(luaState, "drawRect", (lua_CFunction) &lua_wrapper_drawRect);
-  lua_register(luaState, "fillRect", (lua_CFunction) &lua_wrapper_fillRect);
-  lua_register(luaState, "drawCircle", (lua_CFunction) &lua_wrapper_drawCircle);
-  lua_register(luaState, "fillCircle", (lua_CFunction) &lua_wrapper_fillCircle);
-  lua_register(luaState, "drawLine", (lua_CFunction) &lua_wrapper_drawLine);
-  lua_register(luaState, "drawFastHLine", (lua_CFunction) &lua_wrapper_drawFastHLine);
-  lua_register(luaState, "drawFastWLine", (lua_CFunction) &lua_wrapper_drawFastWLine);
-  lua_register(luaState, "fillScreen", (lua_CFunction) &lua_wrapper_fillScreen);
-  lua_register(luaState, "setTextColor", (lua_CFunction) &lua_wrapper_setTextColor);
-  lua_register(luaState, "setTextSize", (lua_CFunction) &lua_wrapper_setTextSize);
-  lua_register(luaState, "setTextDatum", (lua_CFunction) &lua_wrapper_setTextDatum);
-  lua_register(luaState, "setCursor", (lua_CFunction) &lua_wrapper_setCursor);
-  lua_register(luaState, "print", (lua_CFunction) &lua_wrapper_print);
-  lua_register(luaState, "println", (lua_CFunction) &lua_wrapper_println);
-  lua_register(luaState, "cls", (lua_CFunction) &lua_wrapper_cls);
-  lua_register(luaState, "prefsSetString", (lua_CFunction) &lua_wrapper_prefsSetString);
-  lua_register(luaState, "prefsGetString", (lua_CFunction) &lua_wrapper_prefsGetString);
-  lua_register(luaState, "prefsSetInt", (lua_CFunction) &lua_wrapper_prefsSetInt);
-  lua_register(luaState, "prefsGetInt", (lua_CFunction) &lua_wrapper_prefsGetInt);
-  lua_register(luaState, "prefsSetNumber", (lua_CFunction) &lua_wrapper_prefsSetNumber);
-  lua_register(luaState, "prefsGetNumber", (lua_CFunction) &lua_wrapper_prefsGetNumber);
-  lua_register(luaState, "closeProgressionMenu", (lua_CFunction) &lua_wrapper_closeProgressionMenu);
-  lua_register(luaState, "constrain", (lua_CFunction) &lua_wrapper_constrain);
-  lua_register(luaState, "isTouchInZone", (lua_CFunction) &lua_wrapper_isTouchInZone);
-  lua_register(luaState, "getTouchX", (lua_CFunction) &lua_wrapper_getTouchX);
-  lua_register(luaState, "getTouchY", (lua_CFunction) &lua_wrapper_getTouchY);
-  lua_register(luaState, "getTouchPressure", (lua_CFunction) &lua_wrapper_getTouchPressure);
-  lua_register(luaState, "getFreeRAM", (lua_CFunction) &lua_wrapper_getFreeRAM);
-  lua_register(luaState, "disableCaching", (lua_CFunction) &lua_wrapper_disableCaching);
+  lua_register(luaState, "SerialPrintln", (lua_CFunction) &lua_wrapper_serialPrintln);
+  lua_register(luaState, "SerialPrint", (lua_CFunction) &lua_wrapper_serialPrintln);
+  lua_register(luaState, "RunScript", (lua_CFunction) &lua_wrapper_runScript);
+  lua_register(luaState, "LoadSprite", (lua_CFunction) &lua_wrapper_loadSprite);
+  lua_register(luaState, "LoadAnimSprite", (lua_CFunction) &lua_wrapper_loadAnimSprite);
+  lua_register(luaState, "FreeSprite", (lua_CFunction) &lua_wrapper_freeSprite);
+  lua_register(luaState, "DrawSprite", (lua_CFunction) &lua_wrapper_drawSprite);
+  lua_register(luaState, "DrawSpriteRegion", (lua_CFunction) &lua_wrapper_drawSpriteRegion);
+  lua_register(luaState, "DrawAnimSprite", (lua_CFunction) &lua_wrapper_drawAnimSprite);
+  lua_register(luaState, "DrawSpriteToSprite", (lua_CFunction) &lua_wrapper_drawSpriteToSprite);
+  lua_register(luaState, "SpriteWidth", (lua_CFunction) &lua_wrapper_spriteWidth);
+  lua_register(luaState, "SpriteHeight", (lua_CFunction) &lua_wrapper_spriteHeight);
+  lua_register(luaState, "Log", (lua_CFunction) &lua_wrapper_log);
+  lua_register(luaState, "DrawString", (lua_CFunction) &lua_wrapper_drawString);
+  lua_register(luaState, "DrawRect", (lua_CFunction) &lua_wrapper_drawRect);
+  lua_register(luaState, "FillRect", (lua_CFunction) &lua_wrapper_fillRect);
+  lua_register(luaState, "DrawCircle", (lua_CFunction) &lua_wrapper_drawCircle);
+  lua_register(luaState, "FillCircle", (lua_CFunction) &lua_wrapper_fillCircle);
+  lua_register(luaState, "DrawLine", (lua_CFunction) &lua_wrapper_drawLine);
+  lua_register(luaState, "DrawFastHLine", (lua_CFunction) &lua_wrapper_drawFastHLine);
+  lua_register(luaState, "DrawFastWLine", (lua_CFunction) &lua_wrapper_drawFastWLine);
+  lua_register(luaState, "FillScreen", (lua_CFunction) &lua_wrapper_fillScreen);
+  lua_register(luaState, "SetTextColor", (lua_CFunction) &lua_wrapper_setTextColor);
+  lua_register(luaState, "SetTextSize", (lua_CFunction) &lua_wrapper_setTextSize);
+  lua_register(luaState, "SetTextDatum", (lua_CFunction) &lua_wrapper_setTextDatum);
+  lua_register(luaState, "SetCursor", (lua_CFunction) &lua_wrapper_setCursor);
+  lua_register(luaState, "Print", (lua_CFunction) &lua_wrapper_print);
+  lua_register(luaState, "Println", (lua_CFunction) &lua_wrapper_println);
+  lua_register(luaState, "Cls", (lua_CFunction) &lua_wrapper_cls);
+  lua_register(luaState, "PrefsSetString", (lua_CFunction) &lua_wrapper_prefsSetString);
+  lua_register(luaState, "PrefsGetString", (lua_CFunction) &lua_wrapper_prefsGetString);
+  lua_register(luaState, "PrefsSetInt", (lua_CFunction) &lua_wrapper_prefsSetInt);
+  lua_register(luaState, "PrefsGetInt", (lua_CFunction) &lua_wrapper_prefsGetInt);
+  lua_register(luaState, "PrefsSetNumber", (lua_CFunction) &lua_wrapper_prefsSetNumber);
+  lua_register(luaState, "PrefsGetNumber", (lua_CFunction) &lua_wrapper_prefsGetNumber);
+  lua_register(luaState, "CloseProgressionMenu", (lua_CFunction) &lua_wrapper_closeProgressionMenu);
+  lua_register(luaState, "Constrain", (lua_CFunction) &lua_wrapper_constrain);
+  lua_register(luaState, "IsTouchInZone", (lua_CFunction) &lua_wrapper_isTouchInZone);
+  lua_register(luaState, "GetTouchX", (lua_CFunction) &lua_wrapper_getTouchX);
+  lua_register(luaState, "GetTouchY", (lua_CFunction) &lua_wrapper_getTouchY);
+  lua_register(luaState, "GetTouchPressure", (lua_CFunction) &lua_wrapper_getTouchPressure);
+  lua_register(luaState, "GetFreeRAM", (lua_CFunction) &lua_wrapper_getFreeRAM);
+  lua_register(luaState, "DisableCaching", (lua_CFunction) &lua_wrapper_disableCaching);
   bindingsInitiated = true;
 }
 
@@ -669,62 +669,62 @@ void initGames_lua(String gamePath, GameConfig* gameConfig, String* errorMessage
 void updateBlowData(BlowData* blowData) {
   static uint32_t lastMs = 0;
   static int32_t lastKnownTaskNumber = -1;
-  static uint32_t lastBlowCount = 0;
+  static uint32_t lastRepetition = 0;
   int32_t taskNumber = blowData->taskNumber + blowData->cycleNumber * blowData->totalTaskNumber;
-  String blowDataString = "currentlyBlowing="+String(blowData->currentlyBlowing ? "true" : "false")+"\n"+\
-                          "ms="+String(blowData->ms)+"\n"+\
-                          "msDelta="+String(blowData->ms - lastMs)+"\n"+\
-                          "blowStartMs="+String(blowData->blowStartMs)+"\n"+\
-                          "blowEndMs="+String(blowData->blowEndMs)+"\n"+\
-                          "targetDurationMs="+String(blowData->targetDurationMs)+"\n"+\
-                          "cycleNumber="+String(blowData->cycleNumber)+"\n"+\
-                          "totalCycleNumber="+String(blowData->totalCycleNumber)+"\n"+\
-                          "blowNumber="+String(blowData->blowCount)+"\n"+\
-                          "newBlow="+String((blowData->blowCount>lastBlowCount) ? "true" : "false")+"\n"+\
-                          "totalBlowNumber="+String(blowData->totalBlowCount)+"\n"+\
-                          "pressure="+String(blowData->pressure)+"\n"+\
-                          "peakPressure="+String(blowData->peakPressure)+"\n"+\
-                          "minPressure="+String(blowData->minPressure)+"\n"+\
-                          "cumulativeError="+String(blowData->cumulativeError)+"\n"+\
-                          "fails="+String(blowData->fails)+"\n"+\
-                          "taskType="+String(blowData->taskType)+"\n"+\
-                          "lastBlowStatus="+String(blowData->lastBlowStatus)+"\n"+\
-                          "totalTimeSpentBreathing="+String(blowData->totalTimeSpentBreathing)+"\n"+\
-                          "taskStartMs="+String(blowData->taskStartMs)+"\n"+\
-                          "cumulatedTaskNumber="+String(blowData->taskNumber + blowData->cycleNumber * blowData->totalTaskNumber)+"\n"+\
-                          "taskNumber="+String(taskNumber)+"\n"+\
-                          "totalTaskNumber="+String(blowData->totalTaskNumber)+"\n"+
-                          "isNewTask="+String(taskNumber != lastKnownTaskNumber ? "true" : "false")+"\n"+
-                          "breathingScore="+String(blowData->breathingScore);
+  String blowDataString = "CurrentlyBlowing="+String(blowData->currentlyBlowing ? "true" : "false")+"\n"+\
+                          "Ms="+String(blowData->ms)+"\n"+\
+                          "MsDelta="+String(blowData->ms - lastMs)+"\n"+\
+                          "BlowStartMs="+String(blowData->blowStartMs)+"\n"+\
+                          "BlowEndMs="+String(blowData->blowEndMs)+"\n"+\
+                          "TargetDurationMs="+String(blowData->targetDurationMs)+"\n"+\
+                          "CycleNumber="+String(blowData->cycleNumber)+"\n"+\
+                          "TotalCycleNumber="+String(blowData->totalCycleNumber)+"\n"+\
+                          "CurrentRepetition="+String(blowData->currentRepetition)+"\n"+\
+                          "NewRepetition="+String((blowData->currentRepetition>lastRepetition) ? "true" : "false")+"\n"+\
+                          "Repetitions="+String(blowData->repetitions)+"\n"+\
+                          "Pressure="+String(blowData->pressure)+"\n"+\
+                          "PeakPressure="+String(blowData->peakPressure)+"\n"+\
+                          "MinPressure="+String(blowData->minPressure)+"\n"+\
+                          "CumulativeError="+String(blowData->cumulativeError)+"\n"+\
+                          "Fails="+String(blowData->fails)+"\n"+\
+                          "TaskType="+String(blowData->taskType)+"\n"+\
+                          "LastBlowStatus="+String(blowData->lastBlowStatus)+"\n"+\
+                          "TotalTimeSpentBreathing="+String(blowData->totalTimeSpentBreathing)+"\n"+\
+                          "TaskStartMs="+String(blowData->taskStartMs)+"\n"+\
+                          "CumulatedTaskNumber="+String(blowData->taskNumber + blowData->cycleNumber * blowData->totalTaskNumber)+"\n"+\
+                          "TaskNumber="+String(taskNumber)+"\n"+\
+                          "TotalTaskNumber="+String(blowData->totalTaskNumber)+"\n"+
+                          "IsNewTask="+String(taskNumber != lastKnownTaskNumber ? "true" : "false")+"\n"+
+                          "BreathingScore="+String(blowData->breathingScore);
   lastKnownTaskNumber = taskNumber;
   lua_dostring(blowDataString.c_str(), "updateBlowData()");
   lastMs = blowData->ms;
-  lastBlowCount = blowData->blowCount;
+  lastRepetition = blowData->currentRepetition;
 }
 
 void updateJumpData(JumpData* jumpData) {
   static uint32_t lastMs = 0;
-  static uint32_t lastJumpCount = 0;
+  static uint32_t lastRepetition = 0;
   static uint32_t lastJumpMs = 0;
   int32_t taskNumber = jumpData->taskNumber + jumpData->cycleNumber * jumpData->totalTaskNumber;
-  if (jumpData->jumpCount > lastJumpCount) {
+  if (jumpData->currentRepetition > lastRepetition) {
     lastJumpMs = jumpData->ms;
   }
-  String jumpDataString = "ms="+String(jumpData->ms)+"\n"+\
-                          "msDelta="+String(jumpData->ms - lastMs)+"\n"+\
-                          "cycleNumber="+String(jumpData->cycleNumber)+"\n"+\
-                          "totalCycleNumber="+String(jumpData->totalCycleNumber)+"\n"+\
-                          "cumulatedTaskNumber="+String(jumpData->taskNumber + jumpData->cycleNumber * jumpData->totalTaskNumber)+"\n"+\
-                          "taskNumber="+String(taskNumber)+"\n"+\
-                          "totalTaskNumber="+String(jumpData->totalTaskNumber)+"\n"+
-                          "jumpCount="+String(jumpData->jumpCount)+"\n"+\
-                          "currentlyJumping="+String(jumpData->currentlyJumping ? "true" : "false")+"\n"+\
-                          "newJump="+String((jumpData->jumpCount>lastJumpCount) ? "true" : "false")+"\n"+\
-                          "msLeft="+String(jumpData->msLeft)+"\n"+\
-                          "lastJumpMs="+String(lastJumpMs);
+  String jumpDataString = "Ms="+String(jumpData->ms)+"\n"+\
+                          "MsDelta="+String(jumpData->ms - lastMs)+"\n"+\
+                          "CycleNumber="+String(jumpData->cycleNumber)+"\n"+\
+                          "TotalCycleNumber="+String(jumpData->totalCycleNumber)+"\n"+\
+                          "CumulatedTaskNumber="+String(jumpData->taskNumber + jumpData->cycleNumber * jumpData->totalTaskNumber)+"\n"+\
+                          "TaskNumber="+String(taskNumber)+"\n"+\
+                          "TotalTaskNumber="+String(jumpData->totalTaskNumber)+"\n"+
+                          "CurrentRepetition="+String(jumpData->currentRepetition)+"\n"+\
+                          "CurrentlyJumping="+String(jumpData->currentlyJumping ? "true" : "false")+"\n"+\
+                          "NewRepetition="+String((jumpData->currentRepetition>lastRepetition) ? "true" : "false")+"\n"+\
+                          "MsLeft="+String(jumpData->msLeft)+"\n"+\
+                          "LastJumpMs="+String(lastJumpMs);
   lua_dostring(jumpDataString.c_str(), "updateJumpData()");
   lastMs = jumpData->ms;
-  lastJumpCount = jumpData->jumpCount;
+  lastRepetition = jumpData->currentRepetition;
 }
 
 void drawShortBlowGame_lua(DISPLAY_T* display, BlowData* blowData, String* errorMessage) {
@@ -760,7 +760,7 @@ void drawInhalationGame_lua(DISPLAY_T* display, BlowData* blowData, String* erro
 bool displayProgressionMenu_lua(DISPLAY_T *display, String *errorMessage) {
   luaProgressionMenuRunning = true;
   luaDisplay = display;
-  lua_dostring(("ms="+String(millis())).c_str(), "displayProgressionMenu_lua()");
+  lua_dostring(("Ms="+String(millis())).c_str(), "displayProgressionMenu_lua()");
   String error = lua_dofile(luaGamePath + "progressionMenu.lua");
   if (!error.isEmpty()) {
     errorMessage->concat(error);
