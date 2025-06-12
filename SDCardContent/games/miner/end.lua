@@ -1,1 +1,1 @@
-prefsSetInt("money", money)
+PrefsSetInt("money", money)

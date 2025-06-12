@@ -1,54 +1,54 @@
-if (worldMapArray[3][1] ~= 0) then -- init
+if (WorldMapArray[3][1] ~= 0) then -- init
   for x = 0, 7 do
     for y = 0, 4 do
-      worldMapArray[x][y] = 1
+      WorldMapArray[x][y] = 1
     end
   end
   for x = 3, 4 do
     for y = 0, 2 do
-      worldMapArray[x][y] = 0
+      WorldMapArray[x][y] = 0
     end
   end
 end
 
-if (newJump) then
-  mineTile(3, 3)
-  mineTile(4, 3)
+if (NewRepetition) then
+  MineTile(3, 3)
+  MineTile(4, 3)
 end
 
-if (lastJumpMs + 200 > ms) then
-  jumpOffset = (ms-lastJumpMs) / 8
-  yDigOffset = (ms-lastJumpMs) / 5
-elseif (yDigOffset > 0) then
+if (LastJumpMs + 200 > Ms) then
+  JumpOffset = (Ms-LastJumpMs) / 8
+  YDigOffset = (Ms-LastJumpMs) / 5
+elseif (YDigOffset > 0) then
   for x = 0, 7 do
     for y = 0, 4 do
-      worldMapArray[x][y] = worldMapArray[x][y+1]
+      WorldMapArray[x][y] = WorldMapArray[x][y+1]
     end
-    genTile(x, 5, 2000)
+    GenTile(x, 5, 2000)
   end
-  yDigOffset = 0
+  YDigOffset = 0
 else
-  yDigOffset = 0
-  jumpOffset = 25
+  YDigOffset = 0
+  JumpOffset = 25
 end
 
 for x = 0, 7 do
   for y = 0, 4 do
-    drawTile(x, y, yDigOffset, true)
+    DrawTile(x, y, YDigOffset, true)
   end
 end
 
-if (yDigOffset > 0) then
+if (YDigOffset > 0) then
   for x = 0, 7 do
-    drawTile(x, 5, yDigOffset)
+    DrawTile(x, 5, YDigOffset)
   end
-  fillRect(0, 176, 320, 24+40 - yDigOffset, 0x0)
+  FillRect(0, 176, 320, 24+40 - YDigOffset, 0x0)
 else
-  fillRect(0, 176, 320, 24, 0x0)
+  FillRect(0, 176, 320, 24, 0x0)
 end
 
-drawSprite(sBigDigger, 157-spriteWidth(sBigDigger)/2, 85-spriteHeight(sBigDigger)/2 - jumpOffset + yDigOffset)
+DrawSprite(SBigDigger, 157-spriteWidth(SBigDigger)/2, 85-spriteHeight(SBigDigger)/2 - JumpOffset + YDigOffset)
 
-displayEarnings(160, 80)
-setTextSize(2)
-drawString("$" .. money, 190, 188)
+DisplayEarnings(160, 80)
+SetTextSize(2)
+DrawString("$" .. money, 190, 188)
