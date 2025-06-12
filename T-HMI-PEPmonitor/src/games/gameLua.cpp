@@ -679,9 +679,9 @@ void updateBlowData(BlowData* blowData) {
                           "TargetDurationMs="+String(blowData->targetDurationMs)+"\n"+\
                           "CycleNumber="+String(blowData->cycleNumber)+"\n"+\
                           "TotalCycleNumber="+String(blowData->totalCycleNumber)+"\n"+\
-                          "CurrentRepetition="+String(blowData->currentRepetition)+"\n"+\
-                          "NewRepetition="+String((blowData->currentRepetition>lastRepetition) ? "true" : "false")+"\n"+\
-                          "Repetitions="+String(blowData->repetitions)+"\n"+\
+                          "CurrentRepetition="+String(blowData->blowCount)+"\n"+\
+                          "NewRepetition="+String((blowData->blowCount>lastRepetition) ? "true" : "false")+"\n"+\
+                          "Repetitions="+String(blowData->totalBlowCount)+"\n"+\
                           "Pressure="+String(blowData->pressure)+"\n"+\
                           "PeakPressure="+String(blowData->peakPressure)+"\n"+\
                           "MinPressure="+String(blowData->minPressure)+"\n"+\
@@ -699,7 +699,7 @@ void updateBlowData(BlowData* blowData) {
   lastKnownTaskNumber = taskNumber;
   lua_dostring(blowDataString.c_str(), "updateBlowData()");
   lastMs = blowData->ms;
-  lastRepetition = blowData->currentRepetition;
+  lastRepetition = blowData->blowCount;
 }
 
 void updateJumpData(JumpData* jumpData) {
@@ -707,7 +707,7 @@ void updateJumpData(JumpData* jumpData) {
   static uint32_t lastRepetition = 0;
   static uint32_t lastJumpMs = 0;
   int32_t taskNumber = jumpData->taskNumber + jumpData->cycleNumber * jumpData->totalTaskNumber;
-  if (jumpData->currentRepetition > lastRepetition) {
+  if (jumpData->jumpCount > lastRepetition) {
     lastJumpMs = jumpData->ms;
   }
   String jumpDataString = "Ms="+String(jumpData->ms)+"\n"+\
@@ -717,14 +717,14 @@ void updateJumpData(JumpData* jumpData) {
                           "CumulatedTaskNumber="+String(jumpData->taskNumber + jumpData->cycleNumber * jumpData->totalTaskNumber)+"\n"+\
                           "TaskNumber="+String(taskNumber)+"\n"+\
                           "TotalTaskNumber="+String(jumpData->totalTaskNumber)+"\n"+
-                          "CurrentRepetition="+String(jumpData->currentRepetition)+"\n"+\
+                          "CurrentRepetition="+String(jumpData->jumpCount)+"\n"+\
                           "CurrentlyJumping="+String(jumpData->currentlyJumping ? "true" : "false")+"\n"+\
-                          "NewRepetition="+String((jumpData->currentRepetition>lastRepetition) ? "true" : "false")+"\n"+\
+                          "NewRepetition="+String((jumpData->jumpCount>lastRepetition) ? "true" : "false")+"\n"+\
                           "MsLeft="+String(jumpData->msLeft)+"\n"+\
                           "LastJumpMs="+String(lastJumpMs);
   lua_dostring(jumpDataString.c_str(), "updateJumpData()");
   lastMs = jumpData->ms;
-  lastRepetition = jumpData->currentRepetition;
+  lastRepetition = jumpData->jumpCount;
 }
 
 void drawShortBlowGame_lua(DISPLAY_T* display, BlowData* blowData, String* errorMessage) {
