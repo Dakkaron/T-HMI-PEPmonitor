@@ -206,7 +206,7 @@ function GenTile(x, y, baseOdds)
   elseif (Stage == 3) then
     if (v < 20) then
       WorldMapArray[x][y] = 7
-    elseif (v < 21 and strX == -1) then
+    elseif (v < 21 and StrX == -1) then
       GenStructure(x, y, 1)
     elseif (v < 40) then
       WorldMapArray[x][y] = 5

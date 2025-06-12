@@ -30,7 +30,7 @@ if (CurrentlyBlowing) then
     if (TargetPositions[i][1] <= 35) then
       TargetPositions[i][1] = 100000
       local r = GetEarnings(TargetType[i])
-      EarnValue = earnValue + r
+      EarnValue = EarnValue + r
       Money = Money + r
       EarnTime = Ms + 2000
     end
